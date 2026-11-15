@@ -10,7 +10,7 @@
 
 **Part 2: the game**
 
-- [ ] T6 Failing tests, then the trial runner (timing, first press, probes, pause/resume)
+- [x] T6 Failing tests, then the trial runner (timing, first press, probes, pause/resume)
 - [ ] T7 Device detection; practice sequence and feedback
 - [ ] T8 Play screen: check-in → practice → countdown → trials → probes → submit; leaving voids the session
 - [ ] T9 Manual timing check in a real browser; `pnpm check`
