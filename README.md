@@ -48,7 +48,7 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 
 ## Testing
 
-`pnpm test` (API tests need Docker). Core reference values come from independent calculations (Python `statistics`), not from the implementation. A mutation check deliberately broke each important rule (51 in total across scoring, progress, player isolation, timing limits, retries, token hashing, rate limits and log redaction) and confirmed a test fails for every one. See [docs/ai-log.md](docs/ai-log.md) for the gaps it found.
+`pnpm test` (API tests need Docker). Core reference values come from independent calculations (Python `statistics`), not from the implementation. A mutation check deliberately broke each important rule (53 in total across scoring, progress, player isolation, timing limits, retries, token hashing, rate limits and log redaction) and confirmed a test fails for every one. See [docs/ai-log.md](docs/ai-log.md) for the gaps it found.
 
 ## AI tools
 
