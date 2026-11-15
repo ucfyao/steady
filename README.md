@@ -2,7 +2,7 @@
 
 A three-minute daily focus check built on the Sustained Attention to Response Task (SART) with thought probes. Take-home assignment for Walk the Dragon.
 
-> **Status:** work in progress. The scoring and progress core (Specs 001–002) and the API (Spec 003) are done and tested. The web app (Spec 004) has its skeleton, API client and player profiles; the game, results and progress screens come next.
+> **Status:** work in progress. The scoring and progress core (Specs 001–002) and the API (Spec 003) are done and tested. The web app (Spec 004) has player profiles and the full game (check-in, practice, timed trials, probes); the results and progress screens come next.
 
 ## Quick start
 
@@ -43,6 +43,7 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **Anonymous players, hashed tokens.** A player is a random 256-bit token; the database stores only its SHA-256 hash (a fast hash is fine for a high-entropy token, unlike a password). The player id always comes from the token. Every session query filters on `player_id`, and another player's session returns `404`, the same as a missing one. Cost: a lost token means lost history.
 - **The server owns time and scoring.** The seed is chosen by the server and never returned, the exact trials are stored and scored, and a submission is rejected (`422`) if it arrives faster than the trials could have run or after 30 minutes. An identical retry returns the stored result; a different second submission returns `409`. The final write is conditional (`completed_at IS NULL`), so two concurrent submits cannot both win.
 - **Players on a device are local profiles.** Each profile is a name plus its token in `localStorage`; the name never leaves the browser. Several people can share a device, and the demo can show two players seeing only their own data, without the server storing anything personal.
+- **The trial clock is plain TypeScript, driven by frame timestamps.** `TrialRunner` takes `requestAnimationFrame` and `event.timeStamp` values and decides onsets, windows and probes, so timing is unit-tested with synthetic times. The digit is written straight into the DOM inside the frame callback, not through React state, so it is on screen in the frame whose timestamp becomes its onset. In a headless-browser run where a script pressed 400 ms after each digit appeared, the recorded RTs were 400.3–404.9 ms (median 401.3).
 - **One session, one row.** Trials, the raw submission and the score are JSONB columns, which keeps writes atomic; the raw responses are kept so a future `scoringVersion` can re-score history. Trade-off: no trial-level SQL queries, which nothing needs yet.
 - **Tests run the real app on a real database.** Integration tests start PostgreSQL 17 with Testcontainers, apply the committed migrations and drive the HTTP stack with a fake clock. CI runs them on every PR. Mocked repositories would not catch a missing `player_id` filter.
 - **The app refuses to start on bad config,** with a message naming the variable.
