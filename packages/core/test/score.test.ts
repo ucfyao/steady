@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { SART_CONFIG, createSessionPlan, scoreSession } from '../src/index.js';
+import {
+  SART_CONFIG,
+  createSessionPlan,
+  mulberry32,
+  scoreSession,
+  type TrialOutcome,
+} from '../src/index.js';
 import { perfect, submit } from './helpers.js';
 
 const plan = createSessionPlan(2026);
@@ -157,6 +163,59 @@ describe('scoreSession', () => {
     expect(s.anticipations).toBe(1);
     expect(s.omissions).toBe(0);
     expect(s.longestSteadyRun).toBe(Math.max(go.index, 125 - go.index));
+  });
+
+  describe('trialOutcomes (Spec 001, scoring version 2)', () => {
+    it('labels each kind of trial as the spec defines it', () => {
+      const targets = plan.trials.filter((t) => t.isTarget);
+      const gos = plan.trials.filter((t) => !t.isTarget && t.index > 10);
+      const caught = targets[0]!.index;
+      const commission = targets[1]!.index;
+      const anticipation = gos[0]!.index;
+      const omission = gos[1]!.index;
+      const rtFor = (i: number, isTarget: boolean): number | null => {
+        if (i === commission || i === anticipation) return 50;
+        if (i === omission) return null;
+        return isTarget ? null : 400;
+      };
+      const s = scoreSession(
+        plan,
+        submit(plan, (t) => rtFor(t.index, t.isTarget)),
+      );
+
+      const expected = new Map<number, TrialOutcome>([
+        [caught, 'caught'],
+        [commission, 'commission'],
+        [anticipation, 'anticipation'],
+        [omission, 'omission'],
+      ]);
+      expect(s.trialOutcomes).toHaveLength(126);
+      s.trialOutcomes.forEach((outcome, i) => {
+        const want = expected.get(i) ?? (plan.trials[i]!.isTarget ? 'caught' : 'steady');
+        expect(outcome, `trial ${i}`).toBe(want);
+      });
+    });
+
+    it('agrees with longestSteadyRun for random submissions', () => {
+      const rng = mulberry32(99);
+      for (let k = 0; k < 200; k++) {
+        const s = scoreSession(
+          plan,
+          submit(plan, () => {
+            const r = rng();
+            return r < 0.15 ? null : r < 0.2 ? 60 : 200 + Math.round(rng() * 700);
+          }),
+        );
+        expect(s.trialOutcomes).toHaveLength(plan.trials.length);
+        let best = 0;
+        let run = 0;
+        for (const o of s.trialOutcomes) {
+          run = o === 'steady' || o === 'caught' ? run + 1 : 0;
+          best = Math.max(best, run);
+        }
+        expect(s.longestSteadyRun).toBe(best);
+      }
+    });
   });
 
   it('computes RT stats when exactly 10 RTs qualify', () => {

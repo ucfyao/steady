@@ -85,7 +85,13 @@ The input must already be valid. Definitions:
   - `high_omissions`: `omissionRate > 0.3`
   - `many_anticipations`: anticipations make up more than 10% of presses
   - `regular_timing`: `rtCv < 0.05` (machine-like regularity; only when `rtCv` is not null)
-- **`longestSteadyRun`:** the longest run of consecutive correct trials (a go trial pressed without anticipation, or a target withheld), for the session-journey UI.
+- **`trialOutcomes`** (scoring version 2): one outcome per trial, in plan order, for the session-journey UI, so the client only draws and never applies a scoring rule:
+  - `steady`: a go trial pressed without anticipation;
+  - `anticipation`: a go trial pressed with `rt < 100`;
+  - `omission`: a go trial not pressed;
+  - `caught`: a target withheld;
+  - `commission`: a target pressed (at any RT, including an anticipation).
+- **`longestSteadyRun`:** the longest run of consecutive correct trials (`steady` or `caught` in `trialOutcomes`), for the session-journey UI.
 - The result always includes `scoringVersion`.
 
 ## Test cases (Vitest)
@@ -116,6 +122,7 @@ The input must already be valid. Definitions:
 - `regular_timing` is raised for CV < 0.05, not for human-like CV (≈ 0.125), not when CV is null, and changes no other metric.
 - Across 500 seeds, none of the first 5 trials is a target.
 - `longestSteadyRun` breaks at a commission and at an anticipation.
+- `trialOutcomes`: a hand-built submission with one trial of each kind (a withheld target, a target pressed at 50 ms, a go trial at 50 ms, a go trial not pressed, the rest pressed at 400 ms) gives exactly those outcomes at those indices and `steady` everywhere else; across 200 random submissions there is one outcome per trial and `longestSteadyRun` equals the longest run of `steady`/`caught`.
 - RT stats are `null` with 9 qualifying RTs and computed with exactly 10.
 - Known statistics: a hand-built RT set gives the expected median, sample SD and CV.
 - Φ⁻¹ matches reference values: Φ⁻¹(0.5) = 0, Φ⁻¹(0.975) ≈ 1.959964, Φ⁻¹(0.025) ≈ −1.959964.
@@ -124,6 +131,9 @@ The input must already be valid. Definitions:
 ## Versioning
 
 Any change to how a session is scored bumps `scoringVersion`, so stored scores can be told apart and recomputed from the raw responses.
+
+- **1:** the first version.
+- **2:** adds `trialOutcomes` (Spec 004 part 3). No metric changed. There is no deployed data, so no version-1 scores need re-scoring.
 
 ## Out of scope
 

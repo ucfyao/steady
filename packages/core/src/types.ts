@@ -37,6 +37,9 @@ export interface Submission {
 
 export type ValidationResult = { ok: true } | { ok: false; errors: string[] };
 
+/** What happened on one trial (Spec 001), for the session-journey UI. */
+export type TrialOutcome = 'steady' | 'anticipation' | 'omission' | 'caught' | 'commission';
+
 export type BehaviourFlag = 'high_omissions' | 'many_anticipations' | 'regular_timing';
 
 export interface ProbeResult {
@@ -56,6 +59,8 @@ export interface SessionScore {
   rtCv: number | null;
   dPrime: number;
   longestSteadyRun: number;
+  /** One per trial, in plan order (scoring version 2). */
+  trialOutcomes: TrialOutcome[];
   probes: ProbeResult[];
   flags: BehaviourFlag[];
 }
