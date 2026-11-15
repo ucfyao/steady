@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SubmissionSchema } from '../src/index.js';
+import { CheckInSchema, SubmissionSchema } from '../src/index.js';
 
 describe('SubmissionSchema (shared by API and web)', () => {
   it('parses a well-formed submission', () => {
@@ -24,5 +24,25 @@ describe('SubmissionSchema (shared by API and web)', () => {
   it('strips unknown fields such as a client-computed score', () => {
     const parsed = SubmissionSchema.parse({ rts: [], probeAnswers: [], score: 100 });
     expect(parsed).not.toHaveProperty('score');
+  });
+});
+
+describe('CheckInSchema', () => {
+  it('accepts full, partial and empty check-ins', () => {
+    expect(CheckInSchema.parse({ sleep: 'good', stress: 'low' })).toEqual({
+      sleep: 'good',
+      stress: 'low',
+    });
+    expect(CheckInSchema.parse({ stress: 'high' })).toEqual({ stress: 'high' });
+    expect(CheckInSchema.parse({})).toEqual({});
+  });
+
+  it('drops unknown fields', () => {
+    expect(CheckInSchema.parse({ sleep: 'ok', mood: 'great' })).toEqual({ sleep: 'ok' });
+  });
+
+  it('rejects unknown levels', () => {
+    expect(CheckInSchema.safeParse({ sleep: 'great' }).success).toBe(false);
+    expect(CheckInSchema.safeParse({ stress: 3 }).success).toBe(false);
   });
 });
