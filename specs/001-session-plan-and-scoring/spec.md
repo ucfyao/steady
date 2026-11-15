@@ -1,6 +1,6 @@
 # Spec 001 — Session plan and scoring (`@steady/core`)
 
-Status: in progress (`packages/core`)
+Status: implemented (`packages/core`)
 Design note: `docs/design-note.md` §3–5
 
 ## Goal

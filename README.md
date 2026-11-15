@@ -2,7 +2,15 @@
 
 A three-minute daily focus check built on the Sustained Attention to Response Task (SART) with thought probes. Take-home assignment for Walk the Dragon.
 
-> **Status:** work in progress. Setup instructions and technical decisions will be added as the project comes together.
+> **Status:** work in progress. The scoring core (Spec 001) is done and tested; progress, the API and the web app come next.
+
+## Repository layout
+
+```
+packages/core    @steady/core: pure TypeScript session plan, validation and scoring
+specs/           one folder per feature (spec.md)
+docs/            design note
+```
 
 ## Design note
 
