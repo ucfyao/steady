@@ -38,3 +38,12 @@ export const PROGRESS_CONFIG = {
   recentSessions: 5, // [P] recent = median of the last 5 non-practice sessions
   minGroupSize: 10, // [P] below this, no group median and no text summary
 } as const;
+
+/** Server-side timing plausibility for a submission (Spec 003). Technical validity: failures are rejected. */
+export const SUBMIT_CONFIG = {
+  // [P] elapsed time must be at least 95% of the pure trial time; probes only add time
+  minElapsedMs: Math.round(
+    SART_CONFIG.digits.length * SART_CONFIG.copiesPerDigit * TRIAL_MS * 0.95,
+  ),
+  expiresAfterMs: 30 * 60_000, // [P] an open session older than this cannot be submitted
+} as const;

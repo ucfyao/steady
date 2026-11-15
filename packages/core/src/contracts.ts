@@ -21,3 +21,6 @@ export const CheckInSchema = z.object({
   sleep: z.enum(SLEEP_LEVELS).optional(),
   stress: z.enum(STRESS_LEVELS).optional(),
 });
+
+/** POST /api/sessions */
+export const StartSessionSchema = z.object({ checkIn: CheckInSchema.nullish() });
