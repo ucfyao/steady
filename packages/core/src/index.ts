@@ -5,3 +5,4 @@ export { createSessionPlan, mulberry32 } from './plan.js';
 export { CheckInSchema, ProbeAnswerSchema, RtSchema, SubmissionSchema } from './contracts.js';
 export { validateSubmission } from './validate.js';
 export { isTransitionTrial, scoreSession } from './score.js';
+export { compareByCheckIn, comparePreProbe, summariseProgress } from './progress.js';
