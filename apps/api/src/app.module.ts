@@ -2,10 +2,12 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { LoggerModule } from 'nestjs-pino';
 import { PlayerGuard } from './auth/player.guard.js';
+import { CLOCK, systemClock } from './clock.js';
 import { APP_CONFIG, type AppConfig } from './config.js';
 import { DbModule } from './db/db.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PlayersModule } from './players/players.module.js';
+import { SessionsModule } from './sessions/sessions.module.js';
 
 /**
  * Built from an explicit config (not process.env) so tests can run the real
@@ -27,13 +29,15 @@ export class AppModule {
         }),
         DbModule,
         PlayersModule,
+        SessionsModule,
       ],
       controllers: [HealthController],
       providers: [
         { provide: APP_CONFIG, useValue: config },
+        { provide: CLOCK, useValue: systemClock },
         { provide: APP_GUARD, useClass: PlayerGuard },
       ],
-      exports: [APP_CONFIG],
+      exports: [APP_CONFIG, CLOCK],
     };
   }
 }

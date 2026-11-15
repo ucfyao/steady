@@ -8,13 +8,24 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
+import { CLOCK, type Clock } from '../../src/clock.js';
 import type { AppConfig } from '../../src/config.js';
 import * as schema from '../../src/db/schema.js';
 
 const MIGRATIONS = fileURLToPath(new URL('../../drizzle', import.meta.url));
 
+/** A clock the test moves by hand. */
+export class FakeClock implements Clock {
+  private t = new Date('2026-11-15T09:00:00Z').getTime();
+  now = () => new Date(this.t);
+  advance(ms: number) {
+    this.t += ms;
+  }
+}
+
 export interface TestApp {
   http: ReturnType<NestExpressApplication['getHttpServer']>;
+  clock: FakeClock;
   db: ReturnType<typeof drizzle<typeof schema>>;
   /** Stops the database, to test how the app behaves without it. */
   stopDatabase(): Promise<void>;
@@ -38,9 +49,11 @@ export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<
     prettyLogs: false,
     ...overrides,
   };
-  const moduleRef = await Test.createTestingModule({
-    imports: [AppModule.register(config)],
-  }).compile();
+  const clock = new FakeClock();
+  const moduleRef = await Test.createTestingModule({ imports: [AppModule.register(config)] })
+    .overrideProvider(CLOCK)
+    .useValue(clock)
+    .compile();
   const app = configureApp(
     moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false }),
   );
@@ -49,6 +62,7 @@ export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<
   let stopped = false;
   return {
     http: app.getHttpServer(),
+    clock,
     db,
     async stopDatabase() {
       await pool.end();

@@ -77,6 +77,7 @@ Integration tests (Vitest + supertest) run the real app against PostgreSQL 17 in
 - **Invalid submission** (wrong length) → `400` with errors; nothing stored.
 - **Too fast** (60 s) and **expired** (31 min) → `422`; nothing stored.
 - **Retry:** the same body twice → identical `200` responses, one stored result, also after the expiry time; a different body → `409`.
+- **Concurrent submits:** two identical bodies at once → both `200` with the same result; two different bodies at once → one `200`, one `409`, and the stored score is the winner's.
 - **Isolation:** player B gets `404` submitting player A's session; A's sessions never appear in B's list or progress.
 - **Progress:** six completed sessions → a baseline exists.
 - **Delete:** `DELETE /api/me` → `204`; the token then gets `401`, and the player's rows are gone.
