@@ -35,7 +35,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 ## Conventions
 
 - Workspace packages go in `apps/*` and `packages/*`.
-- Vitest with `*.test.ts` everywhere; no Jest.
+- Vitest with `*.test.ts` everywhere (`*.test.tsx` for React components); no Jest.
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`), scoped where useful, e.g. `feat(core):`.
 - Every change goes through a feature branch and a squash-merged PR; `main` is protected.
 - Docs and code are in English.
