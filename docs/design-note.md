@@ -35,7 +35,7 @@ Breath counting is a validated behavioural measure of mindfulness [R] (Levinson 
 
 The SART is monotonous by design, so the gamification is restrained, and it must not change how people respond.
 
-- **Clear goal and practice:** "Catch every 3, keep a steady rhythm." The first session includes an 18-trial practice round with feedback after each trial, as in the standard training block.
+- **Clear goal and practice:** "Catch every 3, keep a steady rhythm." The rules are shown as numbered steps with an example before practice and before every session, and say up front that everyone presses on some 3s. The first session includes an 18-trial practice round with feedback after each trial, as in the standard training block; it **starts slow (800 ms digit) and ends at the real speed [P]**, because a first play-test at full speed felt impossible to keep up with. The real session always uses the standard timing, so results stay comparable.
 - **No live score during the main block.** A live score would change how people respond. Visuals stay calm and never affect stimulus timing.
 - **The reward comes afterwards:** a _session journey_ ribbon shows every trial (steady stretches, caught and missed 3s, where you said you drifted), plus your longest steady run.
 - **Weekly target (4 of 7 days) instead of a daily streak; no leaderboards.** Comparing attention scores with colleagues would discourage honest use.

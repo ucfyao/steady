@@ -180,3 +180,188 @@ button:disabled {
 .confirm p {
   margin: 0 8px 0 0;
 }
+
+a.button {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: 6px;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+.choice {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0 0 16px;
+  padding: 8px 16px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+
+.choice legend {
+  padding: 0 4px;
+  font-weight: 600;
+}
+
+.choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* How to play: numbered steps and three example tiles. */
+.how-to {
+  margin: 16px 0 24px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.how-to h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.how-steps {
+  margin: 0 0 16px;
+  padding-left: 1.4em;
+  line-height: 1.6;
+}
+
+.how-mask {
+  font-weight: 600;
+}
+
+.how-example {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.how-example figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.how-digit {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--text);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+}
+
+.how-target figcaption {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.how-target .how-digit {
+  border-color: var(--danger);
+}
+
+.how-to .lead {
+  margin-bottom: 0;
+}
+
+/* Practice only: the rule stays above the box. */
+.reminder {
+  margin: 0;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* The game stage: a calm, fixed-size box so the layout never shifts during trials. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.tap-area {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.stimulus {
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown,
+.feedback {
+  position: absolute;
+  inset: auto 0;
+  margin: 0;
+  text-align: center;
+  font-size: 2rem;
+  color: var(--muted);
+}
+
+/* Practice feedback can be a short sentence; the tick stays large. */
+.feedback {
+  padding: 0 16px;
+  font-size: 1.5rem;
+}
+
+.feedback-hit {
+  font-size: 2rem;
+}
+
+.feedback-caught,
+.feedback-hit {
+  color: var(--accent);
+}
+
+.feedback-commission,
+.feedback-omission {
+  color: var(--danger);
+}
+
+.probe {
+  text-align: center;
+}
+
+.probe-answers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.probe-answers button {
+  min-width: 120px;
+  padding: 12px 16px;
+}
+
+kbd {
+  margin-left: 8px;
+  font-size: 0.8em;
+  opacity: 0.7;
+}

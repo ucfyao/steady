@@ -1,6 +1,6 @@
 # Spec 004 — Web app (`apps/web`)
 
-Status: in progress (`apps/web`): part 1
+Status: in progress (`apps/web`): parts 1–2
 Design note: `docs/design-note.md` §3, §6, §7
 
 ## Goal
@@ -27,20 +27,24 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 
 1. **Home:** "Catch every 3, keep a steady rhythm." Shows this week's days played against the weekly target (4 of 7), when the baseline will be ready ("3 more sessions"), and a **Start** button.
 2. **Check-in (optional):** sleep (poor / ok / good) and stress (low / medium / high), each skippable. Sent with `POST /api/sessions`.
-3. **Practice (first session only, or on request):** 18 trials with feedback after each ("Caught it", "That was a 3", "Missed one"), as in the standard SART training block. Generated on the client, never submitted.
-4. **Get ready:** instructions for the device, then a 3-2-1 countdown.
-5. **Trials:** 126 trials as planned by the server. No score, counter or feedback is shown during the block.
-6. **Probes:** after each planned probe trial the clock pauses and the app asks "Where was your mind just now?" (On task / Drifting / Elsewhere, also keys 1–3). After the answer there is a 1-second pause, then the trials resume.
-7. **Submitting:** sends `{ rts, probeAnswers }`. If the request fails, the player can retry; an identical retry is safe (Spec 003).
-8. **Results (Spec 004 part 3):** the session journey ribbon (every trial: steady stretches, caught and missed 3s, drift reports), longest steady run, catch rate next to median RT and steadiness (RT CV), and any descriptive flags in plain words.
-9. **Progress (part 3):** charts of catch rate, omissions, median RT and RT variability per session, the baseline vs recent card, the weekly target, and the exploratory sleep/stress and pre-probe comparisons with their `n` and the "a pattern so far, not a cause" wording.
+3. **How to play (before practice, and again on Get ready):** the rules, shown as steps with an example: a digit flashes in the box and turns into `⊗`; press (Space, or tap the box on a touch device) for every digit as soon as it appears; **not for 3**; a press still counts while `⊗` is showing. It also says, before the player finds out the hard way, that 3s are rare and come fast, that everyone presses on some of them, and that this is what the check measures, so speed and accuracy matter equally.
+4. **Practice (first session only, or on request):** 18 trials (2 of them 3s, none in the first 3) that **start slow and end at the real speed [P]**: trials 1–6 show the digit for 800 ms + 1200 ms mask, trials 7–12 500 ms + 1000 ms, trials 13–18 the real 250 ms + 900 ms. A reminder of the rule stays above the box. After each trial, feedback for 800 ms: "Caught it" (withheld on a 3), "That was a 3, let it pass" (pressed on a 3), "Missed one, press for every digit except 3" (no press on another digit), or a quiet tick for a correct press, as in the standard SART training block. Generated on the client and never submitted. This per-trial feedback is not a score.
+5. **Get ready:** the same how-to-play steps for the device, then a 3-2-1 countdown.
+6. **Trials:** 126 trials as planned by the server. No score, counter or feedback is shown during the block.
+7. **Probes:** after each planned probe trial the clock pauses and the app asks "Where was your mind just now?" (On task / Drifting / Elsewhere, also keys 1–3). After the answer there is a 1-second pause, then the trials resume.
+8. **Submitting:** sends `{ rts, probeAnswers }`. If the request fails, the player can retry; an identical retry is safe (Spec 003).
+9. **Results (Spec 004 part 3):** the session journey ribbon (every trial: steady stretches, caught and missed 3s, drift reports), longest steady run, catch rate next to median RT and steadiness (RT CV), and any descriptive flags in plain words.
+10. **Progress (part 3):** charts of catch rate, omissions, median RT and RT variability per session, the baseline vs recent card, the weekly target, and the exploratory sleep/stress and pre-probe comparisons with their `n` and the "a pattern so far, not a cause" wording.
 
 ## Input and timing
 
 - **Device [P]:** a device with a coarse pointer (`matchMedia('(pointer: coarse)')`) uses **touch** (a large tap area); otherwise **keyboard** (Space). The choice is sent as `device` when the session starts, and only that input counts during the session.
-- **Stimulus:** digit for 250 ms, then a mask for 900 ms (1150 ms per trial), with the digit's font size from the plan (5 sizes).
+- **Stimulus:** digit for 250 ms, then a mask for 900 ms (1150 ms per trial), with the digit's font size from the plan (5 sizes). This is the standard SART timing and the real session never changes it, so results stay comparable with the research and between sessions. Only practice uses slower trials (above); the runner takes an optional per-trial timing, and the window for a press is that trial's digit + mask time.
 - **Clock:** `requestAnimationFrame` drives the display; the onset of a trial is the timestamp of the frame that first shows its digit. Presses use `event.timeStamp`. Both are on the `performance.now()` clock.
 - **RT:** `press time − onset` for the first press in that trial's 1150 ms window, otherwise `null`. Further presses in the window are ignored, and so are key-repeat events from holding Space.
+- **Which trial a press belongs to** is decided by its timestamp, not by when the event is handled: a press belongs to the trial whose window `[onset, onset + 1150)` contains it. A press after one window closes but before the next digit is on screen (at most one frame) belongs to no trial, because nothing new was visible yet.
+- **The digit is drawn directly** (a DOM update inside the animation-frame callback), not through React state, so it is on screen in the same frame whose timestamp is recorded as its onset.
+- **Known limits:** onset is the frame's start time, so the true display time can differ by up to one frame (about 17 ms at 60 Hz), and keyboard and touchscreen latency differ by device. Both are why results are compared only within a player, and why the device is stored.
 - **Probes pause the clock:** the next trial's onset is scheduled only after the answer and the 1-second pause.
 - **Leaving voids the session:** if the page becomes hidden during the countdown, trials or probes, the session is abandoned: nothing is submitted, and the player sees "Session voided — leaving the page interrupts the timing" (design note §5).
 
@@ -57,10 +61,15 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 - Trial runner, driven by synthetic frame and press times:
   - RT = press − onset of the frame that showed the digit;
   - only the first press in a window counts; key repeats are ignored;
-  - a press after 1150 ms belongs to the next trial;
+  - a press after 1150 ms belongs to the next trial once its digit is shown, and to no trial in the gap before that;
+  - a press handled after a later frame still counts for the trial whose window contains its timestamp;
   - no press → `null`;
   - the clock pauses at a probe and resumes after the answer plus 1 s;
-  - the result has one RT per trial and one answer per probe, and passes core's `validateSubmission`.
+  - a full session driven by synthetic frames has one RT per trial and one answer per probe, passes core's `validateSubmission`, and takes at least `SUBMIT_CONFIG.minElapsedMs`;
+  - practice mode shows the right feedback after each trial.
+  - a trial with its own timing shows the digit and mask for that long, and its press window is that long.
+- Practice plan: trials 1–6, 7–12 and 13–18 use the three practice speeds; the last six use the real timing.
+- Play screen, driven by a fake frame clock: a first-time player goes check-in → practice → ready → countdown → trials and probes → submit, and the submitted body passes `validateSubmission`; hiding the page mid-session voids it and submits nothing. The how-to-play steps (including "not for 3") are shown before practice and on Get ready, and the rule reminder stays visible during practice.
 - Device detection: coarse pointer → `touch`, otherwise `keyboard`.
 - Weekly target: counts distinct local calendar days with a completed session in the last 7 days.
 - Profiles: create, switch, rename, remove; a `401` removes the profile; exactly one player is created on a first visit, even under StrictMode.

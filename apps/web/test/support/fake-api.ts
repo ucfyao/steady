@@ -1,4 +1,11 @@
-import type { CompletedSession } from '@steady/core';
+import {
+  createSessionPlan,
+  scoreSession,
+  type CompletedSession,
+  type InputDevice,
+  type StartedSession,
+  type Submission,
+} from '@steady/core';
 import { vi } from 'vitest';
 import { ApiError, type Api } from '../../src/api/client.js';
 
@@ -10,7 +17,10 @@ export function fakeBackend() {
   const calls: { token: string | null; method: string }[] = [];
   const unauthorized = new Set<string>();
   const sessions = new Map<string, CompletedSession[]>();
-  const control = { failCreate: false };
+  const control = { failCreate: false, failSubmitOnce: false };
+  const started: { token: string | null; body: { device: InputDevice } }[] = [];
+  const submitted: { id: string; body: Submission }[] = [];
+  const plans = new Map<string, StartedSession>();
 
   const factory = vi.fn((token: string | null): Api => {
     const call = (method: string) => {
@@ -26,8 +36,33 @@ export function fakeBackend() {
         if (control.failCreate) throw new ApiError('network', 'Could not reach the server.');
         return { token: tokenN(++issued) };
       },
-      startSession: unused,
-      submitSession: unused,
+      startSession: async (body) => {
+        call('startSession');
+        const id = `session-${plans.size + 1}`;
+        const { trials, probeAfter } = createSessionPlan(1000 + plans.size);
+        const session = { id, startedAt: new Date(0).toISOString(), plan: { trials, probeAfter } };
+        plans.set(id, session);
+        started.push({ token, body });
+        return session;
+      },
+      submitSession: async (id, body) => {
+        call('submitSession');
+        if (control.failSubmitOnce) {
+          control.failSubmitOnce = false;
+          throw new ApiError('network', 'Could not reach the server.');
+        }
+        submitted.push({ id, body });
+        const plan = plans.get(id)!.plan;
+        // A fake server: test code may score, the web app never does.
+        return {
+          id,
+          startedAt: new Date(0).toISOString(),
+          completedAt: new Date(150_000).toISOString(),
+          checkIn: null,
+          device: started.at(-1)!.body.device,
+          score: scoreSession({ seed: 0, ...plan }, body),
+        };
+      },
       listSessions: async () => (call('listSessions'), sessions.get(token ?? '') ?? []),
       getProgress: unused,
       deleteMe: async () => {
@@ -37,5 +72,15 @@ export function fakeBackend() {
     };
   });
 
-  return { factory, calls, unauthorized, sessions, control, created: () => issued };
+  return {
+    factory,
+    calls,
+    unauthorized,
+    sessions,
+    control,
+    started,
+    submitted,
+    plans,
+    created: () => issued,
+  };
 }

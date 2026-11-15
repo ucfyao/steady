@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { usePlayers } from '../players/usePlayers.js';
 
 export function Home() {
@@ -22,6 +23,9 @@ export function Home() {
       <h1>Hi, {active?.name}</h1>
       <p className="lead">A three-minute focus check. Catch every 3, keep a steady rhythm.</p>
       {completed !== null && <p>Sessions completed: {completed}</p>}
+      <Link to="/play" className="button">
+        Start today&apos;s check
+      </Link>
     </section>
   );
 }

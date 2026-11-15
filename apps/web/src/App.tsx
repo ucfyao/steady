@@ -1,14 +1,20 @@
 import { BrowserRouter, Route, Routes } from 'react-router';
+import type { PlayEnv } from './game/env.js';
 import { Layout } from './Layout.js';
 import { PlayersProvider } from './players/PlayersProvider.js';
 import { Home } from './screens/Home.js';
+import { Play } from './screens/Play.js';
+import { Results } from './screens/Results.js';
 import { YourData } from './screens/YourData.js';
 
-export function AppRoutes() {
+/** `playEnv` lets tests drive the game with a fake clock. */
+export function AppRoutes({ playEnv }: { playEnv?: PlayEnv } = {}) {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path="play" element={<Play env={playEnv} />} />
+        <Route path="results/:id" element={<Results />} />
         <Route path="data" element={<YourData />} />
       </Route>
     </Routes>
