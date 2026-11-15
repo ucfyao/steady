@@ -15,7 +15,7 @@ pnpm dev            # web app on http://localhost:5173, API on http://localhost:
 pnpm check          # lint, format check, typecheck, all tests (API tests need Docker running)
 ```
 
-Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about three minutes. Use **Add player** in the header to try a second player on the same device.
+Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about three minutes. Use **Add player** in the avatar menu (top right) to try a second player on the same device.
 
 End-to-end tests (real browser, API and database; about 4 minutes, because sessions run in real time):
 

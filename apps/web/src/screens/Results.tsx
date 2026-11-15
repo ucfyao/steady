@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
+import { Button } from '../ui/Button.js';
 
 /** Descriptive flags in plain words (Spec 004): about the session, never a failure. */
 const FLAG_TEXT: Record<BehaviourFlag, string> = {
@@ -119,10 +120,8 @@ export function Results() {
         </aside>
       )}
 
-      <div className="inline-form">
-        <Link to="/play" className="button">
-          Play again
-        </Link>
+      <div className="actions">
+        <Button to="/play">Play again</Button>
         <Link to="/">Back to home</Link>
       </div>
     </section>

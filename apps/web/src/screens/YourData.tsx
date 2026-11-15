@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { usePlayers } from '../players/usePlayers.js';
+import { Button } from '../ui/Button.js';
 
 /** Remounted per player by the layout, so its state never carries over to another player. */
 export function YourData() {
@@ -42,7 +43,7 @@ export function YourData() {
           Name on this device{' '}
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={30} />
         </label>
-        <button type="submit">Save name</button>
+        <Button type="submit">Save name</Button>
       </form>
 
       <h2>Delete my data</h2>
@@ -50,17 +51,17 @@ export function YourData() {
       {confirming ? (
         <div role="group" aria-label={`Delete all data for ${active.name}`} className="confirm">
           <p>This cannot be undone.</p>
-          <button type="button" className="danger" disabled={busy} onClick={remove}>
+          <Button variant="danger" disabled={busy} onClick={remove}>
             Yes, delete everything for {active.name}
-          </button>
-          <button type="button" className="secondary" onClick={() => setConfirming(false)}>
+          </Button>
+          <Button variant="secondary" onClick={() => setConfirming(false)}>
             Cancel
-          </button>
+          </Button>
         </div>
       ) : (
-        <button type="button" className="danger" onClick={() => setConfirming(true)}>
+        <Button variant="danger" onClick={() => setConfirming(true)}>
           Delete my data
-        </button>
+        </Button>
       )}
       {error && <p role="alert">{error}</p>}
     </section>

@@ -10,7 +10,7 @@ A React app where a player plays the focus check, sees what happened in that ses
 ## Players on this device [P]
 
 - On first visit the app creates an anonymous player (`POST /api/players`) and keeps the token in `localStorage`.
-- **Local profiles.** A device can hold several players, each with a name the player types (e.g. "Alex"). The name is stored **only in this browser** and never sent to the server, which still knows nothing but a token hash. A header menu shows the active player and lets you switch or add a player. This is how several people share one device, and how the demo shows that each player sees only their own data.
+- **Local profiles.** A device can hold several players, each with a name the player types (e.g. "Alex"). The name is stored **only in this browser** and never sent to the server, which still knows nothing but a token hash. The header shows the active player as an avatar (their initial); its menu lets you switch player, add a player, or open Your data. The menu follows the WAI-ARIA menu-button pattern (keyboard open, arrow keys, Escape closes and returns focus). This is how several people share one device, and how the demo shows that each player sees only their own data.
 - **Your data** page: explains that clearing browser data loses the history (there is no recovery, by design), and offers **Delete my data** (`DELETE /api/me`, after a confirmation), which also removes the local profile.
 - If the API answers `401` for a stored token (the player was deleted elsewhere), the app removes that profile and says so.
 - Switching or deleting a player remounts every screen, so no screen can show the previous player's data or keep an open confirmation (which would then act on the next player).
@@ -63,6 +63,7 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 
 ## Accessibility and look
 
+- "Quiet paper" look (approved design, 2026-11-16): warm paper surfaces, a sage accent, Fraunces headings and Inter text. Every colour, font, size, space and radius is a CSS variable in `src/styles/tokens.css`, with a dark set for `prefers-color-scheme: dark`; text colours are adjusted where needed to meet WCAG AA. Shared controls live in `src/ui` (Button, Chip/ChipGroup on native radios, Card) with CSS Modules.
 - Calm, high-contrast colours; respects `prefers-reduced-motion` (no animated transitions) and the system colour scheme.
 - Everything outside the trial block works with a keyboard and a screen reader. During the block, the digit area is not announced (it would interfere with the task).
 - Usable at phone width.

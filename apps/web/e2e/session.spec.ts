@@ -32,16 +32,18 @@ test('a new player practises, plays a full session and sees results and progress
   await expect(page.getByText('Your starting point is set after 5 more sessions.')).toBeVisible();
 
   // A second player on the same device sees none of it.
-  await page.getByRole('button', { name: 'Add player' }).click();
+  await page.getByRole('button', { name: /^Player: / }).click();
+  await page.getByRole('menuitem', { name: 'Add player' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('Sam');
   await page.getByRole('button', { name: 'Create' }).click();
-  await expect(page.getByRole('combobox', { name: 'Player' })).toHaveValue(/.+/);
+  await expect(page.getByRole('button', { name: 'Player: Sam' })).toBeVisible();
   await expect(page.getByText(/no sessions yet/i)).toBeVisible();
   await page.goto(resultsUrl);
   await expect(page.getByRole('heading', { name: 'Session not found' })).toBeVisible();
 
   // Switching back shows the first player's session again.
-  await page.getByRole('combobox', { name: 'Player' }).selectOption({ index: 0 });
+  await page.getByRole('button', { name: 'Player: Sam' }).click();
+  await page.getByRole('menuitemradio').first().click();
   await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
 });
 

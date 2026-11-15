@@ -1,5 +1,6 @@
 import type { ProbeAnswer, Submission } from '@steady/core';
 import { useEffect, useEffectEvent, useRef, useState, type PointerEvent } from 'react';
+import { Button } from '../ui/Button.js';
 import type { PlayEnv } from './env.js';
 import { TrialRunner, type Outcome, type RunnerOptions, type RunnerPlan } from './runner.js';
 
@@ -178,15 +179,15 @@ export function Block({
           <h2 id="probe-question">Where was your mind just now?</h2>
           <div className="probe-answers">
             {ANSWERS.map((a) => (
-              <button
+              <Button
                 key={a.answer}
-                type="button"
+                variant="secondary"
                 aria-label={a.label}
                 onClick={(e) => answer(a.answer, e.nativeEvent)}
               >
                 {a.label}
                 {env.device === 'keyboard' && <kbd>{a.key}</kbd>}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

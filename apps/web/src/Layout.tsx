@@ -1,10 +1,12 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { NavLink, Outlet } from 'react-router';
+import { PlayerMenu } from './PlayerMenu.js';
 import { usePlayers } from './players/usePlayers.js';
+import { Button } from './ui/Button.js';
+import styles from './Layout.module.css';
 
-function PlayerMenu() {
-  const { profiles, active, switchTo, addPlayer } = usePlayers();
-  const [adding, setAdding] = useState(false);
+function AddPlayerForm({ onDone }: { onDone(): void }) {
+  const { addPlayer } = usePlayers();
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -13,67 +15,65 @@ function PlayerMenu() {
     setError(null);
     try {
       await addPlayer(name);
-      setName('');
-      setAdding(false);
+      onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   }
 
   return (
-    <div className="player-menu">
-      <label>
-        Player{' '}
-        <select value={active?.id ?? ''} onChange={(e) => switchTo(e.target.value)}>
-          {profiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+    <form onSubmit={create} className={styles.addPlayer}>
+      <label className={styles.field}>
+        Name
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={30} autoFocus />
       </label>
-      {adding ? (
-        <form onSubmit={create} className="inline-form">
-          <label>
-            Name <input value={name} onChange={(e) => setName(e.target.value)} maxLength={30} />
-          </label>
-          <button type="submit">Create</button>
-          <button type="button" className="secondary" onClick={() => setAdding(false)}>
-            Cancel
-          </button>
-          {error && <span role="alert">{error}</span>}
-        </form>
-      ) : (
-        <button type="button" className="secondary" onClick={() => setAdding(true)}>
-          Add player
-        </button>
-      )}
-    </div>
+      <div className={styles.actions}>
+        <Button type="submit">Create</Button>
+        <Button variant="secondary" onClick={onDone}>
+          Cancel
+        </Button>
+      </div>
+      {error && <p role="alert">{error}</p>}
+    </form>
   );
 }
 
 export function Layout() {
   const { status, error, retry, notice, dismissNotice, active } = usePlayers();
+  const [adding, setAdding] = useState(false);
+  const avatar = useRef<HTMLButtonElement>(null);
+
+  const doneAdding = () => {
+    setAdding(false);
+    avatar.current?.focus();
+  };
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <NavLink to="/" className="brand">
+    <div className={styles.app}>
+      <header className={styles.header}>
+        <NavLink to="/" className={styles.brand}>
           Steady
         </NavLink>
-        <nav>
-          <NavLink to="/progress">Progress</NavLink>
-          <NavLink to="/data">Your data</NavLink>
-        </nav>
-        {status === 'ready' && <PlayerMenu />}
+        <div className={styles.headerEnd}>
+          <nav aria-label="Main">
+            <NavLink to="/progress" className={styles.navLink}>
+              Progress
+            </NavLink>
+          </nav>
+          {status === 'ready' && (
+            <PlayerMenu buttonRef={avatar} onAddPlayer={() => setAdding(true)} />
+          )}
+        </div>
       </header>
+
+      {status === 'ready' && adding && <AddPlayerForm onDone={doneAdding} />}
 
       {notice && (
         <div role="status" className="notice">
           {notice}{' '}
-          <button type="button" className="link" onClick={dismissNotice}>
+          <Button variant="link" onClick={dismissNotice}>
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 
@@ -82,9 +82,7 @@ export function Layout() {
         {status === 'error' && (
           <div role="alert" className="error">
             <p>{error}</p>
-            <button type="button" onClick={retry}>
-              Try again
-            </button>
+            <Button onClick={retry}>Try again</Button>
           </div>
         )}
         {/* Keyed by player: switching or deleting a player remounts every screen, so no
