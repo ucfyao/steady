@@ -42,7 +42,12 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
      - `many_anticipations`: "Many presses came very early, before a digit could really be seen.";
      - `regular_timing`: "Your timing was unusually even, which is more typical of automated input than of people.";
    - links to play again and home.
-10. **Progress (part 3):** charts of catch rate, omissions, median RT and RT variability per session, the baseline vs recent card, the weekly target, and the exploratory sleep/stress and pre-probe comparisons with their `n` and the "a pattern so far, not a cause" wording.
+10. **Progress (part 3):** at `/progress`, linked from the header. It loads `GET /api/sessions` (one point per session) and `GET /api/progress` (everything statistical); the web app computes only the weekly target. With no sessions it says so and links to Play. Otherwise, top to bottom:
+    - **This week:** "X of 4 days this week" (from 4 days: "Goal reached: X days this week"), with one dot per day for the last 7 local days (today last), filled on days with a completed session.
+    - **Recent vs. where you started:** before the baseline exists, "Your starting point is set after N more sessions" (session 1 is practice). Afterwards, a row per metric with the baseline median, the recent median and their `n`: catch rate (`1 − commissionRate`), missed digits (`omissionRate`), median response (ms), rhythm variability (`rtCv`, "lower is steadier"). No arrows or "better/worse" words: a faster response with more errors is not simply better.
+    - **Charts (Recharts):** four small line charts side by side (two columns, one on a phone), x = session number. The practice session is a hollow point and labelled "practice"; a session with a flag is an outlined warning point, with the flag in the tooltip; the baseline median is a dashed line labelled "where you started" once it exists. Each chart has a text caption with the latest value, for screen readers.
+    - **Exploring patterns (exploratory):** a metric picker (catch rate by default), then for sleep and for stress a dot plot per level ("Poor · n = 3"). A level's median is drawn only when the server returns one (n ≥ 10). When `canSummarise` is true, one sentence names the groups' medians and ends "This is a pattern so far, not a cause."; otherwise "Each group needs at least 10 sessions before Steady describes a pattern." Pre-probe variability by probe answer is shown the same way.
+    - The **Home** screen shows the same "X of 4 days this week" and, before the baseline exists, "N more sessions until your starting point".
 
 ## Input and timing
 
@@ -80,7 +85,8 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 - Play screen, driven by a fake frame clock: a first-time player goes check-in → practice → ready → countdown → trials and probes → submit, and the submitted body passes `validateSubmission`; hiding the page mid-session voids it and submits nothing. The how-to-play steps (including "not for 3") are shown before practice and on Get ready, and the rule reminder stays visible during practice.
 - Device detection: coarse pointer → `touch`, otherwise `keyboard`.
 - Results screen: the summary, one ribbon cell per trial with the server's outcome, the longest run marked, one labelled marker per probe, the tiles (including "Not enough presses to measure"), flags in plain words; it loads the session by URL when there is no navigation state, and shows "Session not found" for an id the player does not have.
-- Weekly target: counts distinct local calendar days with a completed session in the last 7 days.
+- Weekly target: counts distinct local calendar days with a completed session in the last 7 days (today and the 6 days before it, by the device's clock and time zone); two sessions on one day count once; a session at 23:59 seven days ago does not count and one at 00:01 six days ago does; the per-day dots line up with the days.
+- Progress screen: the empty state; the starting-point countdown; the baseline/recent rows with `n` and catch rate as `1 − commissionRate`; chart points with practice and flagged sessions marked; group dots with `n`, a median only when the server sent one, and the pattern sentence only when `canSummarise`.
 - Profiles: create, switch, rename, remove; a `401` removes the profile; exactly one player is created on a first visit, even under StrictMode.
 - Screens: after a player switch or deletion, no open confirmation and no previous player's data are shown, even while the next player's data is still loading.
 - API client: sends the bearer token; maps `400`, `401`, `409`, `422` to typed errors.

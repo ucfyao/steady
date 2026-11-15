@@ -62,6 +62,7 @@ export function Layout() {
           Steady
         </NavLink>
         <nav>
+          <NavLink to="/progress">Progress</NavLink>
           <NavLink to="/data">Your data</NavLink>
         </nav>
         {status === 'ready' && <PlayerMenu />}

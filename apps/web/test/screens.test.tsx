@@ -1,10 +1,10 @@
-import type { CompletedSession } from '@steady/core';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
+import { storedSession } from './support/sessions.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 
 function renderApp(path = '/', backend = fakeBackend()) {
@@ -49,7 +49,7 @@ describe('layout and player menu', () => {
 describe('Home', () => {
   it("shows the goal and the active player's completed sessions", async () => {
     const backend = fakeBackend();
-    backend.sessions.set(tokenN(1), [{ id: 'a' }, { id: 'b' }] as CompletedSession[]);
+    backend.sessions.set(tokenN(1), [storedSession(1), storedSession(2)]);
     renderApp('/', backend);
     expect(await screen.findByText(/Catch every 3, keep a steady rhythm/)).toBeInTheDocument();
     expect(await screen.findByText('Sessions completed: 2')).toBeInTheDocument();
@@ -122,7 +122,7 @@ describe('Your data', () => {
 describe('switching player', () => {
   it("never shows the previous player's session count while the next one loads", async () => {
     const backend = fakeBackend();
-    backend.sessions.set(tokenN(1), [{ id: 'a' }, { id: 'b' }] as CompletedSession[]);
+    backend.sessions.set(tokenN(1), [storedSession(1), storedSession(2)]);
     // Sam's history never arrives, so a stale count from Player 1 would stay on screen.
     const factory = (token: string | null) => {
       const api = backend.factory(token);

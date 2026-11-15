@@ -109,5 +109,5 @@ Expected values are worked out by hand from small fixtures, never by calling the
 
 ## Out of scope
 
-- The weekly 4-of-7 target. It depends on the player's local calendar days, so the web app computes it from completion timestamps.
+- The weekly 4-of-7 target. It depends on the player's local calendar days, so the web app computes it from completion timestamps. Its two numbers are `PROGRESS_CONFIG.weeklyTargetDays` and `weeklyWindowDays`, so every tunable rule stays in `config.ts`.
 - Charts and wording (web app). Persistence and endpoints (Spec 003).
