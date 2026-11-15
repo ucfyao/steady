@@ -15,6 +15,7 @@ import {
   scoreSession,
   validateSubmission,
   type CheckIn,
+  type InputDevice,
   type CompletedSession,
   type StartedSession,
   type Submission,
@@ -39,6 +40,7 @@ function toCompleted(row: SessionRow): CompletedSession {
     startedAt: row.startedAt.toISOString(),
     completedAt: row.completedAt.toISOString(),
     checkIn: row.checkIn ?? null,
+    device: row.device,
     score: row.score,
   };
 }
@@ -51,12 +53,24 @@ export class SessionsService {
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
-  async start(playerId: string, checkIn: CheckIn | null): Promise<StartedSession> {
+  async start(
+    playerId: string,
+    checkIn: CheckIn | null,
+    device: InputDevice,
+  ): Promise<StartedSession> {
     const seed = randomInt(2 ** 31 - 1); // server-chosen; fits a Postgres integer
     const { trials, probeAfter } = createSessionPlan(seed);
     const [row] = await this.db
       .insert(sessions)
-      .values({ playerId, seed, trials, probeAfter, checkIn, startedAt: this.clock.now() })
+      .values({
+        playerId,
+        seed,
+        trials,
+        probeAfter,
+        checkIn,
+        device,
+        startedAt: this.clock.now(),
+      })
       .returning({ id: sessions.id, startedAt: sessions.startedAt });
     return { id: row!.id, startedAt: row!.startedAt.toISOString(), plan: { trials, probeAfter } };
   }

@@ -1,4 +1,4 @@
-import type { CheckIn, StartedSession, Submission } from '@steady/core';
+import type { CheckIn, InputDevice, StartedSession, Submission } from '@steady/core';
 import request from 'supertest';
 import type { TestApp } from './app.js';
 
@@ -9,11 +9,16 @@ export async function newPlayer(t: TestApp): Promise<string> {
   return res.body.token as string;
 }
 
-export async function startSession(t: TestApp, token: string, checkIn?: CheckIn) {
+export async function startSession(
+  t: TestApp,
+  token: string,
+  checkIn?: CheckIn,
+  device: InputDevice = 'keyboard',
+) {
   const res = await request(t.http)
     .post('/api/sessions')
     .set(auth(token))
-    .send(checkIn ? { checkIn } : {})
+    .send(checkIn ? { checkIn, device } : { device })
     .expect(201);
   return res.body as StartedSession;
 }

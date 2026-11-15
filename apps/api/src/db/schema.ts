@@ -1,4 +1,4 @@
-import type { CheckIn, PlanTrial, SessionScore, Submission } from '@steady/core';
+import type { CheckIn, InputDevice, PlanTrial, SessionScore, Submission } from '@steady/core';
 import { index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
@@ -22,6 +22,8 @@ export const sessions = pgTable(
     trials: jsonb('trials').$type<PlanTrial[]>().notNull(),
     probeAfter: jsonb('probe_after').$type<number[]>().notNull(),
     checkIn: jsonb('check_in').$type<CheckIn>(),
+    // One input method per session, so keyboard and touch RTs are never mixed.
+    device: text('device').$type<InputDevice>().notNull(),
     startedAt: ts('started_at').notNull(),
     completedAt: ts('completed_at'),
     // Raw responses are kept so a future scoring version can re-score history.

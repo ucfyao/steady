@@ -4,7 +4,7 @@
  */
 import { z } from 'zod';
 import { TRIAL_MS } from './config.js';
-import { PROBE_ANSWERS, SLEEP_LEVELS, STRESS_LEVELS } from './types.js';
+import { INPUT_DEVICES, PROBE_ANSWERS, SLEEP_LEVELS, STRESS_LEVELS } from './types.js';
 
 export const ProbeAnswerSchema = z.enum(PROBE_ANSWERS);
 
@@ -23,4 +23,7 @@ export const CheckInSchema = z.object({
 });
 
 /** POST /api/sessions */
-export const StartSessionSchema = z.object({ checkIn: CheckInSchema.nullish() });
+export const StartSessionSchema = z.object({
+  checkIn: CheckInSchema.nullish(),
+  device: z.enum(INPUT_DEVICES),
+});

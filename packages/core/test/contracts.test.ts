@@ -48,19 +48,32 @@ describe('CheckInSchema', () => {
 });
 
 describe('StartSessionSchema', () => {
+  const device = 'keyboard';
+
   it('accepts a missing, null or partial check-in', () => {
-    expect(StartSessionSchema.parse({})).toEqual({});
-    expect(StartSessionSchema.parse({ checkIn: null })).toEqual({ checkIn: null });
-    expect(StartSessionSchema.parse({ checkIn: { sleep: 'ok' } })).toEqual({
+    expect(StartSessionSchema.parse({ device })).toEqual({ device });
+    expect(StartSessionSchema.parse({ checkIn: null, device })).toEqual({ checkIn: null, device });
+    expect(StartSessionSchema.parse({ checkIn: { sleep: 'ok' }, device: 'touch' })).toEqual({
       checkIn: { sleep: 'ok' },
+      device: 'touch',
     });
   });
 
   it('drops unknown fields', () => {
-    expect(StartSessionSchema.parse({ checkIn: null, seed: 1 })).toEqual({ checkIn: null });
+    expect(StartSessionSchema.parse({ checkIn: null, device, seed: 1 })).toEqual({
+      checkIn: null,
+      device,
+    });
   });
 
   it('rejects an unknown check-in level', () => {
-    expect(StartSessionSchema.safeParse({ checkIn: { stress: 'extreme' } }).success).toBe(false);
+    expect(StartSessionSchema.safeParse({ checkIn: { stress: 'extreme' }, device }).success).toBe(
+      false,
+    );
+  });
+
+  it('requires a known input device', () => {
+    expect(StartSessionSchema.safeParse({}).success).toBe(false);
+    expect(StartSessionSchema.safeParse({ device: 'mouse' }).success).toBe(false);
   });
 });

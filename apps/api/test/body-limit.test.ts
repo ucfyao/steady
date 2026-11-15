@@ -15,7 +15,7 @@ describe('JSON body limit', () => {
     const res = await request(t.http)
       .post('/api/sessions')
       .set(auth(token))
-      .send({ checkIn: null, padding: 'x'.repeat(33 * 1024) });
+      .send({ checkIn: null, device: 'keyboard', padding: 'x'.repeat(33 * 1024) });
     expect(res.status).toBe(413);
   });
 });

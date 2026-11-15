@@ -63,7 +63,7 @@ All scoring runs **on the server, from the raw trial data**, which is stored unc
   - timestamps are present and increasing;
   - total duration is within tolerance.
 
-  Leaving the tab during play ends the session as _incomplete_. It is saved, but not scored.
+  Leaving the tab during play voids the session: nothing is submitted, and the open session expires after 30 minutes without ever being scored or shown in results or progress. Only complete sessions count.
 
 - **Behavioural flags, descriptive only:**
   - many omissions;
@@ -99,7 +99,7 @@ The server never labels a session as cheating. Integrity checks make faking resu
 
 - **Every session keeps its exact trials and raw responses** (126 trials plus probes) in exchange for results that can be recomputed and audited. The scoring logic is pure functions and is the most heavily tested part. Stack details are in the README.
 - **Not a clinical tool.**
-  - Browser timing adds jitter, and touch and keyboard RTs differ, so the input device is recorded.
+  - Browser timing adds jitter, and touch and keyboard RTs differ. Each session uses one input method (Space on a keyboard, or tapping on a touch screen), and that device is stored with the session.
   - Practice effects inflate early gains.
   - All insights are within-person and exploratory.
 - **With more time:** an n-of-1 experiment where each player sometimes does mindful breathing first, assigned at random; a speed–accuracy-corrected error score; and a task-switching mode.
