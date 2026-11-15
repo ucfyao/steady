@@ -1,6 +1,6 @@
 # Spec 004 — Web app (`apps/web`)
 
-Status: draft
+Status: in progress (`apps/web`): part 1
 Design note: `docs/design-note.md` §3, §6, §7
 
 ## Goal

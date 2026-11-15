@@ -9,7 +9,7 @@
   "scripts": {
     "postinstall": "pnpm --filter @steady/core build",
     "bootstrap": "node -e \"const f=require('fs');f.existsSync('.env')||f.copyFileSync('.env.example','.env')\" && docker compose up -d --wait && pnpm --filter @steady/api db:migrate",
-    "dev": "pnpm --filter @steady/api dev",
+    "dev": "pnpm --parallel --filter @steady/api --filter @steady/web dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
@@ -23,6 +23,7 @@
     "@types/node": "^24.19.2",
     "eslint": "10.15.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "prettier": "3.10.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.72.2"
