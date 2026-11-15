@@ -2,9 +2,9 @@ import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { players } from '../src/db/schema.js';
+import { players, sessions } from '../src/db/schema.js';
 import { startTestApp, type TestApp } from './support/app.js';
-import { auth, newPlayer } from './support/players.js';
+import { auth, newPlayer, playSession } from './support/players.js';
 
 let t: TestApp;
 beforeAll(async () => {
@@ -64,5 +64,19 @@ describe('DELETE /api/me', () => {
     expect(await playerRow(token)).toBeUndefined();
     await request(t.http).delete('/api/me').set(auth(token)).expect(401);
     expect(await playerRow(other)).toBeDefined();
+  });
+
+  it("removes the player's sessions too, and leaves other players' sessions alone", async () => {
+    const token = await newPlayer(t);
+    const other = await newPlayer(t);
+    await playSession(t, token);
+    await playSession(t, other);
+    const me = await playerRow(token);
+
+    await request(t.http).delete('/api/me').set(auth(token)).expect(204);
+
+    expect(await t.db.select().from(sessions).where(eq(sessions.playerId, me!.id))).toEqual([]);
+    const res = await request(t.http).get('/api/sessions').set(auth(other)).expect(200);
+    expect(res.body).toHaveLength(1);
   });
 });

@@ -7,6 +7,7 @@ import { APP_CONFIG, type AppConfig } from './config.js';
 import { DbModule } from './db/db.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PlayersModule } from './players/players.module.js';
+import { ProgressModule } from './progress/progress.module.js';
 import { SessionsModule } from './sessions/sessions.module.js';
 
 /**
@@ -30,6 +31,7 @@ export class AppModule {
         DbModule,
         PlayersModule,
         SessionsModule,
+        ProgressModule,
       ],
       controllers: [HealthController],
       providers: [

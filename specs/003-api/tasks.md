@@ -15,6 +15,6 @@ Split into two PRs: the foundation (app, database, health, test harness) first, 
 - [x] T6 Core: request schemas and response types
 - [x] T7 Clock and Zod pipe; failing tests, then players (create, `DELETE /me`) and the auth guard
 - [x] T8 Failing tests, then start / submit / list sessions
-- [ ] T9 Failing tests, then progress; deleting a player removes their sessions
+- [x] T9 Failing tests, then progress; deleting a player removes their sessions
 - [ ] T10 Rate limits (throttler)
 - [ ] T11 Mutation check on isolation, timing and retry rules; README; `pnpm check`
