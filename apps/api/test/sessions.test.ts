@@ -62,15 +62,38 @@ describe('POST /api/sessions', () => {
   it('stores the check-in, or null without one', async () => {
     const withCheckIn = await startSession(t, token, { sleep: 'poor', stress: 'high' });
     expect((await row(withCheckIn.id)).checkIn).toEqual({ sleep: 'poor', stress: 'high' });
-    const res = await request(t.http).post('/api/sessions').set(auth(token)).expect(201);
+    const res = await request(t.http)
+      .post('/api/sessions')
+      .set(auth(token))
+      .send({ device: 'keyboard' })
+      .expect(201);
     expect((await row(res.body.id)).checkIn).toBeNull();
+  });
+
+  it('stores the input device and returns it with the completed session', async () => {
+    const p = await newPlayer(t);
+    const s = await startSession(t, p, undefined, 'touch');
+    expect((await row(s.id)).device).toBe('touch');
+    t.clock.advance(PLAUSIBLE_MS);
+    const res = await submit(s.id, perfectSubmission(s.plan), p).expect(200);
+    expect(res.body.device).toBe('touch');
+    const list = await request(t.http).get('/api/sessions').set(auth(p)).expect(200);
+    expect(list.body[0].device).toBe('touch');
+  });
+
+  it.each([
+    ['missing', {}],
+    ['unknown', { device: 'mouse' }],
+  ])('rejects a %s device with 400', async (_label, body) => {
+    const res = await request(t.http).post('/api/sessions').set(auth(token)).send(body).expect(400);
+    expect(res.body.errors).toEqual([expect.stringContaining('device')]);
   });
 
   it('rejects an unknown check-in level with 400', async () => {
     const res = await request(t.http)
       .post('/api/sessions')
       .set(auth(token))
-      .send({ checkIn: { sleep: 'great' } })
+      .send({ checkIn: { sleep: 'great' }, device: 'keyboard' })
       .expect(400);
     expect(res.body.errors).toEqual([expect.stringContaining('checkIn.sleep')]);
   });

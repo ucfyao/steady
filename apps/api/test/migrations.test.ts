@@ -38,8 +38,8 @@ const newPlayer = async () =>
 
 const newSession = (playerId: string) =>
   pool.query(
-    `insert into sessions (player_id, seed, trials, probe_after, started_at)
-     values ($1, 1, '[]', '[]', now())`,
+    `insert into sessions (player_id, seed, trials, probe_after, device, started_at)
+     values ($1, 1, '[]', '[]', 'keyboard', now())`,
     [playerId],
   );
 
@@ -52,6 +52,7 @@ describe('committed migrations (Spec 003 storage)', () => {
     expect(await columns('sessions')).toEqual([
       'check_in?',
       'completed_at?',
+      'device',
       'id',
       'player_id',
       'probe_after',

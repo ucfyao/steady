@@ -1,6 +1,10 @@
 export const PROBE_ANSWERS = ['on_task', 'drifting', 'elsewhere'] as const;
 export type ProbeAnswer = (typeof PROBE_ANSWERS)[number];
 
+/** The one input method a session uses: Space on a keyboard, or tapping on a touch screen. */
+export const INPUT_DEVICES = ['keyboard', 'touch'] as const;
+export type InputDevice = (typeof INPUT_DEVICES)[number];
+
 export const SLEEP_LEVELS = ['poor', 'ok', 'good'] as const;
 export const STRESS_LEVELS = ['low', 'medium', 'high'] as const;
 
@@ -107,6 +111,7 @@ export interface CompletedSession {
   startedAt: string;
   completedAt: string;
   checkIn: CheckIn | null;
+  device: InputDevice;
   score: SessionScore;
 }
 
