@@ -1,6 +1,6 @@
 # Spec 002 — Progress: baselines and exploratory comparisons (`@steady/core`)
 
-Status: in progress (`packages/core/src/progress.ts`)
+Status: implemented (`packages/core/src/progress.ts`)
 Design note: `docs/design-note.md` §6
 
 ## Goal

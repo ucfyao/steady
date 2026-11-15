@@ -12,14 +12,14 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 
 ## Layout and boundaries
 
-- `packages/core`: pure domain logic (session plan, validation, scoring) and Zod contracts. No framework, I/O or clock.
+- `packages/core`: pure domain logic (session plan, validation, scoring, progress) and Zod contracts. No framework, I/O or clock.
 - **Scores are computed only on the server, by `scoreSession`.** A client must never compute or submit a score.
 - Every tunable rule lives in `packages/core/src/config.ts`, marked `[R]` (research) or `[P]` (product decision). Do not hard-code thresholds anywhere else.
 - A change to how scores are computed must bump `SART_CONFIG.scoringVersion`.
 
 ## Workflow
 
-1. **Spec first.** Each feature has `specs/NNN-name/spec.md`. If the code has to deviate, update the spec in the same PR.
+1. **Spec first.** Each feature has `specs/NNN-name/spec.md` (plus `plan.md` and `tasks.md` from Spec 002 on). If the code has to deviate, update the spec in the same PR.
 2. **TDD.** Write failing tests first and confirm they fail for the right reason (a stub that throws, not a missing import).
 3. **Independent expectations.** Reference values come from an independent calculation (e.g. Python `statistics`) or from the spec, never from the module under test. After a non-trivial change, break the rule on purpose and confirm a test fails.
 4. **Behavioural flags are descriptive only.** Only technical integrity problems may reject a session.
