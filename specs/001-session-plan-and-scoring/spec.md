@@ -115,6 +115,8 @@ The input must already be valid. Definitions:
 - Anticipations are counted, excluded from the RT set, and raise `many_anticipations` above 10%.
 - `regular_timing` is raised for CV < 0.05, not for human-like CV (≈ 0.125), not when CV is null, and changes no other metric.
 - Across 500 seeds, none of the first 5 trials is a target.
+- `longestSteadyRun` breaks at a commission and at an anticipation.
+- RT stats are `null` with 9 qualifying RTs and computed with exactly 10.
 - Known statistics: a hand-built RT set gives the expected median, sample SD and CV.
 - Φ⁻¹ matches reference values: Φ⁻¹(0.5) = 0, Φ⁻¹(0.975) ≈ 1.959964, Φ⁻¹(0.025) ≈ −1.959964.
 - `preProbeCv` is `null` when there is too little data and correct otherwise.

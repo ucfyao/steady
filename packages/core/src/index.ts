@@ -4,3 +4,4 @@ export { coefficientOfVariation, mean, median, probit, sampleSd } from './stats.
 export { createSessionPlan, mulberry32 } from './plan.js';
 export { ProbeAnswerSchema, RtSchema, SubmissionSchema } from './contracts.js';
 export { validateSubmission } from './validate.js';
+export { isTransitionTrial, scoreSession } from './score.js';
