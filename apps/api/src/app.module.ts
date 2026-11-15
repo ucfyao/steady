@@ -2,6 +2,7 @@ import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
+import type { DestinationStream } from 'pino';
 import { PlayerGuard } from './auth/player.guard.js';
 import { CLOCK, systemClock } from './clock.js';
 import { APP_CONFIG, type AppConfig } from './config.js';
@@ -17,23 +18,26 @@ import { SessionsModule } from './sessions/sessions.module.js';
  */
 @Module({})
 export class AppModule {
-  static register(config: AppConfig): DynamicModule {
+  /** `logDestination` lets tests read the request logs; production logs go to stdout. */
+  static register(config: AppConfig, logDestination?: DestinationStream): DynamicModule {
     // Guards run in order: rate limit first (cheap, no DB), then the token check.
     const guards: Provider[] = [];
     if (config.rateLimitPerMinute !== false)
       guards.push({ provide: APP_GUARD, useClass: ThrottlerGuard });
     guards.push({ provide: APP_GUARD, useClass: PlayerGuard });
 
+    const logOptions = {
+      level: config.logLevel,
+      redact: ['req.headers.authorization'],
+      ...(config.prettyLogs ? { transport: { target: 'pino-pretty' } } : {}),
+    };
+
     return {
       module: AppModule,
       global: true,
       imports: [
         LoggerModule.forRoot({
-          pinoHttp: {
-            level: config.logLevel,
-            redact: ['req.headers.authorization'],
-            ...(config.prettyLogs ? { transport: { target: 'pino-pretty' } } : {}),
-          },
+          pinoHttp: logDestination ? [logOptions, logDestination] : logOptions,
         }),
         ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.rateLimitPerMinute || 1 }]),
         DbModule,

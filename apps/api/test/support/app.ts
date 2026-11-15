@@ -6,6 +6,7 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
+import type { DestinationStream } from 'pino';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
 import { CLOCK, type Clock } from '../../src/clock.js';
@@ -33,7 +34,10 @@ export interface TestApp {
 }
 
 /** The real app (same setup as main.ts) on a fresh Postgres 17 with committed migrations applied. */
-export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<TestApp> {
+export async function startTestApp(
+  overrides: Partial<AppConfig> = {},
+  logDestination?: DestinationStream,
+): Promise<TestApp> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     'postgres:17-alpine',
   ).start();
@@ -51,7 +55,9 @@ export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<
     ...overrides,
   };
   const clock = new FakeClock();
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule.register(config)] })
+  const moduleRef = await Test.createTestingModule({
+    imports: [AppModule.register(config, logDestination)],
+  })
     .overrideProvider(CLOCK)
     .useValue(clock)
     .compile();

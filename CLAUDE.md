@@ -17,7 +17,8 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 
 - `packages/core`: pure domain logic (session plan, validation, scoring, progress) and Zod contracts. No framework, I/O or clock.
 - `apps/api` (NestJS) depends on core and never re-implements a scoring rule.
-- API tests use the real app (`test/support/app.ts`) on Testcontainers Postgres; do not mock the database.
+- API: the player id comes only from `@PlayerId()` (set by the global `PlayerGuard`). Every session query filters on `player_id`; another player's data is a `404`. New routes are protected unless marked `@Public()`.
+- API tests use the real app (`test/support/app.ts`) on Testcontainers Postgres with `FakeClock`; do not mock the database.
 - **Scores are computed only on the server, by `scoreSession`.** A client must never compute or submit a score.
 - Every tunable rule lives in `packages/core/src/config.ts`, marked `[R]` (research) or `[P]` (product decision). Do not hard-code thresholds anywhere else.
 - A change to how scores are computed must bump `SART_CONFIG.scoringVersion`.

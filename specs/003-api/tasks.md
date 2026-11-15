@@ -17,4 +17,4 @@ Split into two PRs: the foundation (app, database, health, test harness) first, 
 - [x] T8 Failing tests, then start / submit / list sessions
 - [x] T9 Failing tests, then progress; deleting a player removes their sessions
 - [x] T10 Rate limits (throttler)
-- [ ] T11 Mutation check on isolation, timing and retry rules; README; `pnpm check`
+- [x] T11 Mutation check on isolation, timing and retry rules; README; `pnpm check`

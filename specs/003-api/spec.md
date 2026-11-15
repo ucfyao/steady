@@ -1,6 +1,6 @@
 # Spec 003 — API and persistence (`apps/api`)
 
-Status: in progress (`apps/api`): foundation implemented; endpoints next
+Status: implemented (`apps/api`)
 Design note: `docs/design-note.md` §5–7
 
 ## Goal
@@ -83,6 +83,8 @@ Integration tests (Vitest + supertest) run the real app against PostgreSQL 17 in
 - **Delete:** `DELETE /api/me` → `204`; the token then gets `401`, and the player's rows are gone.
 - **Health** → `200` without a token, with helmet headers, not rate-limited.
 - **Rate limit:** the 11th new player within a minute → `429`.
+- **Body limit:** a JSON body over 32 kB → `413`.
+- **Logs:** a request with a bearer token is logged with `authorization` redacted, and the token never appears.
 - **Config:** missing or invalid environment variables stop startup with a message naming the variable.
 
 ## Out of scope

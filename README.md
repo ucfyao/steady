@@ -2,7 +2,7 @@
 
 A three-minute daily focus check built on the Sustained Attention to Response Task (SART) with thought probes. Take-home assignment for Walk the Dragon.
 
-> **Status:** work in progress. The scoring and progress core (Specs 001–002) is done and tested. The API (Spec 003) has its foundation (database, migrations, health, test harness); its endpoints and the web app come next.
+> **Status:** work in progress. The scoring and progress core (Specs 001–002) and the API (Spec 003) are done and tested. The web app is next.
 
 ## Quick start
 
@@ -38,10 +38,17 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **TypeScript is pinned to 5.9.** typescript-eslint does not support TypeScript 7 (the native compiler) yet.
 - **One test convention: Vitest with `*.test.ts`,** instead of NestJS's default Jest. Cost: tests compile with SWC, because esbuild cannot emit the decorator metadata Nest's dependency injection needs.
 - **The API is built with plain `tsc` and run with `node`, without the Nest CLI.** `tsc` emits the decorator metadata; dev mode is `tsc --watch` next to `node --watch`.
+- **Deny by default.** `PlayerGuard` is global, so a new route needs a token unless it is explicitly marked `@Public()` (only "create player" and health are).
+- **Anonymous players, hashed tokens.** A player is a random 256-bit token; the database stores only its SHA-256 hash (a fast hash is fine for a high-entropy token, unlike a password). The player id always comes from the token. Every session query filters on `player_id`, and another player's session returns `404`, the same as a missing one. Cost: a lost token means lost history.
+- **The server owns time and scoring.** The seed is chosen by the server and never returned, the exact trials are stored and scored, and a submission is rejected (`422`) if it arrives faster than the trials could have run or after 30 minutes. An identical retry returns the stored result; a different second submission returns `409`. The final write is conditional (`completed_at IS NULL`), so two concurrent submits cannot both win.
 - **One session, one row.** Trials, the raw submission and the score are JSONB columns, which keeps writes atomic; the raw responses are kept so a future `scoringVersion` can re-score history. Trade-off: no trial-level SQL queries, which nothing needs yet.
-- **Tests run the real app on a real database.** Integration tests start PostgreSQL 17 with Testcontainers, apply the committed migrations and drive the HTTP stack. CI runs them on every PR.
+- **Tests run the real app on a real database.** Integration tests start PostgreSQL 17 with Testcontainers, apply the committed migrations and drive the HTTP stack with a fake clock. CI runs them on every PR. Mocked repositories would not catch a missing `player_id` filter.
 - **The app refuses to start on bad config,** with a message naming the variable.
 - **Every tunable rule is in one file** (`packages/core/src/config.ts`), marked [R] when it comes from research and [P] when it is a product decision.
+
+## Testing
+
+`pnpm test` (API tests need Docker). Core reference values come from independent calculations (Python `statistics`), not from the implementation. A mutation check deliberately broke each important rule (51 in total across scoring, progress, player isolation, timing limits, retries, token hashing, rate limits and log redaction) and confirmed a test fails for every one. See [docs/ai-log.md](docs/ai-log.md) for the gaps it found.
 
 ## AI tools
 
