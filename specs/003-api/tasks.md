@@ -8,7 +8,7 @@ Split into two PRs: the foundation (app, database, health, test harness) first, 
 - [x] T2 Scaffold `apps/api` (package, tsconfig, Vitest + SWC), docker-compose for Postgres 17, `pnpm bootstrap`
 - [x] T3 Drizzle schema and first migration
 - [x] T4 Failing tests, then config and health (DB module, helmet, logging, body limit); test harness with Testcontainers
-- [ ] T5 CI runs the API integration tests; `pnpm check`
+- [x] T5 CI runs the API integration tests; `pnpm check`
 
 **Endpoints**
 

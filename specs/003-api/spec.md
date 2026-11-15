@@ -1,6 +1,6 @@
 # Spec 003 — API and persistence (`apps/api`)
 
-Status: in progress (`apps/api`): foundation done in this PR; endpoints next
+Status: in progress (`apps/api`): foundation implemented; endpoints next
 Design note: `docs/design-note.md` §5–7
 
 ## Goal
