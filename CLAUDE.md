@@ -5,7 +5,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 
 ## Commands
 
-- `pnpm install`: installs dependencies
+- `pnpm install`: installs dependencies. Run it first in every new worktree.
 - `pnpm --filter @steady/core test`: core tests only
 - `pnpm --filter @steady/core build`: ESM build with `.d.ts` into `packages/core/dist`
 - `pnpm check`: lint, format check, typecheck, tests. **Must pass before every commit.** CI runs the same command on every PR.
