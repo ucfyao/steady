@@ -93,3 +93,25 @@ export interface GroupComparison {
   /** true only when at least two groups reach the minimum size */
   canSummarise: boolean;
 }
+
+// ---- API response shapes (Spec 003), shared with the web client ----
+
+export interface StartedSession {
+  id: string;
+  startedAt: string;
+  plan: Pick<SessionPlan, 'trials' | 'probeAfter'>;
+}
+
+export interface CompletedSession {
+  id: string;
+  startedAt: string;
+  completedAt: string;
+  checkIn: CheckIn | null;
+  score: SessionScore;
+}
+
+export interface ProgressResponse {
+  summary: ProgressSummary;
+  checkIn: Record<'sleep' | 'stress', Record<ProgressMetric, GroupComparison>>;
+  preProbe: GroupComparison;
+}

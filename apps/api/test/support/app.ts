@@ -6,15 +6,27 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
+import type { DestinationStream } from 'pino';
 import { AppModule } from '../../src/app.module.js';
 import { configureApp } from '../../src/app.setup.js';
+import { CLOCK, type Clock } from '../../src/clock.js';
 import type { AppConfig } from '../../src/config.js';
 import * as schema from '../../src/db/schema.js';
 
 const MIGRATIONS = fileURLToPath(new URL('../../drizzle', import.meta.url));
 
+/** A clock the test moves by hand. */
+export class FakeClock implements Clock {
+  private t = new Date('2026-11-15T09:00:00Z').getTime();
+  now = () => new Date(this.t);
+  advance(ms: number) {
+    this.t += ms;
+  }
+}
+
 export interface TestApp {
   http: ReturnType<NestExpressApplication['getHttpServer']>;
+  clock: FakeClock;
   db: ReturnType<typeof drizzle<typeof schema>>;
   /** Stops the database, to test how the app behaves without it. */
   stopDatabase(): Promise<void>;
@@ -22,7 +34,10 @@ export interface TestApp {
 }
 
 /** The real app (same setup as main.ts) on a fresh Postgres 17 with committed migrations applied. */
-export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<TestApp> {
+export async function startTestApp(
+  overrides: Partial<AppConfig> = {},
+  logDestination?: DestinationStream,
+): Promise<TestApp> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     'postgres:17-alpine',
   ).start();
@@ -36,11 +51,16 @@ export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<
     port: 0,
     logLevel: 'silent',
     prettyLogs: false,
+    rateLimitPerMinute: false,
     ...overrides,
   };
+  const clock = new FakeClock();
   const moduleRef = await Test.createTestingModule({
-    imports: [AppModule.register(config)],
-  }).compile();
+    imports: [AppModule.register(config, logDestination)],
+  })
+    .overrideProvider(CLOCK)
+    .useValue(clock)
+    .compile();
   const app = configureApp(
     moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false }),
   );
@@ -49,6 +69,7 @@ export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<
   let stopped = false;
   return {
     http: app.getHttpServer(),
+    clock,
     db,
     async stopDatabase() {
       await pool.end();

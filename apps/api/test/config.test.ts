@@ -8,6 +8,7 @@ describe('loadConfig', () => {
       port: 4000,
       logLevel: 'info',
       prettyLogs: true,
+      rateLimitPerMinute: 120,
     });
   });
 

@@ -1,6 +1,6 @@
 # Spec 003 — API and persistence (`apps/api`)
 
-Status: in progress (`apps/api`): foundation implemented; endpoints next
+Status: implemented (`apps/api`)
 Design note: `docs/design-note.md` §5–7
 
 ## Goal
@@ -77,11 +77,14 @@ Integration tests (Vitest + supertest) run the real app against PostgreSQL 17 in
 - **Invalid submission** (wrong length) → `400` with errors; nothing stored.
 - **Too fast** (60 s) and **expired** (31 min) → `422`; nothing stored.
 - **Retry:** the same body twice → identical `200` responses, one stored result, also after the expiry time; a different body → `409`.
+- **Concurrent submits:** two identical bodies at once → both `200` with the same result; two different bodies at once → one `200`, one `409`, and the stored score is the winner's.
 - **Isolation:** player B gets `404` submitting player A's session; A's sessions never appear in B's list or progress.
 - **Progress:** six completed sessions → a baseline exists.
 - **Delete:** `DELETE /api/me` → `204`; the token then gets `401`, and the player's rows are gone.
 - **Health** → `200` without a token, with helmet headers, not rate-limited.
 - **Rate limit:** the 11th new player within a minute → `429`.
+- **Body limit:** a JSON body over 32 kB → `413`.
+- **Logs:** a request with a bearer token is logged with `authorization` redacted, and the token never appears.
 - **Config:** missing or invalid environment variables stop startup with a message naming the variable.
 
 ## Out of scope

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CheckInSchema, SubmissionSchema } from '../src/index.js';
+import { CheckInSchema, StartSessionSchema, SubmissionSchema } from '../src/index.js';
 
 describe('SubmissionSchema (shared by API and web)', () => {
   it('parses a well-formed submission', () => {
@@ -44,5 +44,23 @@ describe('CheckInSchema', () => {
   it('rejects unknown levels', () => {
     expect(CheckInSchema.safeParse({ sleep: 'great' }).success).toBe(false);
     expect(CheckInSchema.safeParse({ stress: 3 }).success).toBe(false);
+  });
+});
+
+describe('StartSessionSchema', () => {
+  it('accepts a missing, null or partial check-in', () => {
+    expect(StartSessionSchema.parse({})).toEqual({});
+    expect(StartSessionSchema.parse({ checkIn: null })).toEqual({ checkIn: null });
+    expect(StartSessionSchema.parse({ checkIn: { sleep: 'ok' } })).toEqual({
+      checkIn: { sleep: 'ok' },
+    });
+  });
+
+  it('drops unknown fields', () => {
+    expect(StartSessionSchema.parse({ checkIn: null, seed: 1 })).toEqual({ checkIn: null });
+  });
+
+  it('rejects an unknown check-in level', () => {
+    expect(StartSessionSchema.safeParse({ checkIn: { stress: 'extreme' } }).success).toBe(false);
   });
 });

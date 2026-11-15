@@ -12,6 +12,8 @@ export interface AppConfig {
   port: number;
   logLevel: z.infer<typeof EnvSchema>['LOG_LEVEL'];
   prettyLogs: boolean;
+  /** Requests per minute per client; `false` turns rate limiting off (tests only). */
+  rateLimitPerMinute: number | false;
 }
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
@@ -29,5 +31,6 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     port: e.API_PORT,
     logLevel: e.LOG_LEVEL,
     prettyLogs: e.NODE_ENV === 'development',
+    rateLimitPerMinute: 120, // [P]
   };
 }
