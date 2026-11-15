@@ -1,6 +1,12 @@
 import { SART_CONFIG as C } from './config.js';
 import { coefficientOfVariation, median, probit } from './stats.js';
-import type { BehaviourFlag, SessionPlan, SessionScore, Submission } from './types.js';
+import type {
+  BehaviourFlag,
+  SessionPlan,
+  SessionScore,
+  Submission,
+  TrialOutcome,
+} from './types.js';
 
 /** Warm-up and post-probe trials: kept for accuracy, excluded from RT statistics. */
 export function isTransitionTrial(index: number, probeAfter: readonly number[]): boolean {
@@ -35,11 +41,16 @@ export function scoreSession(plan: SessionPlan, submission: Submission): Session
   const H = (hits + 0.5) / (targets.length + 1);
   const F = (falseAlarms + 0.5) / (goTrials.length + 1);
 
+  const trialOutcomes = trials.map((t): TrialOutcome => {
+    if (t.isTarget) return pressed(t.index) ? 'commission' : 'caught';
+    if (!pressed(t.index)) return 'omission';
+    return anticipated(t.index) ? 'anticipation' : 'steady';
+  });
+
   let longestSteadyRun = 0;
   let run = 0;
-  for (const t of trials) {
-    const correct = t.isTarget ? !pressed(t.index) : pressed(t.index) && !anticipated(t.index);
-    run = correct ? run + 1 : 0;
+  for (const outcome of trialOutcomes) {
+    run = outcome === 'steady' || outcome === 'caught' ? run + 1 : 0;
     longestSteadyRun = Math.max(longestSteadyRun, run);
   }
 
@@ -75,6 +86,7 @@ export function scoreSession(plan: SessionPlan, submission: Submission): Session
     rtCv,
     dPrime: probit(H) - probit(F),
     longestSteadyRun,
+    trialOutcomes,
     probes,
     flags,
   };

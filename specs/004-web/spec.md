@@ -33,7 +33,15 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 6. **Trials:** 126 trials as planned by the server. No score, counter or feedback is shown during the block.
 7. **Probes:** after each planned probe trial the clock pauses and the app asks "Where was your mind just now?" (On task / Drifting / Elsewhere, also keys 1–3). After the answer there is a 1-second pause, then the trials resume.
 8. **Submitting:** sends `{ rts, probeAnswers }`. If the request fails, the player can retry; an identical retry is safe (Spec 003).
-9. **Results (Spec 004 part 3):** the session journey ribbon (every trial: steady stretches, caught and missed 3s, drift reports), longest steady run, catch rate next to median RT and steadiness (RT CV), and any descriptive flags in plain words.
+9. **Results (Spec 004 part 3):** reached after a submit (the session comes with the navigation) or by its URL (the session is loaded from `GET /api/sessions`; one the player does not own, or an unknown id, shows "Session not found"). It shows, all from the server's score:
+   - a one-line summary: "You caught X of Y 3s", where X and Y are counted from `trialOutcomes`;
+   - the **session journey ribbon**: one cell per trial, in order, coloured by its outcome (steady, caught 3, pressed on a 3, missed digit, too early), with the longest steady run underlined and a marker after each probe trial labelled with the answer (On task / Drifting / Elsewhere). It is drawn in three rows of 42 trials (about 48 s each) so it fits a phone. A legend explains the colours; screen readers get one text summary instead of 126 cells;
+   - tiles: catch rate (`1 − commissionRate`), median response time (`medianGoRtMs`), rhythm variability (`rtCv` as a percentage, "lower is steadier"), missed digits (`omissions`), longest steady run. A `null` RT statistic reads "Not enough presses to measure";
+   - any descriptive flags in plain words, framed as "about this session", never as a failure:
+     - `high_omissions`: "You let many digits pass without pressing. If something interrupted you, this session may not reflect your focus.";
+     - `many_anticipations`: "Many presses came very early, before a digit could really be seen.";
+     - `regular_timing`: "Your timing was unusually even, which is more typical of automated input than of people.";
+   - links to play again and home.
 10. **Progress (part 3):** charts of catch rate, omissions, median RT and RT variability per session, the baseline vs recent card, the weekly target, and the exploratory sleep/stress and pre-probe comparisons with their `n` and the "a pattern so far, not a cause" wording.
 
 ## Input and timing
@@ -71,6 +79,7 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 - Practice plan: trials 1–6, 7–12 and 13–18 use the three practice speeds; the last six use the real timing.
 - Play screen, driven by a fake frame clock: a first-time player goes check-in → practice → ready → countdown → trials and probes → submit, and the submitted body passes `validateSubmission`; hiding the page mid-session voids it and submits nothing. The how-to-play steps (including "not for 3") are shown before practice and on Get ready, and the rule reminder stays visible during practice.
 - Device detection: coarse pointer → `touch`, otherwise `keyboard`.
+- Results screen: the summary, one ribbon cell per trial with the server's outcome, the longest run marked, one labelled marker per probe, the tiles (including "Not enough presses to measure"), flags in plain words; it loads the session by URL when there is no navigation state, and shows "Session not found" for an id the player does not have.
 - Weekly target: counts distinct local calendar days with a completed session in the last 7 days.
 - Profiles: create, switch, rename, remove; a `401` removes the profile; exactly one player is created on a first visit, even under StrictMode.
 - Screens: after a player switch or deletion, no open confirmation and no previous player's data are shown, even while the next player's data is still loading.
@@ -83,7 +92,7 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 
 ## Delivery
 
-Three PRs, tracked in `tasks.md`: (1) app skeleton, API client and player profiles; (2) the game; (3) results, progress and end-to-end tests.
+Tracked in `tasks.md`: (1) app skeleton, API client and player profiles; (2) the game; (3) results, progress and end-to-end tests, split into 3a results, 3b progress, 3c end-to-end tests and README.
 
 ## Out of scope
 

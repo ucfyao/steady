@@ -26,7 +26,7 @@ export const SART_CONFIG = {
   flagAnticipationShare: 0.1, // [P] descriptive flag only
   flagRegularTimingCv: 0.05, // [P] descriptive flag only; typical human CV is far higher
 
-  scoringVersion: 1,
+  scoringVersion: 2, // 2: adds trialOutcomes (Spec 001 § Versioning)
 } as const;
 
 export const TRIAL_MS = SART_CONFIG.stimulusMs + SART_CONFIG.maskMs;

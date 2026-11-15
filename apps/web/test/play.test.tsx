@@ -93,7 +93,7 @@ describe('Play', () => {
     // Taps on every 3 must not count: a keyboard session only listens to Space.
     const tapOnTarget = () => fireEvent.pointerDown(screen.getByTestId('tap-area'));
     clock.advance(WHOLE_SESSION_MS, 50, simulatedPlayer(clock, space, tapOnTarget));
-    expect(await screen.findByRole('heading', { name: 'Session saved' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Session complete' })).toBeInTheDocument();
 
     const { id, body } = backend.submitted[0]!;
     const plan = backend.plans.get(id)!.plan;
@@ -157,7 +157,7 @@ describe('Play', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/could not reach the server/i);
     fireEvent.click(within(alert).getByRole('button', { name: 'Try again' }));
-    expect(await screen.findByRole('heading', { name: 'Session saved' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Session complete' })).toBeInTheDocument();
     expect(backend.submitted).toHaveLength(1);
   });
 
@@ -172,7 +172,7 @@ describe('Play', () => {
 
     const tap = () => fireEvent.pointerDown(screen.getByTestId('tap-area'));
     clock.advance(WHOLE_SESSION_MS, 50, simulatedPlayer(clock, tap, space)); // Space on every 3
-    await screen.findByRole('heading', { name: 'Session saved' });
+    await screen.findByRole('heading', { name: 'Session complete' });
 
     const { id, body } = backend.submitted[0]!;
     const plan = backend.plans.get(id)!.plan;

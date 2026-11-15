@@ -2,7 +2,7 @@
 
 A three-minute daily focus check built on the Sustained Attention to Response Task (SART) with thought probes. Take-home assignment for Walk the Dragon.
 
-> **Status:** work in progress. The scoring and progress core (Specs 001–002) and the API (Spec 003) are done and tested. The web app (Spec 004) has player profiles and the full game (check-in, practice, timed trials, probes); the results and progress screens come next.
+> **Status:** work in progress. The scoring and progress core (Specs 001–002) and the API (Spec 003) are done and tested. The web app (Spec 004) has player profiles, the full game (check-in, practice, timed trials, probes) and the results screen with the session journey; the progress screen and end-to-end tests come next.
 
 ## Quick start
 
