@@ -2,7 +2,7 @@
 
 A three-minute daily focus check built on the Sustained Attention to Response Task (SART) with thought probes. Take-home assignment for Walk the Dragon.
 
-> **Status:** work in progress. The scoring and progress core (Specs 001–002) and the API (Spec 003) are done and tested. The web app (Spec 004) has player profiles, the full game (check-in, practice, timed trials, probes) the results screen with the session journey, and the progress screen (weekly target, recent vs. starting point, charts, exploratory comparisons); end-to-end tests come next.
+> **Status:** complete for the assignment's scope. The scoring and progress core (Specs 001–002), the API (Spec 003) and the web app (Spec 004: player profiles, the game, results and progress) are done, with unit, integration and end-to-end tests in CI.
 
 ## Quick start
 
@@ -13,6 +13,15 @@ pnpm install        # also builds @steady/core
 pnpm bootstrap      # creates .env, starts Postgres 17 (Docker, host port 5433), runs migrations
 pnpm dev            # web app on http://localhost:5173, API on http://localhost:4000/api
 pnpm check          # lint, format check, typecheck, all tests (API tests need Docker running)
+```
+
+Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about three minutes. Use **Add player** in the header to try a second player on the same device.
+
+End-to-end tests (real browser, API and database; about 4 minutes, because sessions run in real time):
+
+```bash
+pnpm --filter @steady/web exec playwright install chromium   # once
+pnpm bootstrap && pnpm e2e
 ```
 
 (`pnpm setup` is a pnpm built-in, so the setup script is called `bootstrap`.)
@@ -48,11 +57,41 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **Tests run the real app on a real database.** Integration tests start PostgreSQL 17 with Testcontainers, apply the committed migrations and drive the HTTP stack with a fake clock. CI runs them on every PR. Mocked repositories would not catch a missing `player_id` filter.
 - **The app refuses to start on bad config,** with a message naming the variable.
 - **Every tunable rule is in one file** (`packages/core/src/config.ts`), marked [R] when it comes from research and [P] when it is a product decision.
+- **The real session keeps the standard SART timing (250 ms digit + 900 ms mask); only practice is slower.** A first play-test at full speed was too fast to follow, so practice now starts at an 800 ms digit and ends at the real speed, and the rules are shown as steps before every session. Changing the real timing would make results incomparable with the research and between sessions.
+- **The results page only draws what the server scored.** `scoreSession` returns an outcome per trial, and the session journey ribbon is drawn from it, so the "steady" and "anticipation" rules exist once, in core.
+- **The weekly target is the one number the client computes,** because "4 of the last 7 days" depends on the device's calendar and time zone. Its constants still live in core's config.
+- **Exploratory comparisons never overstate.** Groups are shown as raw dots with `n`; a median appears only from 10 sessions, and a sentence only when two groups reach 10, ending "a pattern so far, not a cause".
 
 ## Testing
 
-`pnpm test` (API tests need Docker). Core reference values come from independent calculations (Python `statistics`), not from the implementation. A mutation check deliberately broke each important rule (53 in total across scoring, progress, player isolation, timing limits, retries, token hashing, rate limits and log redaction) and confirmed a test fails for every one. See [docs/ai-log.md](docs/ai-log.md) for the gaps it found.
+- **Core** (Vitest): reference values come from independent calculations (Python `statistics`) or from the spec, never from the implementation.
+- **API** (Vitest + Testcontainers): the real Nest app on PostgreSQL 17 with a fake clock.
+- **Web** (Vitest + Testing Library): the trial runner with synthetic frame and press times; whole sessions on the play screen with a fake frame clock, checked with core's `validateSubmission`.
+- **End-to-end** (Playwright, separate CI job): a new player practises and plays a full session with real key presses in real time, then sees results and progress; a second player on the same device sees none of it; hiding the page voids a session.
+- **Mutation checks:** more than 100 deliberate rule breaks (scoring, progress, player isolation, timing windows, retries, token hashing, rate limits, log redaction, results and progress screens, voiding) each made a test fail. Each first round found real gaps, listed in [docs/ai-log.md](docs/ai-log.md).
+- **Real browser checks:** headless Chromium against the real stack, at desktop and phone width, for the game's timing (recorded RTs within about 1 ms of the scripted 400 ms), the results page and the progress page.
+
+## Assumptions and limitations
+
+- **Not a clinical tool.** Results are for the player's own trends; all comparisons are within-person and exploratory.
+- **Browser timing:** onset is the frame's timestamp, so display can differ by up to one frame (about 17 ms at 60 Hz), and keyboard and touch latency differ by device. The device is stored with each session; results are compared only within a player.
+- **Identity:** a player is an anonymous token kept in this browser. There are no accounts and no recovery: clearing site data loses the history. This keeps the server free of personal data; real accounts (or employer SSO) would be the next step.
+- **Trust:** the server checks that a submission is plausible (length, timing, duration) and flags machine-like timing, but browser input cannot be fully trusted. It never labels a session as cheating.
+- **Leaving the page voids a session,** because timing would be interrupted. The open session expires after 30 minutes without being scored.
+- **Not built:** deployment, offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use).
+
+## Time spent
+
+TBD
 
 ## AI tools
 
-I use Claude Code for implementation, reviewing its output against the spec and the tests. Where the AI was wrong, and how each problem was caught: [docs/ai-log.md](docs/ai-log.md).
+I used Claude Code throughout, as a pair programmer under a fixed workflow written down in [CLAUDE.md](CLAUDE.md):
+
+- **Spec first:** each feature has a spec (`specs/`) that I reviewed before code; the AI updates the spec in the same PR when code has to deviate.
+- **Tests first, with independent expectations:** tests are written and seen failing before the implementation, and expected values come from the spec or a separate calculation, so a wrong rule cannot also produce its own expected value.
+- **Deliberate breakage:** after each change, the AI breaks each new rule on purpose and confirms a test fails. This found untested rules in almost every part.
+- **Real use:** headless-browser runs against the real stack, and my own play-test, which found that the first game was too fast to learn.
+- **Every PR** passes `pnpm check` and CI, and is reviewed and squash-merged by me.
+
+Where the AI was wrong or weak, and how each problem was caught (18 entries: from a test that passed against a stub, to a broken commit workflow, to a delete confirmation that carried over to the next player): [docs/ai-log.md](docs/ai-log.md).

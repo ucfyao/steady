@@ -1,6 +1,6 @@
 # Spec 004 — Web app (`apps/web`)
 
-Status: in progress (`apps/web`): parts 1–2
+Status: implemented (`apps/web`)
 Design note: `docs/design-note.md` §3, §6, §7
 
 ## Goal
@@ -93,8 +93,10 @@ Home ──▶ Check-in ──▶ (Practice, first time only) ──▶ Get read
 
 **End-to-end (Playwright, real API and database, part 3)**
 
-- A new player plays a full session (with accelerated input) and sees results; a second player on the same device does not see the first player's session.
-- Hiding the page during trials voids the session and submits nothing.
+- A new player goes through practice and a full session, played by the test with real key presses (Space for every digit except 3, "1" at each probe), and sees the results page with the journey ribbon and the progress page with one session. It runs in **real time** (about 3.5 minutes): the server checks real elapsed time, and the app has no test-only shortcut.
+- A second player added on the same device sees no sessions on Progress, and "Session not found" at the first player's results URL; switching back shows the first player's session again.
+- Hiding the page during trials (a `visibilitychange` to `hidden`) voids the session: the page says so, and the API lists no completed session for that player.
+- They run against the real API and Postgres (`pnpm e2e`, Chromium only) in a separate CI job, `e2e`.
 
 ## Delivery
 
