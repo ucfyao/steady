@@ -117,7 +117,7 @@ The server never labels a session as cheating. Integrity checks make faking resu
 - Stanislaw, H., & Todorov, N. (1999). Calculation of signal detection theory measures. _BRMIC_, 31(1), 137–149. https://doi.org/10.3758/BF03207704
 - Hautus, M. J. (1995). Corrections for extreme proportions and their biasing effects on estimated values of d′. _BRMIC_, 27(1), 46–51. https://doi.org/10.3758/BF03203619
 - Simons, D. J. et al. (2016). Do "brain-training" programs work? _Psychological Science in the Public Interest_, 17(3), 103–186. https://doi.org/10.1177/1529100616661983
-- FTC (2016). Lumosity to pay $2 million to settle FTC deceptive advertising charges. https://www.ftc.gov/news-events/press-releases/2016/01/lumosity-pay-2-million-settle-ftc-deceptive-advertising-charges
+- FTC (2016). Lumosity to pay $2 million to settle FTC deceptive advertising charges. https://www.ftc.gov/news-events/news/press-releases/2016/01/lumosity-pay-2-million-settle-ftc-deceptive-advertising-charges-its-brain-training-program
 - Basner, M., & Dinges, D. F. (2011). Maximizing sensitivity of the PVT to sleep loss. _Sleep_, 34(5), 581–591. https://pmc.ncbi.nlm.nih.gov/articles/PMC3079937
 - Levinson, D. B. et al. (2014). A mind you can count on: Validating breath counting as a behavioral measure of mindfulness. _Frontiers in Psychology_, 5, 1202. https://doi.org/10.3389/fpsyg.2014.01202
 - OAIC. Australian Privacy Principles guidelines (APP 3, APP 11). https://www.oaic.gov.au/privacy/australian-privacy-principles
