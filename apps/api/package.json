@@ -16,6 +16,7 @@
     "@nestjs/common": "12.5.0",
     "@nestjs/core": "12.5.0",
     "@nestjs/platform-express": "12.5.0",
+    "@nestjs/throttler": "6.7.1",
     "@steady/core": "workspace:*",
     "drizzle-orm": "0.45.4",
     "helmet": "8.3.0",

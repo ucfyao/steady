@@ -1,5 +1,6 @@
-import { type DynamicModule, Module } from '@nestjs/common';
+import { type DynamicModule, Module, type Provider } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { PlayerGuard } from './auth/player.guard.js';
 import { CLOCK, systemClock } from './clock.js';
@@ -17,6 +18,12 @@ import { SessionsModule } from './sessions/sessions.module.js';
 @Module({})
 export class AppModule {
   static register(config: AppConfig): DynamicModule {
+    // Guards run in order: rate limit first (cheap, no DB), then the token check.
+    const guards: Provider[] = [];
+    if (config.rateLimitPerMinute !== false)
+      guards.push({ provide: APP_GUARD, useClass: ThrottlerGuard });
+    guards.push({ provide: APP_GUARD, useClass: PlayerGuard });
+
     return {
       module: AppModule,
       global: true,
@@ -28,6 +35,7 @@ export class AppModule {
             ...(config.prettyLogs ? { transport: { target: 'pino-pretty' } } : {}),
           },
         }),
+        ThrottlerModule.forRoot([{ ttl: 60_000, limit: config.rateLimitPerMinute || 1 }]),
         DbModule,
         PlayersModule,
         SessionsModule,
@@ -37,7 +45,7 @@ export class AppModule {
       providers: [
         { provide: APP_CONFIG, useValue: config },
         { provide: CLOCK, useValue: systemClock },
-        { provide: APP_GUARD, useClass: PlayerGuard },
+        ...guards,
       ],
       exports: [APP_CONFIG, CLOCK],
     };

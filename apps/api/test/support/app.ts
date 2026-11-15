@@ -47,6 +47,7 @@ export async function startTestApp(overrides: Partial<AppConfig> = {}): Promise<
     port: 0,
     logLevel: 'silent',
     prettyLogs: false,
+    rateLimitPerMinute: false,
     ...overrides,
   };
   const clock = new FakeClock();

@@ -1,4 +1,5 @@
 import { Controller, Delete, HttpCode, Inject, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { eq } from 'drizzle-orm';
 import { PlayerId } from '../auth/player-id.decorator.js';
 import { Public } from '../auth/public.decorator.js';
@@ -12,6 +13,7 @@ export class PlayersController {
 
   /** The token is returned once and never stored in plain text. */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } }) // [P]
   @Post('players')
   async create() {
     const token = newToken();
