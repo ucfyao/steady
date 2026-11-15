@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { usePlayers } from '../players/usePlayers.js';
 
+/** Remounted per player by the layout, so its state never carries over to another player. */
 export function YourData() {
   const { active, rename, deleteActive } = usePlayers();
   const [name, setName] = useState(active?.name ?? '');

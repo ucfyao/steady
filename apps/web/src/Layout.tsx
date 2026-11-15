@@ -53,7 +53,7 @@ function PlayerMenu() {
 }
 
 export function Layout() {
-  const { status, error, retry, notice, dismissNotice } = usePlayers();
+  const { status, error, retry, notice, dismissNotice, active } = usePlayers();
 
   return (
     <div className="app">
@@ -86,7 +86,9 @@ export function Layout() {
             </button>
           </div>
         )}
-        {status === 'ready' && <Outlet />}
+        {/* Keyed by player: switching or deleting a player remounts every screen, so no
+            screen can carry over another player's data or an open confirmation. */}
+        {status === 'ready' && <Outlet key={active!.id} />}
       </main>
     </div>
   );

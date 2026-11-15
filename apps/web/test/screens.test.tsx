@@ -89,4 +89,60 @@ describe('Your data', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(/deleted/i);
     expect(backend.calls).toContainEqual({ token: tokenN(1), method: 'deleteMe' });
   });
+
+  it("starts fresh for the next player: no open confirmation, and that player's name", async () => {
+    renderApp('/data');
+    await playerSelect();
+    await userEvent.click(screen.getByRole('button', { name: 'Add player' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), 'Sam');
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+    expect(await playerSelect()).toHaveDisplayValue('Sam');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete my data' }));
+    await userEvent.click(screen.getByRole('button', { name: /yes, delete everything/i }));
+    expect(await playerSelect()).toHaveDisplayValue('Player 1');
+
+    expect(screen.queryByRole('button', { name: /yes, delete everything/i })).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Name on this device' })).toHaveValue('Player 1');
+  });
+
+  it('closes an open confirmation when you switch player', async () => {
+    renderApp('/data');
+    await playerSelect();
+    await userEvent.click(screen.getByRole('button', { name: 'Add player' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), 'Sam');
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete my data' }));
+
+    await userEvent.selectOptions(await playerSelect(), 'Player 1');
+    expect(screen.queryByRole('button', { name: /yes, delete everything/i })).toBeNull();
+  });
+});
+
+describe('switching player', () => {
+  it("never shows the previous player's session count while the next one loads", async () => {
+    const backend = fakeBackend();
+    backend.sessions.set(tokenN(1), [{ id: 'a' }, { id: 'b' }] as CompletedSession[]);
+    // Sam's history never arrives, so a stale count from Player 1 would stay on screen.
+    const factory = (token: string | null) => {
+      const api = backend.factory(token);
+      return token === tokenN(2)
+        ? { ...api, listSessions: () => new Promise<never>(() => {}) }
+        : api;
+    };
+    render(
+      <PlayersProvider apiFactory={factory} storage={localStorage}>
+        <MemoryRouter>
+          <AppRoutes />
+        </MemoryRouter>
+      </PlayersProvider>,
+    );
+    expect(await screen.findByText('Sessions completed: 2')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Add player' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Name' }), 'Sam');
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+    expect(await screen.findByText('Hi, Sam')).toBeInTheDocument();
+    expect(screen.queryByText(/Sessions completed/)).toBeNull();
+  });
 });

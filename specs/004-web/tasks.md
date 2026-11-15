@@ -6,7 +6,7 @@
 - [x] T2 Scaffold `apps/web` (Vite, React, Router, Vitest + Testing Library); `/api` dev proxy; `pnpm dev` runs API and web
 - [x] T3 Failing tests, then the typed API client
 - [x] T4 Failing tests, then local profiles and the active player (create on first visit, switch, add, `401` handling)
-- [ ] T5 Layout, Home placeholder and Your data (delete with confirmation); `pnpm check`
+- [x] T5 Layout, Home placeholder and Your data (delete with confirmation); `pnpm check`
 
 **Part 2: the game**
 
