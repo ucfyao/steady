@@ -4,6 +4,8 @@ import { Link, useLocation, useParams } from 'react-router';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
+import { Card } from '../ui/Card.js';
+import styles from './Results.module.css';
 
 /** Descriptive flags in plain words (Spec 004): about the session, never a failure. */
 const FLAG_TEXT: Record<BehaviourFlag, string> = {
@@ -77,63 +79,89 @@ export function Results() {
   const percent = (x: number) => `${Math.round(x * 100)}%`;
 
   return (
-    <section className="results">
+    <section className={styles.results}>
       <h1>Session complete</h1>
       <p className="lead">
         You caught {caught} of {threes} 3s.
       </p>
 
-      <JourneyRibbon
-        outcomes={score.trialOutcomes}
-        probes={score.probes}
-        longestSteadyRun={score.longestSteadyRun}
-        summary={summary}
-      />
+      <Card as="section" aria-labelledby="stats-title">
+        <h2 id="stats-title">This session</h2>
+        <div className={styles.stats}>
+          <Stat
+            label="Catch rate"
+            value={percent(1 - score.commissionRate)}
+            hint="3s you held back on"
+          />
+          <Stat
+            label="Median response"
+            value={score.medianGoRtMs === null ? NOT_ENOUGH : `${Math.round(score.medianGoRtMs)}`}
+            unit={score.medianGoRtMs === null ? undefined : 'ms'}
+          />
+          <Stat
+            label="Rhythm variability"
+            value={score.rtCv === null ? NOT_ENOUGH : percent(score.rtCv)}
+            hint="Lower is steadier"
+          />
+          <Stat label="Missed digits" value={String(score.omissions)} />
+          <Stat label="Longest steady run" value={String(score.longestSteadyRun)} unit="trials" />
+        </div>
+      </Card>
 
-      <div className="tiles">
-        <Tile
-          label="Catch rate"
-          value={percent(1 - score.commissionRate)}
-          hint="3s you held back on"
+      <Card as="section" aria-labelledby="journey-title">
+        <h2 id="journey-title">Your session, trial by trial</h2>
+        <JourneyRibbon
+          outcomes={score.trialOutcomes}
+          probes={score.probes}
+          longestSteadyRun={score.longestSteadyRun}
+          summary={summary}
         />
-        <Tile
-          label="Median response"
-          value={score.medianGoRtMs === null ? NOT_ENOUGH : `${Math.round(score.medianGoRtMs)} ms`}
-        />
-        <Tile
-          label="Rhythm variability"
-          value={score.rtCv === null ? NOT_ENOUGH : percent(score.rtCv)}
-          hint="Lower is steadier"
-        />
-        <Tile label="Missed digits" value={String(score.omissions)} />
-        <Tile label="Longest steady run" value={`${score.longestSteadyRun} trials`} />
-      </div>
+      </Card>
 
       {score.flags.length > 0 && (
-        <aside className="notice about">
-          <h2>About this session</h2>
+        <Card as="aside" aria-labelledby="about-title" className={styles.about}>
+          <h2 id="about-title">About this session</h2>
           <ul>
             {score.flags.map((f) => (
               <li key={f}>{FLAG_TEXT[f]}</li>
             ))}
           </ul>
-        </aside>
+        </Card>
       )}
 
-      <div className="actions">
-        <Button to="/play">Play again</Button>
-        <Link to="/">Back to home</Link>
+      <div className={styles.actions}>
+        <Button to="/" size="lg">
+          Back to home
+        </Button>
+        <Button to="/progress" variant="secondary" size="lg">
+          See your progress
+        </Button>
       </div>
     </section>
   );
 }
 
-function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
+/** A big serif number over a small label, as in the design's "Last check" row. */
+function Stat({
+  label,
+  value,
+  unit,
+  hint,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  hint?: string;
+}) {
+  const measured = value !== NOT_ENOUGH;
   return (
-    <div className="tile" role="group" aria-label={label}>
-      <span className="tile-label">{label}</span>
-      <span className="tile-value">{value}</span>
-      {hint && <span className="tile-hint">{hint}</span>}
+    <div className={styles.stat} role="group" aria-label={label}>
+      <span className={measured ? styles.value : styles.notMeasured}>
+        {value}
+        {unit && <span className={styles.unit}> {unit}</span>}
+      </span>
+      <span className={styles.label}>{label}</span>
+      {hint && <span className={styles.hint}>{hint}</span>}
     </div>
   );
 }

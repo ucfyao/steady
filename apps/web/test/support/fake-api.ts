@@ -7,7 +7,6 @@ import {
   type ProgressMetric,
   type ProgressResponse,
   type CompletedSession,
-  type InputDevice,
   type StartedSession,
   type Submission,
 } from '@steady/core';
@@ -39,7 +38,7 @@ export function fakeBackend() {
   const unauthorized = new Set<string>();
   const sessions = new Map<string, CompletedSession[]>();
   const control = { failCreate: false, failSubmitOnce: false };
-  const started: { token: string | null; body: { device: InputDevice } }[] = [];
+  const started: { token: string | null; body: Parameters<Api['startSession']>[0] }[] = [];
   const submitted: { id: string; body: Submission }[] = [];
   const plans = new Map<string, StartedSession>();
 

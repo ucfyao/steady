@@ -21,3 +21,10 @@
 - [x] T10 Results: per-trial outcomes in core (`scoringVersion` 2); journey ribbon, longest steady run, metrics, flags in plain words (PR 3a)
 - [x] T11 Failing tests, then the weekly target; Progress screen with charts and comparisons (PR 3b)
 - [x] T12 Playwright end-to-end tests in CI; README; `pnpm check` (PR 3c)
+
+**Part 4: redesign of the game and results**
+
+- [x] T13 Failing tests, then the check-in split: returning players get one screen (Start, Skip, How to play) and go straight to the countdown; first-time players keep the rules and practice
+- [x] T14 Focus mode: the layout drops the header while the block runs; full-screen stage, one-line hint, no progress; probe as large buttons with keys 1–3; React commits only at phase changes
+- [x] T15 Results in the new style: serif numbers with small labels, ribbon colours from the tokens (a held-back 3 is hollow, a pressed 3 is filled), Back to home and See your progress
+- [x] T16 Timing check in a real browser (headless Chromium, real API; a script presses Space 400 ms after each digit appears, "1" at each probe), same machine and script on `main` and on this branch: `main` desktop 112 presses, RT 402.8–410.0 ms, median 406.0; branch desktop 402.5–410.8, median 406.0; branch at 375 px 402.5–410.4, median 406.1. No change; the ~6 ms above 400 is this machine's timer and frame overhead, the same on both. `pnpm check`, `pnpm e2e`

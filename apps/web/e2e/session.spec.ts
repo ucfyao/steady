@@ -15,6 +15,9 @@ test('a new player practises, plays a full session and sees results and progress
 
   await expect(page.getByText(/practice complete/i)).toBeVisible();
   await page.getByRole('button', { name: 'Start', exact: true }).click();
+  // Focus mode: no header or navigation while the block runs.
+  await expect(page.getByTestId('stimulus')).toBeAttached({ timeout: 15_000 });
+  await expect(page.getByRole('banner')).toHaveCount(0);
   const { presses, probes } = await playBlock(page);
   expect(presses).toBe(112);
   expect(probes).toBe(4);
@@ -27,7 +30,7 @@ test('a new player practises, plays a full session and sees results and progress
   await expect(page.getByRole('group', { name: 'Missed digits' })).toContainText('0');
   const resultsUrl = page.url();
 
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await page.getByRole('link', { name: 'See your progress' }).click();
   await expect(page.getByText('1 of 4 days this week')).toBeVisible();
   await expect(page.getByText('Your starting point is set after 5 more sessions.')).toBeVisible();
 
@@ -45,6 +48,14 @@ test('a new player practises, plays a full session and sees results and progress
   await page.getByRole('button', { name: 'Player: Sam' }).click();
   await page.getByRole('menuitemradio').first().click();
   await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
+
+  // Now a returning player: one check-in screen, then straight to the countdown.
+  await page.goto('/play');
+  await expect(page.getByRole('button', { name: 'How to play' })).toBeVisible();
+  await skipCheckIn(page);
+  await expect(page.getByTestId('stimulus')).toBeAttached({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: 'Start practice' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'How to play' })).toHaveCount(0);
 });
 
 test('leaving the page during trials voids the session', async ({ page, request }) => {

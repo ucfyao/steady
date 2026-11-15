@@ -1,16 +1,19 @@
 import type { InputDevice } from '@steady/core';
+import styles from './HowToPlay.module.css';
 
 const MASK = '⊗';
 
-/** The rules, shown before practice and before every real session (Spec 004). */
+/** The rules, shown before practice and from "How to play" (Spec 004). */
 export function HowToPlay({ device }: { device: InputDevice }) {
-  const action = device === 'touch' ? 'Tap the box' : 'Press Space';
+  const action = device === 'touch' ? 'Tap the screen' : 'Press Space';
+  const press = device === 'touch' ? 'Tap' : 'Press';
   return (
-    <section className="how-to" aria-labelledby="how-to-title">
+    <section className={styles.howTo} aria-labelledby="how-to-title">
       <h2 id="how-to-title">How to play</h2>
-      <ol className="how-steps">
+      <ol className={styles.steps}>
         <li>
-          A digit flashes in the box, then turns into <span className="how-mask">{MASK}</span>.
+          A digit flashes in the middle of the screen, then turns into{' '}
+          <span className={styles.mask}>{MASK}</span>.
         </li>
         <li>
           <strong>{action}</strong> for every digit, as soon as you see it.
@@ -20,21 +23,21 @@ export function HowToPlay({ device }: { device: InputDevice }) {
         </li>
         <li>A press still counts while {MASK} is showing, so you have just over a second.</li>
       </ol>
-      <div className="how-example" aria-hidden="true">
+      <div className={styles.example} aria-hidden="true">
         <figure>
-          <span className="how-digit">5</span>
-          <figcaption>{device === 'touch' ? 'Tap' : 'Press'}</figcaption>
+          <span className={styles.digit}>5</span>
+          <figcaption>{press}</figcaption>
         </figure>
         <figure>
-          <span className="how-digit">8</span>
-          <figcaption>{device === 'touch' ? 'Tap' : 'Press'}</figcaption>
+          <span className={styles.digit}>8</span>
+          <figcaption>{press}</figcaption>
         </figure>
-        <figure className="how-target">
-          <span className="how-digit">3</span>
+        <figure className={styles.target}>
+          <span className={styles.digit}>3</span>
           <figcaption>Hold back</figcaption>
         </figure>
       </div>
-      <p className="lead">
+      <p className={styles.note}>
         3s are rare and come fast, so everyone presses on some of them by habit. That is what this
         check measures. Speed and accuracy matter equally.
       </p>

@@ -1,12 +1,19 @@
 import type { ProbeAnswer, Submission } from '@steady/core';
 import { useEffect, useEffectEvent, useRef, useState, type PointerEvent } from 'react';
+import { useFocusMode } from '../Layout.js';
 import { Button } from '../ui/Button.js';
+import styles from './Block.module.css';
 import type { PlayEnv } from './env.js';
 import { TrialRunner, type Outcome, type RunnerOptions, type RunnerPlan } from './runner.js';
 
 const COUNTDOWN_S = 3;
-/** [R] PsyToolkit SART: five font sizes (48–120 pt), used here as px. */
+/** [R] PsyToolkit SART: five font sizes (48–120 pt), kept as ratios of the largest. */
 const FONT_PX = [48, 72, 94, 100, 120] as const;
+/**
+ * The largest size is `--digit-max` (about 240 px, smaller on a phone; Block.module.css).
+ * Built once, so a frame only assigns a ready-made string, as before.
+ */
+const FONT_SIZE = FONT_PX.map((px) => `calc(var(--digit-max) * ${px / 120})`);
 const MASK = '⊗';
 
 const FEEDBACK: Record<Outcome, string> = {
@@ -40,12 +47,12 @@ export function Block({
   env,
   onDone,
   onVoid,
-  reminder,
+  hint,
 }: {
   plan: RunnerPlan;
   options?: RunnerOptions;
-  /** Practice only: the rule, kept above the box. */
-  reminder?: string;
+  /** The rule, in one quiet line under the digit. */
+  hint: string;
   env: PlayEnv;
   onDone(submission: Submission): void;
   onVoid(): void;
@@ -53,7 +60,12 @@ export function Block({
   const stimulus = useRef<HTMLDivElement>(null);
   const runnerRef = useRef<TrialRunner | null>(null);
   const [ui, setUi] = useState<Ui>({ kind: 'countdown', n: COUNTDOWN_S });
+  const focusRoot = useRef<HTMLDivElement>(null);
   const done = useEffectEvent(onDone);
+  useFocusMode();
+
+  // Focus moves into the block, off the button that started it (which is now gone).
+  useEffect(() => focusRoot.current?.focus(), []);
   const voided = useEffectEvent(onVoid);
 
   useEffect(() => {
@@ -65,9 +77,9 @@ export function Block({
     let started = false;
     let shown = '';
 
-    const draw = (el: HTMLDivElement, text: string, sizePx: number, index?: number) => {
+    const draw = (el: HTMLDivElement, text: string, size: string, index?: number) => {
       el.textContent = text;
-      el.style.fontSize = `${sizePx}px`;
+      el.style.fontSize = size;
       if (index !== undefined) el.dataset.index = String(index);
     };
 
@@ -93,9 +105,9 @@ export function Block({
       const el = stimulus.current;
       if (el) {
         if (view.phase === 'stimulus')
-          draw(el, String(view.digit), FONT_PX[view.fontSize]!, view.index);
-        else if (view.phase === 'mask') draw(el, MASK, FONT_PX[2]);
-        else draw(el, '', FONT_PX[2]);
+          draw(el, String(view.digit), FONT_SIZE[view.fontSize]!, view.index);
+        else if (view.phase === 'mask') draw(el, MASK, FONT_SIZE[2]!);
+        else draw(el, '', FONT_SIZE[2]!);
       }
 
       const key =
@@ -157,41 +169,45 @@ export function Block({
   const answer = (a: ProbeAnswer, event: Event) =>
     runnerRef.current?.answer(a, env.pressTime(event));
 
+  // Focus mode: the whole screen is the stage. No progress, count or timer is shown,
+  // because knowing how far along you are changes how people respond.
   return (
-    <div className="stage">
-      {reminder && <p className="reminder">{reminder}</p>}
+    <div ref={focusRoot} className={styles.focus} tabIndex={-1}>
       <div
-        className="tap-area"
+        className={styles.stage}
         data-testid="tap-area"
         onPointerDown={tap}
         aria-hidden={ui.kind === 'trials'}
       >
-        {ui.kind === 'countdown' && <p className="countdown">{ui.n}</p>}
+        {ui.kind === 'countdown' && <p className={styles.countdown}>{ui.n}</p>}
         {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
-        <div ref={stimulus} className="stimulus" data-testid="stimulus" />
+        <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
         {ui.kind === 'feedback' && (
-          <p className={`feedback feedback-${ui.outcome}`}>{FEEDBACK[ui.outcome]}</p>
+          <p className={`${styles.feedback} ${styles[ui.outcome]}`}>{FEEDBACK[ui.outcome]}</p>
         )}
       </div>
 
       {ui.kind === 'probe' && (
-        <div role="dialog" aria-labelledby="probe-question" className="probe">
+        <div role="dialog" aria-labelledby="probe-question" className={styles.probe}>
           <h2 id="probe-question">Where was your mind just now?</h2>
-          <div className="probe-answers">
+          <div className={styles.answers}>
             {ANSWERS.map((a) => (
               <Button
                 key={a.answer}
                 variant="secondary"
+                size="lg"
                 aria-label={a.label}
                 onClick={(e) => answer(a.answer, e.nativeEvent)}
               >
                 {a.label}
-                {env.device === 'keyboard' && <kbd>{a.key}</kbd>}
+                {env.device === 'keyboard' && <kbd className={styles.key}>{a.key}</kbd>}
               </Button>
             ))}
           </div>
         </div>
       )}
+
+      <p className={styles.hint}>{hint}</p>
     </div>
   );
 }

@@ -1,0 +1,104 @@
+/* Focus mode: one calm surface over the whole viewport, nothing but the stage. */
+.focus {
+  --digit-max: clamp(7.5rem, min(56vw, 42vh), 15rem); /* about 240 px on a desktop */
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  color: var(--color-text);
+  outline: none;
+  overscroll-behavior: none;
+}
+
+/* The whole screen is the tap target on a touch device. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stimulus {
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.countdown,
+.feedback {
+  position: absolute;
+  inset: auto var(--space-4);
+  margin: 0;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.countdown {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+}
+
+/* Practice feedback can be a short sentence; the tick stays large. */
+.feedback {
+  font-size: var(--text-xl);
+}
+
+.hit,
+.caught {
+  color: var(--color-link);
+}
+
+.hit {
+  font-size: var(--text-3xl);
+}
+
+.commission,
+.omission {
+  color: var(--color-danger);
+}
+
+.probe {
+  position: relative;
+  z-index: 1;
+  width: min(100% - 2 * var(--space-4), 30rem);
+  text-align: center;
+}
+
+.probe h2 {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-6);
+}
+
+.answers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.key {
+  margin-left: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.hint {
+  position: absolute;
+  bottom: max(var(--space-7), env(safe-area-inset-bottom));
+  left: var(--space-4);
+  right: var(--space-4);
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}

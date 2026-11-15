@@ -109,6 +109,17 @@ describe('Results', () => {
     expect(screen.getByText(/many digits pass without pressing/i)).toBeInTheDocument();
   });
 
+  it('ends with a primary way home and a secondary way to progress', async () => {
+    renderResults({ pathname: '/results/s1', state: { session: mixed } });
+    await screen.findByText('You caught 13 of 14 3s.');
+    const main = screen.getByRole('main');
+    expect(within(main).getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
+    expect(within(main).getByRole('link', { name: 'See your progress' })).toHaveAttribute(
+      'href',
+      '/progress',
+    );
+  });
+
   it('loads the session by URL when there is no navigation state', async () => {
     const backend = renderResults('/results/s1');
     expect(await screen.findByText('You caught 13 of 14 3s.')).toBeInTheDocument();

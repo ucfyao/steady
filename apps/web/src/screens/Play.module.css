@@ -1,0 +1,19 @@
+.checkIn {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkIn :global(.lead) {
+  margin-bottom: var(--space-7);
+}
+
+.questions {
+  margin-bottom: var(--space-6);
+}
+
+.links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-4);
+  font-size: var(--text-md);
+}
