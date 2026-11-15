@@ -1,8 +1,15 @@
 import { SART_CONFIG, type PlanTrial, type ProbeAnswer, type Submission } from '@steady/core';
 
+export interface TrialTiming {
+  stimulusMs: number;
+  maskMs: number;
+}
+
 export interface RunnerPlan {
   trials: PlanTrial[];
   probeAfter: number[];
+  /** Practice only: per-trial timing. The real session always uses SART_CONFIG. */
+  timing?: TrialTiming[];
 }
 
 export interface RunnerOptions {
@@ -24,7 +31,7 @@ export type RunnerView =
   | { phase: 'resume' }
   | { phase: 'done' };
 
-const TRIAL_MS = SART_CONFIG.stimulusMs + SART_CONFIG.maskMs;
+const REAL: TrialTiming = { stimulusMs: SART_CONFIG.stimulusMs, maskMs: SART_CONFIG.maskMs };
 
 /**
  * Runs one block of SART trials from frame and press timestamps (Spec 004).
@@ -34,6 +41,7 @@ const TRIAL_MS = SART_CONFIG.stimulusMs + SART_CONFIG.maskMs;
 export class TrialRunner {
   private readonly trials: PlanTrial[];
   private readonly probeAfter: number[];
+  private readonly timing: TrialTiming[] | undefined;
   private readonly resumeMs: number;
   private readonly feedbackMs: number;
 
@@ -50,6 +58,7 @@ export class TrialRunner {
   constructor(plan: RunnerPlan, options: RunnerOptions = {}) {
     this.trials = plan.trials;
     this.probeAfter = plan.probeAfter;
+    this.timing = plan.timing;
     this.resumeMs = options.resumeMs ?? 1000;
     this.feedbackMs = options.feedbackMs ?? 0;
     this.rts = plan.trials.map(() => null);
@@ -65,8 +74,9 @@ export class TrialRunner {
 
     if (v.phase === 'stimulus' || v.phase === 'mask') {
       const onset = this.onsets[v.index]!;
-      if (now < onset + SART_CONFIG.stimulusMs) return v;
-      if (now < onset + TRIAL_MS) return this.show({ phase: 'mask', index: v.index });
+      const { stimulusMs } = this.timingOf(v.index);
+      if (now < onset + stimulusMs) return v;
+      if (now < onset + this.windowMs(v.index)) return this.show({ phase: 'mask', index: v.index });
       return this.endTrial(v.index, now);
     }
 
@@ -80,11 +90,11 @@ export class TrialRunner {
 
   press(time: number, opts: { repeat?: boolean } = {}): void {
     if (opts.repeat) return;
-    // The trial whose window [onset, onset + 1150) contains the press, if any.
+    // The trial whose window [onset, onset + digit + mask) contains the press, if any.
     for (let i = this.onsets.length - 1; i >= 0; i--) {
       const onset = this.onsets[i]!;
       if (time < onset) continue;
-      if (time < onset + TRIAL_MS && this.rts[i] === null) this.rts[i] = time - onset;
+      if (time < onset + this.windowMs(i) && this.rts[i] === null) this.rts[i] = time - onset;
       return;
     }
   }
@@ -114,7 +124,7 @@ export class TrialRunner {
   }
 
   private endTrial(index: number, now: number): RunnerView {
-    const windowEnd = this.onsets[index]! + TRIAL_MS;
+    const windowEnd = this.onsets[index]! + this.windowMs(index);
     const isLast = index === this.trials.length - 1;
 
     if (this.feedbackMs > 0) {
@@ -129,6 +139,15 @@ export class TrialRunner {
 
     this.nextDue = windowEnd;
     return this.startTrial(index + 1, now);
+  }
+
+  private timingOf(index: number): TrialTiming {
+    return this.timing?.[index] ?? REAL;
+  }
+
+  private windowMs(index: number): number {
+    const t = this.timingOf(index);
+    return t.stimulusMs + t.maskMs;
   }
 
   private outcome(index: number): Outcome {

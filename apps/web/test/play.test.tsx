@@ -58,6 +58,20 @@ const space = () => fireEvent.keyDown(window, { code: 'Space', key: ' ' });
 // 3 s countdown + 126 trials × 1150 ms + 4 probes × (1 frame + 1 s) + frame slack
 const WHOLE_SESSION_MS = 3000 + 126 * 1200 + 4 * 1100 + 2000;
 
+/** The how-to-play steps from Spec 004, for the given device. */
+function expectHowToPlay(action: RegExp) {
+  const how = screen.getByRole('region', { name: 'How to play' });
+  const steps = within(how)
+    .getAllByRole('listitem')
+    .map((li) => li.textContent);
+  expect(steps).toHaveLength(4);
+  expect(steps[0]).toMatch(/digit flashes.*⊗/i);
+  expect(steps[1]).toMatch(action);
+  expect(steps[2]).toMatch(/not for 3/i);
+  expect(steps[3]).toMatch(/still counts while ⊗/i);
+  expect(how).toHaveTextContent(/everyone presses on some/i);
+}
+
 async function startFromCheckIn(sleep?: string) {
   await screen.findByRole('heading', { name: /how are you today/i });
   if (sleep) fireEvent.click(screen.getByRole('radio', { name: sleep }));
@@ -68,7 +82,8 @@ describe('Play', () => {
   it('plays a full session and submits a valid body', async () => {
     const { backend, clock } = renderPlay({ returning: true });
     await startFromCheckIn('Poor');
-    expect(await screen.findByText(/press space for every digit except 3/i)).toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Ready?' });
+    expectHowToPlay(/press space for every digit/i);
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     await screen.findByText('3'); // countdown
     expect(backend.started).toEqual([
@@ -95,15 +110,24 @@ describe('Play', () => {
   it('runs the practice round first for a new player, without touching the server', async () => {
     const { backend, clock } = renderPlay({ returning: false });
     await startFromCheckIn();
-    fireEvent.click(await screen.findByRole('button', { name: 'Start practice' }));
+    await screen.findByRole('heading', { name: /first, a short practice/i });
+    expectHowToPlay(/press space for every digit/i);
+    expect(screen.getByText(/starts slow/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Start practice' }));
 
     let caught = 0;
+    let reminderMissing = 0;
     const player = simulatedPlayer(clock, space);
-    clock.advance(3000 + 18 * (1200 + 800) + 1000, 50, () => {
+    // 3 s countdown + 6 × 2000 + 6 × 1500 + 6 × 1150 ms trials, 800 ms feedback each
+    const practiceMs = 3000 + 6 * 2000 + 6 * 1500 + 6 * 1150 + 18 * 850 + 1000;
+    clock.advance(practiceMs, 50, () => {
       player();
       if (screen.queryByText('Caught it')) caught++;
+      const inBlock = screen.queryByTestId('stimulus') !== null;
+      if (inBlock && !screen.queryByText('Press Space for every digit except 3')) reminderMissing++;
     });
     expect(caught).toBeGreaterThan(0);
+    expect(reminderMissing).toBe(0);
     expect(await screen.findByText(/practice complete/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start' })).toBeInTheDocument();
     expect(backend.calls.map((c) => c.method)).not.toContain('startSession');
@@ -140,7 +164,8 @@ describe('Play', () => {
   it('on a touch device, counts taps and ignores the keyboard', async () => {
     const { backend, clock } = renderPlay({ returning: true, device: 'touch' });
     await startFromCheckIn();
-    expect(await screen.findByText(/tap the box for every digit except 3/i)).toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Ready?' });
+    expectHowToPlay(/tap the box for every digit/i);
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     await screen.findByText('3');
     expect(backend.started[0]!.body.device).toBe('touch');

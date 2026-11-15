@@ -38,6 +38,15 @@ describe('createPracticePlan', () => {
     });
   });
 
+  it('starts slow and ends at the real speed (Spec 004)', () => {
+    const { trials, timing } = createPracticePlan(5);
+    expect(timing).toHaveLength(trials.length);
+    const at = (from: number, to: number) => timing.slice(from, to);
+    expect(at(0, 6)).toEqual(Array(6).fill({ stimulusMs: 800, maskMs: 1200 }));
+    expect(at(6, 12)).toEqual(Array(6).fill({ stimulusMs: 500, maskMs: 1000 }));
+    expect(at(12, 18)).toEqual(Array(6).fill({ stimulusMs: 250, maskMs: 900 }));
+  });
+
   it('is deterministic per seed and varies between seeds', () => {
     expect(createPracticePlan(1)).toEqual(createPracticePlan(1));
     expect(createPracticePlan(1)).not.toEqual(createPracticePlan(2));

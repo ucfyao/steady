@@ -13,10 +13,11 @@ const go = (index: number, digit = 5): PlanTrial => ({
   fontSize: 2,
 });
 const three = (index: number): PlanTrial => ({ index, digit: 3, isTarget: true, fontSize: 0 });
-const plan = (trials: PlanTrial[], probeAfter: number[] = []): RunnerPlan => ({
-  trials,
-  probeAfter,
-});
+const plan = (
+  trials: PlanTrial[],
+  probeAfter: number[] = [],
+  timing?: RunnerPlan['timing'],
+): RunnerPlan => ({ trials, probeAfter, ...(timing && { timing }) });
 
 /** Calls frame() every `step` ms from `from` up to and including `to`; returns the last view. */
 function frames(r: TrialRunner, from: number, to: number, step = 10): RunnerView {
@@ -111,6 +112,28 @@ describe('TrialRunner timing', () => {
     r.press(1150 + 250);
     frames(r, 1160, 2400);
     expect(r.submission().rts).toEqual([null, 250]);
+  });
+});
+
+describe('TrialRunner per-trial timing (practice)', () => {
+  it('shows each trial for its own digit and mask time, with a window that long', () => {
+    // Trial 0 is slow (800 + 1200 = 2000 ms); trial 1 uses the real timing.
+    const slow = { stimulusMs: 800, maskMs: 1200 };
+    const real = { stimulusMs: 250, maskMs: 900 };
+    const r = new TrialRunner(plan([go(0), go(1, 7), go(2)], [], [slow, real, real]));
+    r.start(0);
+    r.frame(0);
+    expect(r.frame(799).phase).toBe('stimulus');
+    expect(r.frame(800)).toEqual({ phase: 'mask', index: 0 });
+    r.press(1900); // past 1150 ms, still inside trial 0's 2000 ms window
+    expect(r.frame(1990)).toEqual({ phase: 'mask', index: 0 });
+    expect(r.frame(2000)).toMatchObject({ phase: 'stimulus', index: 1 });
+    expect(r.frame(2249).phase).toBe('stimulus');
+    expect(r.frame(2250)).toEqual({ phase: 'mask', index: 1 });
+    r.press(2000 + 1150); // trial 1's window has closed
+    expect(r.frame(3150)).toMatchObject({ phase: 'stimulus', index: 2 });
+    frames(r, 3160, 4400);
+    expect(r.submission().rts).toEqual([1900, null, null]);
   });
 });
 

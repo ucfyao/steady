@@ -11,8 +11,8 @@ const MASK = '⊗';
 const FEEDBACK: Record<Outcome, string> = {
   hit: '✓',
   caught: 'Caught it',
-  commission: 'That was a 3',
-  omission: 'Missed one',
+  commission: 'That was a 3, let it pass',
+  omission: 'Missed one, press for every digit except 3',
 };
 
 const ANSWERS: { answer: ProbeAnswer; label: string; key: string }[] = [
@@ -39,9 +39,12 @@ export function Block({
   env,
   onDone,
   onVoid,
+  reminder,
 }: {
   plan: RunnerPlan;
   options?: RunnerOptions;
+  /** Practice only: the rule, kept above the box. */
+  reminder?: string;
   env: PlayEnv;
   onDone(submission: Submission): void;
   onVoid(): void;
@@ -155,6 +158,7 @@ export function Block({
 
   return (
     <div className="stage">
+      {reminder && <p className="reminder">{reminder}</p>}
       <div
         className="tap-area"
         data-testid="tap-area"

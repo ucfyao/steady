@@ -9,6 +9,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { ApiError } from '../api/client.js';
 import { Block } from '../game/Block.js';
+import { HowToPlay } from '../game/HowToPlay.js';
 import { browserEnv, type PlayEnv } from '../game/env.js';
 import { createPracticePlan } from '../game/practice.js';
 import type { RunnerOptions } from '../game/runner.js';
@@ -94,10 +95,10 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     }
   }
 
-  const instructions =
+  const reminder =
     env.device === 'touch'
-      ? 'Tap the box for every digit except 3. Keep a steady rhythm.'
-      : 'Press Space for every digit except 3. Keep a steady rhythm.';
+      ? 'Tap the box for every digit except 3'
+      : 'Press Space for every digit except 3';
 
   switch (step.k) {
     case 'loading':
@@ -120,8 +121,11 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       return (
         <section>
           <h1>First, a short practice</h1>
-          <p>{instructions}</p>
-          <p>18 digits, with feedback after each one. Nothing is saved.</p>
+          <HowToPlay device={env.device} />
+          <p>
+            18 digits. It starts slow and speeds up to the real pace, with feedback after each one.
+            Nothing is saved.
+          </p>
           <button type="button" onClick={practice}>
             Start practice
           </button>
@@ -133,6 +137,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         <Block
           plan={step.plan}
           options={PRACTICE_OPTIONS}
+          reminder={reminder}
           env={env}
           onDone={() => setStep({ k: 'ready', practiced: true })}
           onVoid={() => setStep({ k: 'voided' })}
@@ -142,9 +147,13 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     case 'ready':
       return (
         <section>
-          {step.practiced && <p className="notice">Practice complete. Now the real session.</p>}
+          {step.practiced && (
+            <p className="notice">
+              Practice complete. The real session runs at full speed the whole way.
+            </p>
+          )}
           <h1>Ready?</h1>
-          <p>{instructions}</p>
+          <HowToPlay device={env.device} />
           <p>
             About three minutes. A few times you will be asked where your mind was. Stay on this
             page until the end: leaving it voids the session.

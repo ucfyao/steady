@@ -14,6 +14,7 @@
 - [x] T7 Device detection; practice sequence and feedback
 - [x] T8 Play screen: check-in → practice → countdown → trials → probes → submit; leaving voids the session
 - [x] T9 Manual timing check in a real browser; `pnpm check`
+- [x] T9a After playing it: clear how-to-play steps, and practice that starts slow and ends at the real speed
 
 **Part 3: results, progress, end-to-end**
 
