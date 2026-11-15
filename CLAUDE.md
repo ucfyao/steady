@@ -5,14 +5,19 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 
 ## Commands
 
-- `pnpm install`: installs dependencies. Run it first in every new worktree.
+- `pnpm install`: installs dependencies and builds `@steady/core`. Run it first in every new worktree.
+- `pnpm bootstrap`: `.env`, Postgres 17 in Docker (host port 5433), migrations
+- `pnpm dev`: API on port 4000 (watch mode)
+- `pnpm --filter @steady/api db:generate`: after changing `apps/api/src/db/schema.ts`; commit the generated SQL
 - `pnpm --filter @steady/core test`: core tests only
-- `pnpm --filter @steady/core build`: ESM build with `.d.ts` into `packages/core/dist`
-- `pnpm check`: lint, format check, typecheck, tests. **Must pass before every commit.** CI runs the same command on every PR.
+- `pnpm --filter @steady/core build`: ESM build with `.d.ts` into `packages/core/dist`. Run it after changing `packages/core/src` so the API sees the change.
+- `pnpm check`: lint, format check, typecheck, tests. **Must pass before every commit.** CI runs the same command on every PR. API tests need Docker.
 
 ## Layout and boundaries
 
 - `packages/core`: pure domain logic (session plan, validation, scoring, progress) and Zod contracts. No framework, I/O or clock.
+- `apps/api` (NestJS) depends on core and never re-implements a scoring rule.
+- API tests use the real app (`test/support/app.ts`) on Testcontainers Postgres; do not mock the database.
 - **Scores are computed only on the server, by `scoreSession`.** A client must never compute or submit a score.
 - Every tunable rule lives in `packages/core/src/config.ts`, marked `[R]` (research) or `[P]` (product decision). Do not hard-code thresholds anywhere else.
 - A change to how scores are computed must bump `SART_CONFIG.scoringVersion`.

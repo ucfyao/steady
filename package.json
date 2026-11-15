@@ -7,6 +7,9 @@
     "node": ">=24"
   },
   "scripts": {
+    "postinstall": "pnpm --filter @steady/core build",
+    "bootstrap": "node -e \"const f=require('fs');f.existsSync('.env')||f.copyFileSync('.env.example','.env')\" && docker compose up -d --wait && pnpm --filter @steady/api db:migrate",
+    "dev": "pnpm --filter @steady/api dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
