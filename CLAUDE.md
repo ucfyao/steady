@@ -7,7 +7,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 
 - `pnpm install`: installs dependencies and builds `@steady/core`. Run it first in every new worktree.
 - `pnpm bootstrap`: `.env`, Postgres 17 in Docker (host port 5433), migrations
-- `pnpm dev`: API on port 4000 (watch mode)
+- `pnpm dev`: web app on port 5173 (proxies `/api`) and API on port 4000, both in watch mode
 - `pnpm --filter @steady/api db:generate`: after changing `apps/api/src/db/schema.ts`; commit the generated SQL
 - `pnpm --filter @steady/core test`: core tests only
 - `pnpm --filter @steady/core build`: ESM build with `.d.ts` into `packages/core/dist`. Run it after changing `packages/core/src` so the API sees the change.
@@ -18,6 +18,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 - `packages/core`: pure domain logic (session plan, validation, scoring, progress) and Zod contracts. No framework, I/O or clock.
 - `apps/api` (NestJS) depends on core and never re-implements a scoring rule.
 - API: the player id comes only from `@PlayerId()` (set by the global `PlayerGuard`). Every session query filters on `player_id`; another player's data is a `404`. New routes are protected unless marked `@Public()`.
+- `apps/web` (React) talks only to the API through `src/api/client.ts` and uses core's types; it never computes a score. Screens are remounted per player (`<Outlet key>`), so none may cache another player's data.
 - API tests use the real app (`test/support/app.ts`) on Testcontainers Postgres with `FakeClock`; do not mock the database.
 - **Scores are computed only on the server, by `scoreSession`.** A client must never compute or submit a score.
 - Every tunable rule lives in `packages/core/src/config.ts`, marked `[R]` (research) or `[P]` (product decision). Do not hard-code thresholds anywhere else.
@@ -34,7 +35,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 ## Conventions
 
 - Workspace packages go in `apps/*` and `packages/*`.
-- Vitest with `*.test.ts` everywhere; no Jest.
+- Vitest with `*.test.ts` everywhere (`*.test.tsx` for React components); no Jest.
 - Conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`), scoped where useful, e.g. `feat(core):`.
 - Every change goes through a feature branch and a squash-merged PR; `main` is protected.
 - Docs and code are in English.
