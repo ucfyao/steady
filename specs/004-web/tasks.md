@@ -20,4 +20,4 @@
 
 - [x] T10 Results: per-trial outcomes in core (`scoringVersion` 2); journey ribbon, longest steady run, metrics, flags in plain words (PR 3a)
 - [x] T11 Failing tests, then the weekly target; Progress screen with charts and comparisons (PR 3b)
-- [ ] T12 Playwright end-to-end tests in CI; README; `pnpm check` (PR 3c)
+- [x] T12 Playwright end-to-end tests in CI; README; `pnpm check` (PR 3c)

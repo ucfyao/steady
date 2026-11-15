@@ -2,3 +2,6 @@ dist
 coverage
 pnpm-lock.yaml
 apps/api/drizzle
+test-results
+playwright-report
+blob-report
