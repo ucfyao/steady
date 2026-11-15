@@ -37,6 +37,8 @@ export const PROGRESS_CONFIG = {
   baselineSessions: 5, // [P] initial baseline = median of sessions 2–6, fixed once set
   recentSessions: 5, // [P] recent = median of the last 5 non-practice sessions
   minGroupSize: 10, // [P] below this, no group median and no text summary
+  weeklyTargetDays: 4, // [P] play on 4 of the last 7 local days (computed by the web app)
+  weeklyWindowDays: 7, // [P]
 } as const;
 
 /** Server-side timing plausibility for a submission (Spec 003). Technical validity: failures are rejected. */

@@ -1,6 +1,11 @@
 import {
+  compareByCheckIn,
+  comparePreProbe,
   createSessionPlan,
   scoreSession,
+  summariseProgress,
+  type ProgressMetric,
+  type ProgressResponse,
   type CompletedSession,
   type InputDevice,
   type StartedSession,
@@ -8,6 +13,22 @@ import {
 } from '@steady/core';
 import { vi } from 'vitest';
 import { ApiError, type Api } from '../../src/api/client.js';
+
+const METRICS: ProgressMetric[] = ['commissionRate', 'omissionRate', 'medianGoRtMs', 'rtCv'];
+
+/** What GET /api/progress returns for these sessions: core's functions, as the API calls them. */
+export function progressOf(sessions: CompletedSession[]): ProgressResponse {
+  const history = sessions.map((s) => ({ score: s.score, checkIn: s.checkIn }));
+  const byMetric = (dimension: 'sleep' | 'stress') =>
+    Object.fromEntries(
+      METRICS.map((m) => [m, compareByCheckIn(history, dimension, m)]),
+    ) as ProgressResponse['checkIn']['sleep'];
+  return {
+    summary: summariseProgress(history),
+    checkIn: { sleep: byMetric('sleep'), stress: byMetric('stress') },
+    preProbe: comparePreProbe(history),
+  };
+}
 
 export const tokenN = (n: number) => String(n).padStart(43, 'x');
 
@@ -26,9 +47,6 @@ export function fakeBackend() {
     const call = (method: string) => {
       calls.push({ token, method });
       if (token && unauthorized.has(token)) throw new ApiError('unauthorized', 'Unauthorized', 401);
-    };
-    const unused = async (): Promise<never> => {
-      throw new Error('not used in this test');
     };
     return {
       createPlayer: async () => {
@@ -64,7 +82,10 @@ export function fakeBackend() {
         };
       },
       listSessions: async () => (call('listSessions'), sessions.get(token ?? '') ?? []),
-      getProgress: unused,
+      getProgress: async () => {
+        call('getProgress');
+        return progressOf(sessions.get(token ?? '') ?? []);
+      },
       deleteMe: async () => {
         call('deleteMe');
         if (token) unauthorized.add(token);
