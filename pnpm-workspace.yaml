@@ -1,3 +1,12 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+
+# These packages ship prebuilt binaries (or have optional native add-ons), so their
+# install scripts are not needed. Listing them keeps installs quiet and explicit.
+ignoredBuiltDependencies:
+  - '@swc/core'
+  - cpu-features
+  - esbuild
+  - protobufjs
+  - ssh2
