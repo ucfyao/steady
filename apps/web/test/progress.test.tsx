@@ -147,8 +147,9 @@ describe('Progress screen', () => {
 
   it('switches the compared metric', async () => {
     renderAt('/progress', withCheckIns);
-    const picker = await screen.findByRole('combobox', { name: 'Compare' });
-    fireEvent.change(picker, { target: { value: 'rtCv' } });
+    const picker = await screen.findByRole('group', { name: 'Compare' });
+    expect(within(picker).getByRole('radio', { name: 'Catch rate' })).toBeChecked();
+    fireEvent.click(within(picker).getByRole('radio', { name: 'Rhythm variability' }));
     expect(region('Sleep')).toHaveTextContent(
       'So far, your median rhythm variability was 30% after poor sleep and 20% after good sleep.',
     );

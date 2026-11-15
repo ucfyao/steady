@@ -1,8 +1,9 @@
 import type { CompletedSession, ProgressSummary } from '@steady/core';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
 import { usePlayers } from '../players/usePlayers.js';
 import { WeekDots } from '../progress/WeekDots.js';
+import { Button } from '../ui/Button.js';
+import { Card } from '../ui/Card.js';
 import { moreSessions } from './Progress.js';
 
 export function Home() {
@@ -30,17 +31,17 @@ export function Home() {
       <h1>Hi, {active?.name}</h1>
       <p className="lead">A three-minute focus check. Catch every 3, keep a steady rhythm.</p>
       {data && (
-        <div className="card">
+        <Card>
           <WeekDots completedAt={data.sessions.map((s) => s.completedAt)} />
           <p>Sessions completed: {data.sessions.length}</p>
           {data.summary.sessionsUntilBaseline > 0 && (
             <p>{moreSessions(data.summary.sessionsUntilBaseline)} until your starting point</p>
           )}
-        </div>
+        </Card>
       )}
-      <Link to="/play" className="button">
+      <Button to="/play" size="lg">
         Start today&apos;s check
-      </Link>
+      </Button>
     </section>
   );
 }

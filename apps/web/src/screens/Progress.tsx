@@ -1,12 +1,14 @@
 import type { CompletedSession, ProgressMetric, ProgressResponse } from '@steady/core';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
 import { usePlayers } from '../players/usePlayers.js';
 import { GroupDots } from '../progress/GroupDots.js';
 import { MetricChart } from '../progress/MetricChart.js';
 import { METRIC_VIEWS, metricView } from '../progress/metrics.js';
 import { sessionPoints, type SessionPoint } from '../progress/series.js';
 import { WeekDots } from '../progress/WeekDots.js';
+import { Button } from '../ui/Button.js';
+import { Card } from '../ui/Card.js';
+import { ChipGroup } from '../ui/ChipGroup.js';
 
 type State =
   | { k: 'loading' }
@@ -76,9 +78,9 @@ export function Progress() {
       <section>
         <h1>Progress</h1>
         <p>No sessions yet. Your progress appears here after your first check.</p>
-        <Link to="/play" className="button">
+        <Button to="/play" size="lg">
           Start today&apos;s check
-        </Link>
+        </Button>
       </section>
     );
 
@@ -90,12 +92,12 @@ export function Progress() {
     <section className="progress">
       <h1>Progress</h1>
 
-      <section className="card" aria-labelledby="week-title">
+      <Card as="section" aria-labelledby="week-title">
         <h2 id="week-title">This week</h2>
         <WeekDots completedAt={sessions.map((s) => s.completedAt)} />
-      </section>
+      </Card>
 
-      <section className="card" aria-labelledby="recent-title">
+      <Card as="section" aria-labelledby="recent-title">
         <h2 id="recent-title">Recent vs. where you started</h2>
         {summary.baseline && summary.recent ? (
           <table className="compare-table">
@@ -131,7 +133,7 @@ export function Progress() {
             <p className="lead">Session 1 is practice; sessions 2–6 set where you started.</p>
           </>
         )}
-      </section>
+      </Card>
 
       <section aria-labelledby="time-title">
         <h2 id="time-title">Over time</h2>
@@ -161,16 +163,13 @@ export function Progress() {
           Exploratory: each dot is one session. Sessions after a check-in are grouped by your
           answer. Practice is left out.
         </p>
-        <label className="inline-form">
-          Compare
-          <select value={metric} onChange={(e) => setMetric(e.target.value as ProgressMetric)}>
-            {METRIC_VIEWS.map((m) => (
-              <option key={m.key} value={m.key}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ChipGroup<ProgressMetric>
+          legend="Compare"
+          name="compare"
+          options={METRIC_VIEWS.map((m) => ({ value: m.key, label: m.label }))}
+          value={metric}
+          onChange={setMetric}
+        />
         <GroupDots
           title="Sleep"
           comparison={progress.checkIn.sleep[metric]}

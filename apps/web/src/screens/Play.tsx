@@ -14,6 +14,8 @@ import { browserEnv, type PlayEnv } from '../game/env.js';
 import { createPracticePlan } from '../game/practice.js';
 import type { RunnerOptions } from '../game/runner.js';
 import { usePlayers } from '../players/usePlayers.js';
+import { Button } from '../ui/Button.js';
+import { ChipGroup } from '../ui/ChipGroup.js';
 
 const PRACTICE_OPTIONS: RunnerOptions = { feedbackMs: 800 }; // [P] Spec 004
 const MAIN_OPTIONS: RunnerOptions = {};
@@ -39,6 +41,9 @@ const LABELS: Record<string, string> = {
   medium: 'Medium',
   high: 'High',
 };
+
+/** The chip value for "no answer" (the field is left out of the check-in). */
+const SKIP = '';
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -126,9 +131,9 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             18 digits. It starts slow and speeds up to the real pace, with feedback after each one.
             Nothing is saved.
           </p>
-          <button type="button" onClick={practice}>
+          <Button size="lg" onClick={practice}>
             Start practice
-          </button>
+          </Button>
         </section>
       );
 
@@ -158,13 +163,13 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             About three minutes. A few times you will be asked where your mind was. Stay on this
             page until the end: leaving it voids the session.
           </p>
-          <div className="inline-form">
-            <button type="button" onClick={start}>
+          <div className="actions">
+            <Button size="lg" onClick={start}>
               Start
-            </button>
-            <button type="button" className="secondary" onClick={practice}>
+            </Button>
+            <Button variant="secondary" onClick={practice}>
               Practice again
-            </button>
+            </Button>
           </div>
         </section>
       );
@@ -186,9 +191,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         <div role="alert" className="error">
           <p>{step.error.message}</p>
           {retryable ? (
-            <button type="button" onClick={() => submit(step.session, step.submission)}>
-              Try again
-            </button>
+            <Button onClick={() => submit(step.session, step.submission)}>Try again</Button>
           ) : (
             <Link to="/">Back to home</Link>
           )}
@@ -233,33 +236,21 @@ function CheckInForm({
     legend: string,
     levels: readonly NonNullable<CheckIn[K]>[],
   ) => (
-    <fieldset className="choice">
-      <legend>{legend}</legend>
-      {levels.map((level) => (
-        <label key={level}>
-          <input
-            type="radio"
-            name={field}
-            checked={value[field] === level}
-            onChange={() => onChange({ ...value, [field]: level })}
-          />
-          {LABELS[level]}
-        </label>
-      ))}
-      <label>
-        <input
-          type="radio"
-          name={field}
-          checked={value[field] === undefined}
-          onChange={() => {
-            const next = { ...value };
-            delete next[field];
-            onChange(next);
-          }}
-        />
-        Skip
-      </label>
-    </fieldset>
+    <ChipGroup
+      legend={legend}
+      name={field}
+      options={[
+        ...levels.map((level) => ({ value: level as string, label: LABELS[level] })),
+        { value: SKIP, label: 'Skip' },
+      ]}
+      value={value[field] ?? SKIP}
+      onChange={(level) => {
+        const next = { ...value };
+        if (level === SKIP) delete next[field];
+        else next[field] = level as NonNullable<CheckIn[K]>;
+        onChange(next);
+      }}
+    />
   );
 
   return (
@@ -270,7 +261,9 @@ function CheckInForm({
       </p>
       {group('sleep', 'How did you sleep?', SLEEP_LEVELS)}
       {group('stress', 'How stressed do you feel?', STRESS_LEVELS)}
-      <button type="submit">Continue</button>
+      <Button type="submit" size="lg">
+        Continue
+      </Button>
     </form>
   );
 }
