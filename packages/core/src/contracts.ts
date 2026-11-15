@@ -4,7 +4,7 @@
  */
 import { z } from 'zod';
 import { TRIAL_MS } from './config.js';
-import { PROBE_ANSWERS } from './types.js';
+import { PROBE_ANSWERS, SLEEP_LEVELS, STRESS_LEVELS } from './types.js';
 
 export const ProbeAnswerSchema = z.enum(PROBE_ANSWERS);
 
@@ -14,4 +14,10 @@ export const RtSchema = z.number().finite().min(0).max(TRIAL_MS).nullable();
 export const SubmissionSchema = z.object({
   rts: z.array(RtSchema),
   probeAnswers: z.array(ProbeAnswerSchema),
+});
+
+/** Optional self-report before a session; unknown fields are dropped. */
+export const CheckInSchema = z.object({
+  sleep: z.enum(SLEEP_LEVELS).optional(),
+  stress: z.enum(STRESS_LEVELS).optional(),
 });

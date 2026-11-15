@@ -30,3 +30,11 @@ export const SART_CONFIG = {
 } as const;
 
 export const TRIAL_MS = SART_CONFIG.stimulusMs + SART_CONFIG.maskMs;
+
+/** Progress rules (Spec 002). They never change how one session is scored. */
+export const PROGRESS_CONFIG = {
+  practiceSessions: 1, // [P] session 1 is practice: plotted, never compared
+  baselineSessions: 5, // [P] initial baseline = median of sessions 2–6, fixed once set
+  recentSessions: 5, // [P] recent = median of the last 5 non-practice sessions
+  minGroupSize: 10, // [P] below this, no group median and no text summary
+} as const;
