@@ -105,7 +105,7 @@ Expected values are worked out by hand from small fixtures, never by calling the
 - Check-in split: groups in fixed order including empty ones; practice session and sessions without that answer are excluded; `median` null below 10.
 - `canSummarise`: false with one group at 10 and another at 9; true with two groups at 10.
 - Pre-probe: values are collected across sessions per answer, null CVs are skipped, the practice session's probes are excluded.
-- `CheckInSchema` accepts partial and empty check-ins, and rejects unknown levels.
+- `CheckInSchema` accepts partial and empty check-ins, drops unknown fields, and rejects unknown levels.
 
 ## Out of scope
 
