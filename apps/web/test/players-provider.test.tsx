@@ -1,40 +1,11 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { StrictMode, useContext } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ApiError, type Api } from '../src/api/client.js';
 import { PlayersContext, PlayersProvider } from '../src/players/PlayersProvider.js';
 import { STORAGE_KEY, loadProfiles } from '../src/players/store.js';
-
-const tokenN = (n: number) => String(n).padStart(43, 'x');
-
-/** A fake API per token; createPlayer hands out tokens 1, 2, 3, … */
-function fakeBackend() {
-  let issued = 0;
-  const calls: { token: string | null; method: string }[] = [];
-  const unauthorized = new Set<string>();
-  const factory = vi.fn((token: string | null): Api => {
-    const call = (method: string) => {
-      calls.push({ token, method });
-      if (token && unauthorized.has(token)) throw new ApiError('unauthorized', 'Unauthorized', 401);
-    };
-    return {
-      createPlayer: async () => (call('createPlayer'), { token: tokenN(++issued) }),
-      startSession: async () => {
-        throw new Error('unused');
-      },
-      submitSession: async () => {
-        throw new Error('unused');
-      },
-      listSessions: async () => (call('listSessions'), []),
-      getProgress: async () => {
-        throw new Error('unused');
-      },
-      deleteMe: async () => call('deleteMe'),
-    };
-  });
-  return { factory, calls, unauthorized, created: () => issued };
-}
+import { fakeBackend, tokenN } from './support/fake-api.js';
 
 function Probe() {
   const ctx = useContext(PlayersContext)!;

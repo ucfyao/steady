@@ -115,6 +115,7 @@ export function PlayersProvider({
       if (!(e instanceof ApiError && e.kind === 'unauthorized')) throw e;
     }
     setState((s) => removeProfile(s, active.id));
+    setNotice(`${active.name}'s data was deleted from the server and from this device.`);
   }, [active, apiFactory]);
 
   const value: PlayersContextValue = {
