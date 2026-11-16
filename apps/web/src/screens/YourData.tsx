@@ -42,7 +42,7 @@ export function YourData() {
         <p>Player names are stored only on this device and are never sent to the server.</p>
       </div>
 
-      <Card as="section" aria-labelledby="name-title">
+      <Card as="section" aria-labelledby="name-title" className={styles.section}>
         <h2 id="name-title">Name on this device</h2>
         <form onSubmit={save} className={styles.form}>
           <label className={styles.field}>
@@ -55,7 +55,7 @@ export function YourData() {
         </form>
       </Card>
 
-      <Card as="section" aria-labelledby="delete-title">
+      <Card as="section" aria-labelledby="delete-title" className={styles.section}>
         <h2 id="delete-title">Delete my data</h2>
         <p className={styles.explain}>
           Deletes every session for {active.name} from the server, then removes the player here.
@@ -77,7 +77,7 @@ export function YourData() {
             </div>
           </div>
         ) : (
-          <Button variant="danger" onClick={() => setConfirming(true)}>
+          <Button variant="secondary" onClick={() => setConfirming(true)}>
             Delete my data
           </Button>
         )}

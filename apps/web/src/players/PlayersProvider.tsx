@@ -11,6 +11,7 @@ import { ApiError, createApi, type Api } from '../api/client.js';
 import {
   activeProfile,
   addProfile,
+  importProfile,
   loadProfiles,
   normaliseName,
   removeProfile,
@@ -33,6 +34,11 @@ export interface PlayersContextValue {
   addPlayer(name?: string): Promise<void>;
   switchTo(id: string): void;
   rename(id: string, name: string): void;
+  /**
+   * Checks the token with the API, then adds that player here (or switches to it if this
+   * device already has it) and makes it active. Throws the API's error if the check fails.
+   */
+  importPlayer(token: string, name: string): Promise<void>;
   /** Deletes the active player's data on the server, then removes the profile here. */
   deleteActive(): Promise<void>;
   retry(): void;
@@ -122,6 +128,21 @@ export function PlayersProvider({
     };
   }, [active, apiFactory]);
 
+  const importPlayer = useCallback(
+    async (token: string, name: string) => {
+      // A raw client: a 401 here means a bad link, not that the active player is gone.
+      await apiFactory(token).listSessions();
+      setState((s) =>
+        importProfile(s, {
+          id: crypto.randomUUID(),
+          token,
+          name: normaliseName(name, `Player ${s.profiles.length + 1}`),
+        }),
+      );
+    },
+    [apiFactory],
+  );
+
   const deleteActive = useCallback(async () => {
     if (!active) return;
     try {
@@ -145,6 +166,7 @@ export function PlayersProvider({
     addPlayer: createProfile,
     switchTo: (id) => setState((s) => switchProfile(s, id)),
     rename: (id, name) => setState((s) => renameProfile(s, id, name)),
+    importPlayer,
     deleteActive,
     retry: () => setError(null),
   };

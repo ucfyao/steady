@@ -31,6 +31,18 @@
   font-size: var(--text-base);
 }
 
+/* Two separate blocks, each with a visible title: renaming is everyday, deleting is not. */
+.section h2 {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  color: var(--color-text);
+  margin-bottom: var(--space-3);
+}
+
+.section + .section {
+  margin-top: var(--space-6);
+}
+
 .explain {
   margin-bottom: var(--space-4);
 }
