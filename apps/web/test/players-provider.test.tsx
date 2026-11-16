@@ -49,7 +49,8 @@ describe('PlayersProvider', () => {
     await screen.findByText('status: ready');
     expect(screen.getByText('active: Player 1')).toBeInTheDocument();
     expect(backend.created()).toBe(1);
-    expect(loadProfiles(localStorage).profiles).toHaveLength(1);
+    // Players are saved in an effect, which can run after the screen shows "ready".
+    await waitFor(() => expect(loadProfiles(localStorage).profiles).toHaveLength(1));
   });
 
   it('reuses stored players without creating a new one', async () => {
@@ -157,7 +158,9 @@ describe('PlayersProvider', () => {
     await userEvent.click(screen.getByText('delete'));
     await screen.findByText('active: Player 1');
     expect(backend.calls).toContainEqual({ token: tokenN(2), method: 'deleteMe' });
-    expect(loadProfiles(localStorage).profiles.map((p) => p.name)).toEqual(['Player 1']);
+    await waitFor(() =>
+      expect(loadProfiles(localStorage).profiles.map((p) => p.name)).toEqual(['Player 1']),
+    );
   });
 
   it('starts over as a new player after deleting the only one', async () => {
