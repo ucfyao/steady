@@ -66,8 +66,6 @@ export interface SessionScore {
   rtCv: number | null;
   dPrime: number;
   longestSteadyRun: number;
-  /** Game points from `scorePoints(trialOutcomes)` (scoring version 4, Spec 006). */
-  points: number;
   /** One per trial, in plan order (scoring version 2). */
   trialOutcomes: TrialOutcome[];
   probes: ProbeResult[];

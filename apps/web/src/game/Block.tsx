@@ -1,7 +1,7 @@
 import {
-  createPointsCounter,
   maxPoints,
-  SART_CONFIG,
+  pointsSoFar,
+  trialOutcome,
   type ProbeAnswer,
   type Submission,
   type TrialOutcome,
@@ -103,11 +103,12 @@ export function Block({
     let started = false;
     let shown = '';
 
-    // ---- The game layer (Spec 006 §2): core's counter, display only, never sent. ----
-    const counter = createPointsCounter();
+    // ---- The game layer (Spec 006 §2) ----
+    // One count: the points of the outcomes so far, by core's rules, recomputed whenever an
+    // outcome is known. Results shows the points of the server's outcomes for the same
+    // presses, so the two always agree. Nothing here is sent.
     const best = maxPoints(plan.trials);
-    /** Trials already counted, by a press or by their window closing. */
-    const counted = new Set<number>();
+    const outcomes: TrialOutcome[] = [];
     let current = -1;
 
     const scatter = () => {
@@ -143,12 +144,15 @@ export function Block({
       setTimeout(() => f.remove(), 700);
     };
 
-    /** One trial's outcome, in trial order: points, fireflies and dawn (game variant). */
+    /** A trial's outcome is known: redraw the points, fireflies and dawn (game variant). */
     const count = (index: number, outcome: TrialOutcome) => {
-      if (counted.has(index)) return;
-      counted.add(index);
+      const before = outcomes[index];
+      if (before === outcome) return;
+      // A press stamped inside a window that closed a frame earlier replaces that trial's
+      // "missed", exactly as the runner (and so the server) counts it.
+      outcomes[index] = outcome;
       if (!game) return;
-      const step = counter.add(outcome);
+      const step = pointsSoFar(outcomes.filter((o) => o !== undefined));
       if (pointsEl.current) pointsEl.current.textContent = String(step.total);
       if (multEl.current) multEl.current.textContent = `×${step.multiplier}`;
       if (step.gained > 0) {
@@ -163,14 +167,12 @@ export function Block({
     };
     /** A trial whose window closed without a press: a held-back 3, or a missed digit. */
     const close = (index: number) => {
-      if (index < 0 || counted.has(index)) return;
-      count(index, plan.trials[index]!.isTarget ? 'caught' : 'omission');
+      if (index < 0 || outcomes[index] !== undefined) return;
+      count(index, trialOutcome(plan.trials[index]!.isTarget, null));
     };
     const lightUp = (index: number, outcome: TrialOutcome) => {
       const el = lantern.current;
-      if (el) el.dataset.glow = outcome === 'steady' ? 'ok' : 'bad';
-      // A press that arrives after its trial was already closed (at most a frame late)
-      // changes nothing here; the server's count is the one that is stored.
+      if (el && index === current) el.dataset.glow = outcome === 'steady' ? 'ok' : 'bad';
       count(index, outcome);
     };
 
@@ -250,12 +252,7 @@ export function Block({
     const press = (time: number, repeat?: boolean) => {
       const r = runner.press(time, { repeat });
       if (!r) return;
-      const outcome: TrialOutcome = r.isTarget
-        ? 'commission'
-        : r.rt < SART_CONFIG.anticipationMs
-          ? 'anticipation'
-          : 'steady';
-      lightUp(r.index, outcome);
+      lightUp(r.index, trialOutcome(r.isTarget, r.rt));
     };
     pressRef.current = press;
 

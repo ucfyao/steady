@@ -1,4 +1,4 @@
-import { scoreSession, type CompletedSession, type Variant } from '@steady/core';
+import { scorePoints, scoreSession, type CompletedSession, type Variant } from '@steady/core';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { Profiler } from 'react';
 import { MemoryRouter } from 'react-router';
@@ -115,7 +115,7 @@ describe('the lantern (both variants)', () => {
 });
 
 describe('game variant', () => {
-  it('shows the points rising to the server’s count, the multiplier and fireflies', async () => {
+  it('shows points that end at the points of the server’s outcomes, the multiplier and fireflies', async () => {
     const { backend, clock } = renderPlay('game');
     await start();
     let last = '';
@@ -149,8 +149,9 @@ describe('game variant', () => {
     await screen.findByRole('heading', { name: 'Session complete' });
     const { id, body } = backend.submitted[0]!;
     const plan = backend.plans.get(id)!.plan;
-    // The server's count (core's scorePoints via scoreSession), not one the page made up.
-    expect(Number(last)).toBe(scoreSession({ seed: 0, ...plan }, body).points);
+    // One count: the points of the server's trial outcomes, which Results shows too.
+    const { trialOutcomes } = scoreSession({ seed: 0, ...plan }, body);
+    expect(Number(last)).toBe(scorePoints(trialOutcomes));
     expect(mult.has('×2')).toBe(true);
     expect(maxFlies).toBeGreaterThan(0);
     expect(maxFlies).toBeLessThanOrEqual(30);

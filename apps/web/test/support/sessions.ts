@@ -15,7 +15,7 @@ export function storedSession(
     device: 'keyboard',
     variant: 'calm',
     score: {
-      scoringVersion: 4,
+      scoringVersion: 3,
       commissions: 0,
       commissionRate: 0.2,
       // 6 of the 72 digits (Spec 005), so the count and the rate agree.
@@ -26,7 +26,6 @@ export function storedSession(
       rtCv: 0.2,
       dPrime: 3,
       longestSteadyRun: 40,
-      points: 600,
       trialOutcomes: [],
       probes: opts.probes ?? [],
       flags: [],

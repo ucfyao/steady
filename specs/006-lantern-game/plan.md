@@ -2,8 +2,8 @@
 
 ## Core
 
-- `src/points.ts`: `createPointsCounter`, `scorePoints`, `maxPoints`; `GAME_CONFIG` in `config.ts`.
-- `scoreSession` adds `points`; `scoringVersion` 4.
+- `src/points.ts`: `createPointsCounter`, `scorePoints`, `pointsSoFar`, `maxPoints`; `GAME_CONFIG` in `config.ts`.
+- `score.ts`: the outcome rule as `trialOutcome`, used by `scoreSession`. The score itself does not change.
 - `VARIANTS` / `Variant`; `StartedSession.variant`, `CompletedSession.variant`; `StartSessionSchema.variant` (optional).
 
 ## API

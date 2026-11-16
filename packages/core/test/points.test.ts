@@ -3,8 +3,11 @@ import {
   createPointsCounter,
   createSessionPlan,
   maxPoints,
+  mulberry32,
+  pointsSoFar,
   scorePoints,
   scoreSession,
+  trialOutcome,
   type TrialOutcome,
 } from '../src/index.js';
 import { perfect, submit } from './helpers.js';
@@ -79,13 +82,50 @@ describe('maxPoints', () => {
   });
 });
 
-describe('scoreSession points (scoring version 4)', () => {
-  it('includes the points of its trial outcomes', () => {
+describe('points are never part of the score', () => {
+  it('are not stored with the score; they come from its trial outcomes', () => {
     const plan = createSessionPlan(5);
     const s = scoreSession(plan, submit(plan, perfect(400)));
-    expect(s.points).toBe(scorePoints(s.trialOutcomes));
-    expect(s.points).toBe(maxPoints(plan.trials));
-    expect(s.scoringVersion).toBe(4);
+    expect(s).not.toHaveProperty('points');
+    expect(scorePoints(s.trialOutcomes)).toBe(maxPoints(plan.trials));
+    expect(s.scoringVersion).toBe(3);
+  });
+});
+
+describe('trialOutcome: one rule for the server and the live display', () => {
+  it('matches scoreSession on every trial of random sessions', () => {
+    const rng = mulberry32(7);
+    for (let k = 0; k < 50; k++) {
+      const plan = createSessionPlan(100 + k);
+      const sub = submit(plan, () => {
+        const r = rng();
+        return r < 0.1 ? null : r < 0.15 ? 40 : 200 + r * 600;
+      });
+      const s = scoreSession(plan, sub);
+      plan.trials.forEach((t, i) =>
+        expect(trialOutcome(t.isTarget, sub.rts[i]!)).toBe(s.trialOutcomes[i]),
+      );
+    }
+  });
+
+  it('follows Spec 001: a 3 pressed at any RT is a commission; under 100 ms on a digit is too early', () => {
+    expect(trialOutcome(true, null)).toBe('caught');
+    expect(trialOutcome(true, 50)).toBe('commission');
+    expect(trialOutcome(false, null)).toBe('omission');
+    expect(trialOutcome(false, 99)).toBe('anticipation');
+    expect(trialOutcome(false, 100)).toBe('steady');
+  });
+});
+
+describe('pointsSoFar', () => {
+  it('is the last step of the counter over the outcomes so far', () => {
+    expect(pointsSoFar([])).toEqual({ gained: 0, total: 0, streak: 0, multiplier: 1 });
+    expect(pointsSoFar([...times(4, 'steady'), 'caught'])).toEqual({
+      gained: 60,
+      total: 100,
+      streak: 5,
+      multiplier: 2,
+    });
   });
 });
 

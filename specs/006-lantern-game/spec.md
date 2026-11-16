@@ -3,7 +3,7 @@
 Status: implemented
 Design note: `docs/design-note.md` §3
 Depends on: Spec 005
-Changes: Spec 001 (`points` in the score, scoring version 4), Spec 003 (`variant` on players and sessions), Spec 004 (focus mode, mask, countdown, feedback during the block)
+Changes: Spec 001 (`trialOutcome`, one rule for every outcome), Spec 003 (`variant` on players and sessions), Spec 004 (focus mode, mask, countdown, feedback during the block)
 
 ## Why
 
@@ -36,7 +36,7 @@ Rules, in core's `GAME_CONFIG` and one pure function `scorePoints(trialOutcomes)
 - A slip resets the streak (and so the multiplier) to zero. Points already earned are never taken away.
 - `maxPoints(trials)`: the points of a session with every trial correct.
 
-The same counter (`createPointsCounter()` in core) drives the live display, so the browser never has its own rule. The browser's count is **display only**: it is never sent, and the server's `scorePoints` result is what is stored and shown afterwards.
+**One count, never stored.** A session's points are always `scorePoints(trialOutcomes)` of its outcomes, and an outcome always comes from core's `trialOutcome(isTarget, rt)`, the rule `scoreSession` uses. During the block the page recomputes the points from the outcomes known so far (`pointsSoFar`); after it, Results, Home and Progress take the server's `trialOutcomes`. The same presses give the same outcomes, so the live count and every later screen agree. The points are never sent, never stored, and never part of the score.
 
 **What the game variant shows during the block**
 
@@ -49,10 +49,10 @@ The calm variant shows none of this: the lantern, the frost and the glow only.
 
 **Practice** uses the variant's look and its points (from 0, never saved), so a new player in the game variant sees the points from the first press. The practice's words after each trial (Spec 004) stay.
 
-## 3. Scoring version 4
+## 3. No change to the score
 
-- `SessionScore.points` (an integer) is added: `scorePoints(trialOutcomes)`, computed by the server for every session in both variants, so the two groups can be compared on the same number.
-- No measurement changed. `longestSteadyRun` is the longest streak, as before.
+- The score is unchanged (scoring version 3). Points are not stored: anything that needs them (Results, a personal best, a comparison between the variants in SQL) derives them from the stored `trialOutcomes` with `scorePoints`.
+- The trial outcome rule moves into one exported function, `trialOutcome`, so the server's scoring and the live display cannot drift apart.
 
 ## 4. Results (game variant)
 
@@ -78,7 +78,9 @@ Home, Results and Progress redesign, personal bests and the sky collection (Spec
 - `scorePoints`, against values worked out by hand from this spec: an empty list is 0; 4 steady = 40; 5 steady = 4 × 10 + 20 = 60; a caught 3 as the 5th correct trial = 40 + 60 = 100; a slip after 6 steady resets: 6 steady, commission, 5 steady = (40 + 20 + 20) + (40 + 20) = 140; 30 steady = 4 × 10 + 10 × 20 + 15 × 30 + 1 × 50 = 740; omissions and anticipations never earn.
 - `createPointsCounter` gives the same totals step by step, with `gained`, `streak` and `multiplier` after each trial.
 - `maxPoints` equals `scorePoints` of an all-correct session.
-- `scoreSession` includes `points` equal to `scorePoints(trialOutcomes)`; `scoringVersion` is 4.
+- The score has no `points` and stays at scoring version 3; `scorePoints(trialOutcomes)` of a perfect session equals `maxPoints`.
+- `trialOutcome` gives the same outcome as `scoreSession` on every trial of 50 random sessions, and follows Spec 001 at the edges (a 3 at any RT, 99 vs 100 ms).
+- `pointsSoFar` is the counter's last step (all zero for no outcomes).
 
 **API**
 

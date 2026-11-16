@@ -1,5 +1,6 @@
 import {
   maxPoints,
+  scorePoints,
   type BehaviourFlag,
   type CompletedSession,
   type ProgressMetric,
@@ -199,7 +200,7 @@ export function Results() {
 }
 
 /**
- * The game first (Spec 006 §4): the server's points, the longest streak and how far the
+ * The game first (Spec 006 §4): the points of the server's outcomes, the longest streak and how far the
  * sky got towards dawn (points ÷ an all-correct session's points, rounded down).
  */
 function GameSummary({ session }: { session: CompletedSession }) {
@@ -208,12 +209,14 @@ function GameSummary({ session }: { session: CompletedSession }) {
     isTarget: o === 'caught' || o === 'commission',
   }));
   const best = maxPoints(trials);
-  const dawn = best > 0 ? Math.floor((score.points / best) * 100) : 0;
+  // Points are never stored: they are always the points of the server's trial outcomes.
+  const points = scorePoints(score.trialOutcomes);
+  const dawn = best > 0 ? Math.floor((points / best) * 100) : 0;
   return (
     <Card as="section" aria-labelledby="game-title" className={styles.game}>
       <h2 id="game-title">Your game</h2>
       <p className={styles.gamePoints}>
-        <b>{score.points}</b> points
+        <b>{points}</b> points
       </p>
       <p className={styles.gameLine}>
         Longest streak: {score.longestSteadyRun} · Dawn {dawn}%

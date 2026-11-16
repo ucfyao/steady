@@ -45,7 +45,7 @@ describe('scoreSession', () => {
     expect(s.longestSteadyRun).toBe(81);
     // A perfectly constant 400 ms is not human-like, so it is described as such
     expect(s.flags).toEqual(['regular_timing']);
-    expect(s.scoringVersion).toBe(4);
+    expect(s.scoringVersion).toBe(3);
   });
 
   describe('regular_timing flag (descriptive only)', () => {

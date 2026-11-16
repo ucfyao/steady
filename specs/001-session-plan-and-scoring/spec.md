@@ -92,7 +92,7 @@ The input must already be valid. Definitions:
   - `caught`: a target withheld;
   - `commission`: a target pressed (at any RT, including an anticipation).
 - **`longestSteadyRun`:** the longest run of consecutive correct trials (`steady` or `caught` in `trialOutcomes`), for the session-journey UI.
-- **`points`** (scoring version 4, Spec 006): `scorePoints(trialOutcomes)`, the game points. Not a measurement; no metric depends on it.
+- **`trialOutcome(isTarget, rt)`** is exported (Spec 006): the outcome rule above as one function, so the browser's live game points use exactly the server's rule. Game points are never part of the score; they are always `scorePoints(trialOutcomes)`.
 - The result always includes `scoringVersion`.
 
 ## Test cases (Vitest)
@@ -135,7 +135,6 @@ Any change to how a session is scored bumps `scoringVersion`, so stored scores c
 
 - **1:** the first version.
 - **2:** adds `trialOutcomes` (Spec 004 part 3). No metric changed. There is no deployed data, so no version-1 scores need re-scoring.
-- **4:** adds `points` (Spec 006). No metric changed.
 - **3:** 81-trial sessions with 3 probes (Spec 005). The rules are the same; older sessions are deleted by migration `0002`, so no version-3 score is ever compared with an older one.
 
 ## Out of scope

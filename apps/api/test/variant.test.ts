@@ -82,7 +82,7 @@ describe('A/B variant', () => {
     expect(res.body.errors).toEqual([expect.stringContaining('variant')]);
   });
 
-  it('stores the points in the score (scoring version 4)', async () => {
+  it('stores no points: they are always derived from the trial outcomes (Spec 006 §3)', async () => {
     const token = await newPlayer(t);
     const s = (await start(token).expect(201)).body;
     t.clock.advance(PLAUSIBLE_MS);
@@ -93,7 +93,7 @@ describe('A/B variant', () => {
         .send(perfectSubmission(s.plan))
         .expect(200)
     ).body as CompletedSession;
-    expect(done.score.scoringVersion).toBe(4);
-    expect(done.score.points).toBeGreaterThan(0);
+    expect(done.score.scoringVersion).toBe(3);
+    expect(done.score).not.toHaveProperty('points');
   });
 });

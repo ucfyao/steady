@@ -287,7 +287,17 @@ describe('Results: the game first (Spec 006 §4)', () => {
     const game = { ...mixed, id: 'g1', variant: 'game' as const };
     renderResults({ pathname: '/results/g1', state: { session: game } }, [game]);
     const block = await screen.findByRole('region', { name: 'Your game' });
-    expect(block).toHaveTextContent(`${game.score.points} points`);
+    // Points from the outcomes by hand (Spec 006 §2), the same walk as `best` below.
+    const points = game.score.trialOutcomes.reduce(
+      (acc, o) => {
+        if (o !== 'steady' && o !== 'caught') return { streak: 0, total: acc.total };
+        const streak = acc.streak + 1;
+        const mult = streak >= 30 ? 5 : streak >= 15 ? 3 : streak >= 5 ? 2 : 1;
+        return { streak, total: acc.total + (o === 'caught' ? 30 : 10) * mult };
+      },
+      { streak: 0, total: 0 },
+    ).total;
+    expect(block).toHaveTextContent(`${points} points`);
     expect(block).toHaveTextContent(`Longest streak: ${game.score.longestSteadyRun}`);
     // Dawn = points ÷ the points of an all-correct session, rounded down.
     const best = plan.trials.reduce(
@@ -298,7 +308,7 @@ describe('Results: the game first (Spec 006 §4)', () => {
       },
       { streak: 0, total: 0 },
     ).total;
-    expect(block).toHaveTextContent(`Dawn ${Math.floor((game.score.points / best) * 100)}%`);
+    expect(block).toHaveTextContent(`Dawn ${Math.floor((points / best) * 100)}%`);
   });
 
   it('shows no game block for a calm session', async () => {

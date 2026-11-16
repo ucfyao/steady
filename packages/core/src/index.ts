@@ -10,11 +10,12 @@ export {
   SubmissionSchema,
 } from './contracts.js';
 export { validateSubmission } from './validate.js';
-export { isTransitionTrial, scoreSession } from './score.js';
+export { isTransitionTrial, scoreSession, trialOutcome } from './score.js';
 export { compareByCheckIn, comparePreProbe, summariseProgress } from './progress.js';
 export {
   createPointsCounter,
   maxPoints,
+  pointsSoFar,
   scorePoints,
   type PointsCounter,
   type PointsStep,

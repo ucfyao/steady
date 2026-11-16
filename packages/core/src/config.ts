@@ -26,7 +26,7 @@ export const SART_CONFIG = {
   flagAnticipationShare: 0.1, // [P] descriptive flag only
   flagRegularTimingCv: 0.05, // [P] descriptive flag only; typical human CV is far higher
 
-  scoringVersion: 4, // 4: adds points (Spec 006); 3: 81-trial sessions (Spec 005)
+  scoringVersion: 3, // 3: 81-trial sessions (Spec 005); 2: adds trialOutcomes (Spec 001)
 } as const;
 
 export const TRIAL_MS = SART_CONFIG.stimulusMs + SART_CONFIG.maskMs;
@@ -62,8 +62,8 @@ export const SUBMIT_CONFIG = {
 } as const;
 
 /**
- * Game points (Spec 006). They are not a measurement: they never change a session's metrics,
- * and the server's `scorePoints` is the only stored count.
+ * Game points (Spec 006). Not a measurement and never stored: a session's points are
+ * always `scorePoints(trialOutcomes)` of its outcomes, wherever they are shown.
  */
 export const GAME_CONFIG = {
   steadyPoints: 10, // [P] a press on a digit, not too early
