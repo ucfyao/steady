@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { NavLink, Outlet, useOutletContext } from 'react-router';
 import { PlayerMenu } from './PlayerMenu.js';
 import { usePlayers } from './players/usePlayers.js';
@@ -10,10 +10,11 @@ type LayoutContext = { setFocusMode(on: boolean): void };
 /**
  * Focus mode (Spec 004): while a screen calls this, the layout drops the header and
  * notices, so only that screen is on the page. Turns off when the caller unmounts.
+ * A layout effect, so the header is gone before the first frame is painted.
  */
 export function useFocusMode() {
   const setFocusMode = useOutletContext<LayoutContext | undefined>()?.setFocusMode;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!setFocusMode) return;
     setFocusMode(true);
     return () => setFocusMode(false);
