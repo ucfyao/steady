@@ -5,12 +5,12 @@ import {
   type StartedSession,
   type Submission,
 } from '@steady/core';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { ApiError } from '../api/client.js';
 import { Block } from '../game/Block.js';
 import { HowToPlay } from '../game/HowToPlay.js';
-import { PracticeResult } from '../game/PracticeResult.js';
+import { PracticeLine } from '../game/PracticeLine.js';
 import { Steps } from '../game/Steps.js';
 import { browserEnv, type PlayEnv } from '../game/env.js';
 import { createPracticePlan, summarisePractice, type PracticeSummary } from '../game/practice.js';
@@ -26,15 +26,14 @@ const PRACTICE_OPTIONS: RunnerOptions = { feedbackMs: 800 }; // [P] Spec 004
 const MAIN_OPTIONS: RunnerOptions = {};
 
 /**
- * First time: intro (step 1) → practice → practice result (step 2) → before you start
- * (step 3) → countdown and trials. Returning players start at "before you start", which
- * links back to the intro (Spec 004).
+ * First time: intro (step 1) → practice → before you start (step 2, with how the practice
+ * went) → countdown and trials. Returning players start at "before you start", which links
+ * back to the intro (Spec 005).
  */
 type Step =
   | { k: 'loading' }
   | { k: 'intro' }
   | { k: 'practice'; plan: ReturnType<typeof createPracticePlan> }
-  | { k: 'practice-done'; summary: PracticeSummary }
   | { k: 'before' }
   | { k: 'starting' }
   | { k: 'running'; session: StartedSession }
@@ -66,6 +65,8 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   /** On the step-by-step path (first time, or after "How to play"): show the step bar. */
   const [guided, setGuided] = useState(false);
   const [checkIn, setCheckIn] = useState<CheckIn>({});
+  /** The last practice's counts, shown on "Before you start" while on the guided path. */
+  const [practiced, setPracticed] = useState<PracticeSummary | null>(null);
 
   useEffect(() => {
     if (!api) return;
@@ -87,6 +88,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
 
   const intro = () => {
     setGuided(true);
+    setPracticed(null);
     setStep({ k: 'intro' });
   };
   const practice = () => setStep({ k: 'practice', plan: createPracticePlan(Date.now()) });
@@ -144,7 +146,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           <Button size="lg" onClick={practice}>
             Try a short practice
           </Button>
-          <p className={styles.footnote}>18 digits · about 45 seconds · not saved</p>
+          <p className={styles.footnote}>12 digits · about 30 seconds · not saved</p>
           {!firstTime && (
             <Button
               variant="link"
@@ -167,20 +169,11 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           options={PRACTICE_OPTIONS}
           hint={`Practice · ${rule}`}
           env={env}
-          onDone={({ rts }) =>
-            setStep({ k: 'practice-done', summary: summarisePractice(step.plan.trials, rts) })
-          }
+          onDone={({ rts }) => {
+            setPracticed(summarisePractice(step.plan.trials, rts));
+            setStep({ k: 'before' });
+          }}
           onVoid={() => setStep({ k: 'voided', during: 'practice' })}
-        />
-      );
-
-    case 'practice-done':
-      return (
-        <PracticeResult
-          summary={step.summary}
-          device={env.device}
-          onReady={() => setStep({ k: 'before' })}
-          onAgain={practice}
         />
       );
 
@@ -188,6 +181,11 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       return (
         <BeforeYouStart
           guided={guided}
+          practice={
+            guided && practiced ? (
+              <PracticeLine summary={practiced} device={env.device} onAgain={practice} />
+            ) : null
+          }
           value={checkIn}
           onChange={setCheckIn}
           onStart={() => start()}
@@ -253,9 +251,13 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   }
 }
 
-/** Step 3 (Spec 004), shared by new and returning players: the check-in and three points. */
+/**
+ * Step 2 (Spec 005), shared by new and returning players: how the practice went (after one),
+ * the check-in and three points.
+ */
 function BeforeYouStart({
   guided,
+  practice,
   value,
   onChange,
   onStart,
@@ -263,6 +265,7 @@ function BeforeYouStart({
   onHowToPlay,
 }: {
   guided: boolean;
+  practice: ReactNode;
   value: CheckIn;
   onChange(v: CheckIn): void;
   onStart(): void;
@@ -289,7 +292,8 @@ function BeforeYouStart({
 
   return (
     <form onSubmit={submit} className={styles.screen}>
-      {guided && <Steps step={3} label="Before you start" />}
+      {guided && <Steps step={2} label="Before you start" />}
+      {practice}
       <h1>How are you today?</h1>
       <p className={styles.lead}>
         Optional. It helps you spot patterns later; it never changes your score.
@@ -303,7 +307,7 @@ function BeforeYouStart({
           <span className={styles.icon} aria-hidden="true">
             3′
           </span>
-          About three minutes, at full speed
+          About two minutes, at full speed
         </li>
         <li>
           <span className={styles.icon} aria-hidden="true">

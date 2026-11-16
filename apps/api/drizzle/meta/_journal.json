@@ -15,6 +15,13 @@
       "when": 1794751213342,
       "tag": "0001_session_device",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794837337551,
+      "tag": "0002_delete_old_sessions",
+      "breakpoints": true
     }
   ]
 }

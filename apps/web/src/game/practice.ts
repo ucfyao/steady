@@ -1,9 +1,10 @@
 import { SART_CONFIG, mulberry32, type PlanTrial } from '@steady/core';
 import type { TrialTiming } from './runner.js';
 
-const PRACTICE_TARGETS = 2; // [P] 18 trials, 2 of them 3s (≈11% no-go, as in the main block)
+const PRACTICE_TARGETS = 2; // [P] 12 trials, 2 of them 3s (Spec 005)
+const EXTRA_GO = 2; // [P] go digits drawn twice, on top of every go digit once
 const NO_TARGET_AT_START = 3; // [P]
-/** [P] Spec 004: practice starts slow and ends at the real speed, 6 trials per step. */
+/** [P] Spec 005: practice starts slow and ends at the real speed, 4 trials per step. */
 const PRACTICE_SPEEDS: TrialTiming[] = [
   { stimulusMs: 800, maskMs: 1200 },
   { stimulusMs: 500, maskMs: 1000 },
@@ -11,9 +12,9 @@ const PRACTICE_SPEEDS: TrialTiming[] = [
 ];
 
 /**
- * The practice round (Spec 004): every non-target digit twice plus two 3s, shuffled
- * with the seed until no digit repeats and the first three trials have no 3. It starts
- * slow and the last steps run at the real speed.
+ * The practice round (Spec 005): every non-target digit once, two more drawn by the seed,
+ * and two 3s, shuffled with the seed until no digit repeats and the first three trials
+ * have no 3. It starts slow and the last steps run at the real speed.
  * Generated on the client and never submitted.
  */
 export function createPracticePlan(seed: number): {
@@ -23,7 +24,12 @@ export function createPracticePlan(seed: number): {
 } {
   const rng = mulberry32(seed);
   const go = SART_CONFIG.digits.filter((d) => d !== SART_CONFIG.targetDigit);
-  const digits = [...go, ...go, ...Array<number>(PRACTICE_TARGETS).fill(SART_CONFIG.targetDigit)];
+  const extra = Array.from({ length: EXTRA_GO }, () => go[Math.floor(rng() * go.length)]!);
+  const digits = [
+    ...go,
+    ...extra,
+    ...Array<number>(PRACTICE_TARGETS).fill(SART_CONFIG.targetDigit),
+  ];
 
   for (let attempt = 0; attempt < 1000; attempt++) {
     for (let i = digits.length - 1; i > 0; i--) {

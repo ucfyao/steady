@@ -36,7 +36,7 @@ export function pressEverything(plan: StartedSession['plan']): Submission {
   return { rts: plan.trials.map(() => 300), probeAnswers: plan.probeAfter.map(() => 'drifting') };
 }
 
-export const PLAUSIBLE_MS = 150_000; // a real session: 144.9 s of trials plus probes
+export const PLAUSIBLE_MS = 100_000; // a real session: 93.15 s of trials plus probes (Spec 005)
 
 /** Start, wait a realistic time, submit a perfect session. */
 export async function playSession(t: TestApp, token: string, checkIn?: CheckIn) {

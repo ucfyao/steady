@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -86,5 +87,34 @@ describe('committed migrations (Spec 003 storage)', () => {
     await expect(pool.query(`insert into players (token_hash) values ('same')`)).rejects.toThrow(
       /unique/,
     );
+  });
+});
+
+describe('migration 0002 (Spec 005): sessions of the old length are deleted', () => {
+  const trials = (n: number) =>
+    JSON.stringify(Array.from({ length: n }, (_, index) => ({ index })));
+  const sessionWith = (playerId: string, n: number) =>
+    pool.query(
+      `insert into sessions (player_id, seed, trials, probe_after, device, started_at)
+       values ($1, 1, $2, '[]', 'keyboard', now())`,
+      [playerId, trials(n)],
+    );
+
+  it('deletes every session without 81 trials and keeps the players and 81-trial sessions', async () => {
+    await pool.query('delete from sessions');
+    const player = await newPlayer();
+    await sessionWith(player, 126);
+    await sessionWith(player, 126);
+    await sessionWith(player, 81);
+
+    const sql = readFileSync(`${MIGRATIONS}/0002_delete_old_sessions.sql`, 'utf8');
+    await pool.query(sql);
+
+    const { rows } = await pool.query<{ n: number }>(
+      'select jsonb_array_length(trials) as n from sessions',
+    );
+    expect(rows).toEqual([{ n: 81 }]);
+    const players = await pool.query('select id from players where id = $1', [player]);
+    expect(players.rowCount).toBe(1);
   });
 });

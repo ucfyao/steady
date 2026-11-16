@@ -43,16 +43,16 @@ describe('metric definitions', () => {
     expect(METRICS.medianGoRtMs.format(401.6)).toBe('402 ms');
   });
 
-  it('shows digits missed as a count out of the 112 digits, never a percentage', () => {
-    // 126 trials, 14 of them 3s (Spec 001): 112 digits to press for.
+  it('shows digits missed as a count out of the 72 digits, never a percentage', () => {
+    // 81 trials, 9 of them 3s (Spec 005): 72 digits to press for.
     const m = METRICS.omissionRate;
-    expect(m.format(m.show(4 / 112))).toBe('4');
+    expect(m.format(m.show(4 / 72))).toBe('4');
     expect(m.format(m.show(0))).toBe('0');
     // The median of an even number of sessions can fall between two counts.
-    expect(m.format(m.show(3.5 / 112))).toBe('3.5');
-    expect(m.format(m.show(7 / 112))).not.toMatch(/%/);
+    expect(m.format(m.show(3.5 / 72))).toBe('3.5');
+    expect(m.format(m.show(7 / 72))).not.toMatch(/%/);
     // The comparison's reference is in the same unit.
-    expect(compareMetric('omissionRate', 7 / 112, 4 / 112)?.reference).toBeCloseTo(4, 9);
+    expect(compareMetric('omissionRate', 7 / 72, 4 / 72)?.reference).toBeCloseTo(4, 9);
   });
 });
 

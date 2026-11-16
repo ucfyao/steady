@@ -38,14 +38,25 @@ function Stat({
   );
 }
 
-function LastCheck({ session }: { session: CompletedSession | undefined }) {
-  if (!session)
-    return (
-      <Card as="section" aria-labelledby="last-title">
-        <h2 id="last-title">Last check</h2>
-        <p className={styles.empty}>No checks yet. Your first one starts with a short practice.</p>
-      </Card>
-    );
+/** For a player with no checks yet: what Steady is, before anything about history (Spec 005). */
+function Welcome() {
+  return (
+    <Card as="section" aria-labelledby="welcome-title">
+      <h2 id="welcome-title">What Steady does</h2>
+      <p className={styles.empty}>
+        A short game that shows how steady your attention is today. Play a few times a week to see
+        your own pattern.
+      </p>
+      <ul className={styles.points}>
+        <li>About two minutes</li>
+        <li>Starts with a 30-second practice</li>
+        <li>Compared only with your own results</li>
+      </ul>
+    </Card>
+  );
+}
+
+function LastCheck({ session }: { session: CompletedSession }) {
   const { score } = session;
   return (
     <Card as="section" aria-labelledby="last-title">
@@ -90,14 +101,15 @@ export function Home() {
     <section className={styles.home}>
       <h1>Hi, {active?.name}</h1>
       {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
-      <p className={styles.lead}>Three minutes. Catch every digit, hold back on&nbsp;3.</p>
-      {data && (
+      <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
+      {data && data.sessions.length === 0 && <Welcome />}
+      {data && data.sessions.length > 0 && (
         <>
           <Card as="section" aria-labelledby="week-title">
             <h2 id="week-title">Last 7 days</h2>
             <WeekDots completedAt={data.sessions.map((s) => s.completedAt)} />
           </Card>
-          <LastCheck session={data.sessions.at(-1)} />
+          <LastCheck session={data.sessions.at(-1)!} />
           {data.summary.sessionsUntilBaseline > 0 && (
             <p className={styles.baseline}>
               {moreSessions(data.summary.sessionsUntilBaseline)} until your starting point

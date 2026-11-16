@@ -16,7 +16,8 @@ describe('createSessionPlan', () => {
 
   it.each(SEEDS)('seed %i: balanced digits, no adjacent repeats, valid font sizes', (seed) => {
     const { trials } = createSessionPlan(seed);
-    expect(trials).toHaveLength(SART_CONFIG.digits.length * SART_CONFIG.copiesPerDigit);
+    // Spec 005: 81 trials, 9 of each digit (from the spec, not the config)
+    expect(trials).toHaveLength(81);
 
     const counts = new Map<number, number>();
     trials.forEach((t, i) => {
@@ -27,7 +28,7 @@ describe('createSessionPlan', () => {
       expect(t.fontSize).toBeLessThan(SART_CONFIG.fontSizes);
       if (i > 0) expect(t.digit).not.toBe(trials[i - 1]!.digit);
     });
-    for (const d of SART_CONFIG.digits) expect(counts.get(d)).toBe(SART_CONFIG.copiesPerDigit);
+    for (const d of SART_CONFIG.digits) expect(counts.get(d)).toBe(9);
   });
 
   it.each(SEEDS)('seed %i: no target during the first 5 (warm-up) trials', (seed) => {
@@ -38,17 +39,18 @@ describe('createSessionPlan', () => {
 
   it.each(SEEDS)('seed %i: probes on go trials with bounded gaps', (seed) => {
     const { trials, probeAfter } = createSessionPlan(seed);
-    expect(probeAfter).toHaveLength(SART_CONFIG.probesPerSession);
+    // Spec 005: 3 probes, the first at 19–25, gaps 20–26, the last at or before 75
+    expect(probeAfter).toHaveLength(3);
 
     let prev = -1;
     for (const p of probeAfter) {
       expect(trials[p]!.isTarget).toBe(false);
       const gap = p - prev;
-      // nominal gap 25–35; shifting off a target can move a probe back by one
-      expect(gap).toBeGreaterThanOrEqual(SART_CONFIG.probeGapMin - 1);
-      expect(gap).toBeLessThanOrEqual(SART_CONFIG.probeGapMax + 1);
+      // nominal gap 20–26; shifting off a target can move a probe back by one
+      expect(gap).toBeGreaterThanOrEqual(19);
+      expect(gap).toBeLessThanOrEqual(27);
       prev = p;
     }
-    expect(prev).toBeLessThanOrEqual(SART_CONFIG.lastProbeMaxIndex);
+    expect(prev).toBeLessThanOrEqual(75);
   });
 });

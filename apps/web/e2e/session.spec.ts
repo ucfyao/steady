@@ -6,35 +6,34 @@ test('a new player practises, plays a full session and sees results and progress
 }) => {
   await page.goto('/play');
 
-  // First visit: step 1 (how it works), the practice round, step 2 (practice result).
-  await expect(page.getByText('Step 1 of 3')).toBeVisible();
+  // First visit: step 1 (how it works), the practice round, then step 2 (before you start)
+  // with how the practice went at the top.
+  await expect(page.getByText('Step 1 of 2')).toBeVisible();
   await expect(page.getByRole('region', { name: 'How to play' })).toContainText('Hold back');
   await page.getByRole('button', { name: 'Try a short practice' }).click();
   await playBlock(page);
-  await expect(page.getByRole('heading', { name: 'Nice warm-up' })).toBeVisible();
+  await expect(page.getByText('Step 2 of 2')).toBeVisible();
   // The helper never presses on a 3, and presses for every other digit, usually within a few
-  // ms, which the practice result counts as too early (under 100 ms) rather than caught.
-  await expect(page.getByRole('group', { name: '3s held back' })).toContainText('2 / 2');
-  const first = async (name: string) =>
-    Number((await page.getByRole('group', { name }).textContent())!.match(/\d+/)![0]);
-  expect((await first('digits caught')) + (await first('too early'))).toBe(16);
-  await page.getByRole('button', { name: "I'm ready" }).click();
+  // ms, which the practice counts as too early (under 100 ms) rather than caught.
+  const line = (await page.getByTestId('practice-line').textContent())!;
+  expect(line).toContain('2 of 2 3s held back');
+  const caught = Number(line.match(/(\d+) of 10 digits caught/)![1]);
+  const early = Number(line.match(/(\d+) too early/)?.[1] ?? 0);
+  expect(caught + early).toBe(10);
 
-  // Step 3: before you start (the check-in), then the session.
-  await expect(page.getByText('Step 3 of 3')).toBeVisible();
   await skipCheckIn(page);
   // Focus mode: no header or navigation while the block runs.
   await expect(page.getByTestId('stimulus')).toBeAttached({ timeout: 15_000 });
   await expect(page.getByRole('banner')).toHaveCount(0);
   const { presses, probes } = await playBlock(page);
-  expect(presses).toBe(112);
-  expect(probes).toBe(4);
+  expect(presses).toBe(72);
+  expect(probes).toBe(3);
 
   // Scored by the server, which also checked that the session took real time.
   await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
   const ribbon = page.getByRole('img', { name: /session journey/i });
-  await expect(ribbon.getByTestId('trial')).toHaveCount(126);
-  await expect(ribbon.getByTestId('probe')).toHaveCount(4);
+  await expect(ribbon.getByTestId('trial')).toHaveCount(81);
+  await expect(ribbon.getByTestId('probe')).toHaveCount(3);
   await expect(page.getByRole('group', { name: 'Digits missed' })).toContainText('0');
   const resultsUrl = page.url();
 
@@ -78,7 +77,6 @@ test('leaving the page during trials voids the session', async ({ page, request 
   await page.goto('/play');
   await page.getByRole('button', { name: 'Try a short practice' }).click();
   await playBlock(page);
-  await page.getByRole('button', { name: "I'm ready" }).click();
   await skipCheckIn(page);
 
   // Wait for the first digit, then switch away.

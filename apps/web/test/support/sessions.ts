@@ -14,12 +14,12 @@ export function storedSession(
     checkIn: opts.checkIn ?? null,
     device: 'keyboard',
     score: {
-      scoringVersion: 2,
+      scoringVersion: 3,
       commissions: 0,
       commissionRate: 0.2,
-      // 6 of the 112 digits (Spec 001), so the count and the rate agree.
+      // 6 of the 72 digits (Spec 005), so the count and the rate agree.
       omissions: 6,
-      omissionRate: 6 / 112,
+      omissionRate: 6 / 72,
       anticipations: 0,
       medianGoRtMs: 400,
       rtCv: 0.2,

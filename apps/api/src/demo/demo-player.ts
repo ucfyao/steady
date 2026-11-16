@@ -69,7 +69,7 @@ function respond(plan: SessionPlan, skill: number, rand: () => number): Submissi
 /** The demo history relative to `now`, in the local time zone, oldest first. */
 export function demoSessions(now: Date): DemoSession[] {
   const rand = mulberry32(RANDOM_SEED);
-  // Trials, four probes and the countdown: about 2 minutes 55 seconds.
+  // Trials, three probes and the countdown: about 2 minutes.
   const durationMs = SART_CONFIG.digits.length * SART_CONFIG.copiesPerDigit * TRIAL_MS + 30_000;
   return DAYS_AGO.map((ago, i) => {
     const plan = createSessionPlan(Math.floor(rand() * (2 ** 31 - 1)));

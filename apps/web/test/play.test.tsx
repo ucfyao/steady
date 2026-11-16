@@ -63,10 +63,10 @@ function simulatedPlayer(
 }
 
 const space = () => fireEvent.keyDown(window, { code: 'Space', key: ' ' });
-// 3 s countdown + 126 trials × 1150 ms + 4 probes × (1 frame + 1 s) + frame slack
-const WHOLE_SESSION_MS = 3000 + 126 * 1200 + 4 * 1100 + 2000;
-// 3 s countdown + 6 × 2000 + 6 × 1500 + 6 × 1150 ms trials, 800 ms feedback each
-const PRACTICE_MS = 3000 + 6 * 2000 + 6 * 1500 + 6 * 1150 + 18 * 850 + 1000;
+// 3 s countdown + 81 trials × 1150 ms + 3 probes × (1 frame + 1 s) + frame slack (Spec 005)
+const WHOLE_SESSION_MS = 3000 + 81 * 1200 + 3 * 1100 + 2000;
+// 3 s countdown + 4 × 2000 + 4 × 1500 + 4 × 1150 ms trials, 800 ms feedback each
+const PRACTICE_MS = 3000 + 4 * 2000 + 4 * 1500 + 4 * 1150 + 12 * 850 + 1000;
 
 /** Step 1 (Spec 004): the short rules, with the 5 / 8 / 3 example. */
 function expectHowItWorks(action: RegExp) {
@@ -89,18 +89,18 @@ async function startFromCheckIn(sleep?: string) {
 
 const KEYBOARD_HINT = 'Space for every digit except 3';
 const PRACTICE_HINT = 'Practice · Space for every digit except 3';
-const STEP = /step \d of 3/i;
+const STEP = /step \d of 2/i;
 const countdown = () => screen.findByTestId('countdown');
 
-describe('First time: how it works, practice, result, before you start', () => {
-  it('walks a new player through the three steps, then the countdown', async () => {
+describe('First time: how it works, practice, before you start', () => {
+  it('walks a new player through the two steps, then the countdown', async () => {
     const { backend, clock } = renderPlay({ returning: false });
 
     // 1. How it works
     await screen.findByRole('heading', { name: 'Catch every digit. Hold back on 3.' });
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
     expectHowItWorks(/press space as soon as you see a digit/i);
-    expect(screen.getByText('18 digits · about 45 seconds · not saved')).toBeInTheDocument();
+    expect(screen.getByText('12 digits · about 30 seconds · not saved')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /how are you today/i })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Try a short practice' }));
 
@@ -118,24 +118,21 @@ describe('First time: how it works, practice, result, before you start', () => {
     expect(hintMissing).toBe(0);
     expect(stepShown).toBe(0);
 
-    // 2. Practice result: counted in the browser, nothing sent.
-    expect(await screen.findByRole('heading', { name: 'Nice warm-up' })).toBeInTheDocument();
-    expect(screen.getByText('Step 2 of 3')).toBeInTheDocument();
-    expect(screen.getByRole('group', { name: '3s held back' })).toHaveTextContent('2 / 2');
-    expect(screen.getByRole('group', { name: 'digits caught' })).toHaveTextContent('16 / 16');
-    expect(screen.getByRole('group', { name: 'too early' })).toHaveTextContent('0');
-    expect(screen.getByRole('note', { name: 'One tip' })).toHaveTextContent(/no slips/i);
-    expect(backend.calls.map((c) => c.method)).not.toContain('startSession');
-    fireEvent.click(screen.getByRole('button', { name: "I'm ready" }));
-
-    // 3. Before you start: check-in and the three points, leaving in the warning colour.
+    // 2. Before you start: how the practice went (counted in the browser, nothing sent),
+    // then the check-in and the three points, leaving in the warning colour.
     await screen.findByRole('heading', { name: 'How are you today?' });
-    expect(screen.getByText('Step 3 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
+    expect(screen.getByTestId('practice-line')).toHaveTextContent(
+      'Practice: 2 of 2 3s held back · 10 of 10 digits caught',
+    );
+    expect(screen.getByRole('note', { name: 'One tip' })).toHaveTextContent(/no slips/i);
+    expect(screen.getByRole('button', { name: 'Practice again' })).toBeInTheDocument();
+    expect(backend.calls.map((c) => c.method)).not.toContain('startSession');
     const points = within(screen.getByRole('list', { name: 'Before you start' }))
       .getAllByRole('listitem')
       .map((li) => li.textContent);
     expect(points).toEqual([
-      expect.stringMatching(/about three minutes, at full speed/i),
+      expect.stringMatching(/about two minutes, at full speed/i),
       expect.stringMatching(/where your mind was/i),
       expect.stringMatching(/leaving cancels the session/i),
     ]);
@@ -184,24 +181,28 @@ describe('First time: how it works, practice, result, before you start', () => {
       ['Held back ✓', 'Missed', 'That was a 3', 'Too soon', '✓ Nice'].sort(),
     );
 
-    await screen.findByRole('heading', { name: 'Nice warm-up' });
-    expect(screen.getByRole('group', { name: '3s held back' })).toHaveTextContent('1 / 2');
-    expect(screen.getByRole('group', { name: 'digits caught' })).toHaveTextContent('14 / 16');
-    expect(screen.getByRole('group', { name: 'too early' })).toHaveTextContent('1');
+    await screen.findByRole('heading', { name: 'How are you today?' });
+    expect(screen.getByTestId('practice-line')).toHaveTextContent(
+      'Practice: 1 of 2 3s held back · 8 of 10 digits caught · 1 too early',
+    );
     // One slip of each kind: the tip is about the 3 (ties go to the 3).
     expect(screen.getByRole('note', { name: 'One tip' })).toHaveTextContent(
       'You pressed on one 3. That is normal: in the real check they are rare and come at full speed.',
     );
   });
 
-  it('Practice again replays the practice round', async () => {
+  it('Practice again replays the practice round and keeps the answers', async () => {
     const { clock } = renderPlay({ returning: false });
     fireEvent.click(await screen.findByRole('button', { name: 'Try a short practice' }));
     clock.advance(PRACTICE_MS, 50, simulatedPlayer(clock, space));
-    fireEvent.click(await screen.findByRole('button', { name: 'Practice again' }));
+    await screen.findByRole('heading', { name: 'How are you today?' });
+    fireEvent.click(screen.getByRole('radio', { name: 'Good' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Practice again' }));
     expect(await countdown()).toBeInTheDocument();
     clock.advance(PRACTICE_MS, 50, simulatedPlayer(clock, space));
-    expect(await screen.findByRole('heading', { name: 'Nice warm-up' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'How are you today?' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Good' })).toBeChecked();
+    expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
   });
 });
 
@@ -211,6 +212,8 @@ describe('Returning: before you start', () => {
     await screen.findByRole('heading', { name: 'How are you today?' });
     expect(screen.getByText(/optional/i)).toBeInTheDocument();
     expect(screen.queryByText(STEP)).toBeNull();
+    expect(screen.queryByTestId('practice-line')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Practice again' })).toBeNull();
     expect(screen.getByRole('list', { name: 'Before you start' })).toHaveTextContent(
       /leaving cancels the session/i,
     );
@@ -265,7 +268,7 @@ describe('Returning: before you start', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Good' }));
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }));
     expectHowItWorks(/press space as soon as you see a digit/i);
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Skip practice' }));
     await screen.findByRole('heading', { name: 'How are you today?' });
     expect(screen.getByRole('radio', { name: 'Good' })).toBeChecked();
@@ -281,10 +284,10 @@ describe('Returning: before you start', () => {
     fireEvent.click(screen.getByRole('button', { name: 'How to play' }));
     fireEvent.click(screen.getByRole('button', { name: 'Try a short practice' }));
     clock.advance(PRACTICE_MS, 50, simulatedPlayer(clock, space));
-    fireEvent.click(await screen.findByRole('button', { name: "I'm ready" }));
-    expect(backend.calls.map((c) => c.method)).not.toContain('startSession');
     await screen.findByRole('heading', { name: 'How are you today?' });
-    expect(screen.getByText('Step 3 of 3')).toBeInTheDocument();
+    expect(backend.calls.map((c) => c.method)).not.toContain('startSession');
+    expect(screen.getByText('Step 2 of 2')).toBeInTheDocument();
+    expect(screen.getByTestId('practice-line')).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'OK' })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Start' }));
     expect(await countdown()).toBeInTheDocument();
@@ -339,7 +342,7 @@ describe('Focus mode', () => {
     await startFromCheckIn();
     await countdown();
     const before = renders.count;
-    // 3 countdown steps, then per probe: probe, resume, trials. Not one per trial (126).
+    // 3 countdown steps, then per probe: probe, resume, trials. Not one per trial (81).
     clock.advance(WHOLE_SESSION_MS - 2000, 50, simulatedPlayer(clock, space));
     expect(renders.count - before).toBeLessThan(30);
   });
@@ -353,12 +356,7 @@ describe('Focus mode', () => {
     );
     clock.advance(WHOLE_SESSION_MS, 50, player);
     await screen.findByRole('heading', { name: 'Session complete' });
-    expect(backend.submitted[0]!.body.probeAnswers).toEqual([
-      'drifting',
-      'drifting',
-      'drifting',
-      'drifting',
-    ]);
+    expect(backend.submitted[0]!.body.probeAnswers).toEqual(['drifting', 'drifting', 'drifting']);
   });
 });
 
@@ -379,9 +377,9 @@ describe('Play', () => {
     const { id, body } = backend.submitted[0]!;
     const plan = backend.plans.get(id)!.plan;
     expect(validateSubmission({ seed: 0, ...plan }, body)).toEqual({ ok: true });
-    expect(body.probeAnswers).toEqual(['on_task', 'on_task', 'on_task', 'on_task']);
+    expect(body.probeAnswers).toEqual(['on_task', 'on_task', 'on_task']);
     const pressed = body.rts.filter((rt) => rt !== null);
-    expect(pressed).toHaveLength(112);
+    expect(pressed).toHaveLength(72);
     expect(new Set(pressed)).toEqual(new Set([400]));
     body.rts.forEach((rt, i) => {
       if (plan.trials[i]!.isTarget) expect(rt).toBeNull();
@@ -414,7 +412,7 @@ describe('Play', () => {
     clock.advance(5000);
     clock.hide();
     fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
-    expect(screen.getByText('Step 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
   });
 
   it('lets the player retry a failed submit', async () => {
@@ -449,7 +447,7 @@ describe('Play', () => {
 
     const { id, body } = backend.submitted[0]!;
     const plan = backend.plans.get(id)!.plan;
-    expect(body.rts.filter((rt) => rt !== null)).toHaveLength(112);
+    expect(body.rts.filter((rt) => rt !== null)).toHaveLength(72);
     body.rts.forEach((rt, i) => {
       if (plan.trials[i]!.isTarget) expect(rt).toBeNull();
     });

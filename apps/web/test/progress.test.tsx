@@ -39,8 +39,8 @@ const seven = COMMISSION.map((c, i) =>
 );
 
 // 11 sessions: practice, baseline = sessions 2–6, recent = sessions 7–11. Worked out by hand:
-//   catch rate:  baseline 1 − .3 = 70%, recent 1 − .1 = 90% (beyond the 0.1 band): ↑ better
-//   missed:      6 of 112 both: ≈ similar
+//   catch rate:  baseline 1 − .3 = 70%, recent 1 − .1 = 90% (beyond the 0.12 band): ↑ better
+//   missed:      6 of 72 both: ≈ similar
 //   response:    400 → 350 ms (beyond 20 ms): ↓ faster, neither better nor below;
 //                session 9 has no median, so recent n = 4
 //   variation:   20% → 26% (beyond 0.02): ↑ less even, below
@@ -322,9 +322,9 @@ describe('Progress screen', () => {
     expect(within(sleep).queryAllByTestId('group-median')).toHaveLength(0);
     expect(sleep).not.toHaveTextContent(/pattern so far/);
     expect(region('Stress')).toHaveTextContent('Needs at least 20 more sessions with a check-in.');
-    // No probe answers: 20 answers at 4 per session → 5 sessions.
+    // No probe answers: 20 answers at 3 per session (Spec 005) → 7 sessions.
     expect(region('Before each “where was your mind?”')).toHaveTextContent(
-      'Needs at least 5 more sessions.',
+      'Needs at least 7 more sessions.',
     );
   });
 

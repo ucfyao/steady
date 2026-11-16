@@ -36,7 +36,7 @@ export interface MetricDef {
 
 const percent = (x: number) => `${Math.round(x * 100)}%`;
 
-/** Digits to press for in a session: every trial except the 3s (112 of 126). */
+/** Digits to press for in a session: every trial except the 3s (72 of 81). */
 export const GO_TRIALS =
   SART_CONFIG.digits.length * SART_CONFIG.copiesPerDigit - SART_CONFIG.copiesPerDigit;
 
