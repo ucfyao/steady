@@ -338,3 +338,49 @@
 .answers .key {
   color: var(--night-muted);
 }
+
+/*
+ * ---- The plain variant (Spec 008) ----
+ * The original focus screen: the paper surface in the system theme, the digit alone in the
+ * sans face, the ⊗ mask as text. Countdown, feedback and probe in the paper colours.
+ */
+.plain {
+  --digit-max: clamp(7.5rem, min(56vw, 42vh), 15rem); /* about 240 px on a desktop */
+  --night-muted: var(--color-text-muted);
+
+  background: var(--color-surface);
+  color: var(--color-text);
+  color-scheme: normal;
+}
+
+.plain .stimulus {
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.plain .dots i {
+  background: var(--color-border);
+}
+
+.plain .dots i.on {
+  background: var(--color-accent-soft);
+}
+
+.plain .probe {
+  background: var(--color-surface);
+}
+
+.plain .answers button {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.plain .answers button:hover {
+  background: var(--color-surface-sunken);
+}
+
+/* The night scene's text shadow would blur the hint on paper. */
+.plain .hint {
+  text-shadow: none;
+}

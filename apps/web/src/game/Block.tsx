@@ -27,6 +27,8 @@ const FONT_PX = [48, 72, 94, 100, 120] as const;
 const FONT_SIZE = FONT_PX.map((px) => `calc(var(--digit-max) * ${px / 120})`);
 /** Spec 006: at most this many fireflies on screen. */
 const MAX_FLIES = 30;
+/** The plain variant's mask (Spec 008): the original `⊗` in the digit's place. */
+const MASK = '⊗';
 
 /** Practice feedback (Spec 004): one or two words in a coloured pill, readable in 800 ms. */
 const FEEDBACK: Record<Outcome, { text: string; good: boolean }> = {
@@ -51,7 +53,8 @@ type Ui =
   | { kind: 'resume' };
 
 /**
- * One block of trials (practice or the real session) on the lantern scene (Spec 006).
+ * One block of trials (practice or the real session) on the lantern scene (Spec 006), or on
+ * the bare paper surface for the plain variant (Spec 008).
  * The digit, the frost, the glow and the game layer are written straight into the DOM, so
  * the digit is on screen in the frame whose timestamp becomes its onset and React renders
  * only the countdown, feedback and probe.
@@ -88,6 +91,7 @@ export function Block({
   const focusRoot = useRef<HTMLDivElement>(null);
   const done = useEffectEvent(onDone);
   const game = variant === 'game';
+  const plain = variant === 'plain';
   useFocusMode();
 
   // Focus moves into the block, off the button that started it (which is now gone).
@@ -211,7 +215,7 @@ export function Block({
           if (lantern.current) delete lantern.current.dataset.glow;
         }
         draw(String(view.digit), FONT_SIZE[view.fontSize]!, false, view.index);
-      } else if (view.phase === 'mask') draw('', FONT_SIZE[2]!, true);
+      } else if (view.phase === 'mask') draw(plain ? MASK : '', FONT_SIZE[2]!, !plain);
       else {
         close(current);
         draw('', FONT_SIZE[2]!, false);
@@ -272,7 +276,7 @@ export function Block({
       unsubscribe();
       window.removeEventListener('keydown', onKey);
     };
-  }, [plan, options, env, game]);
+  }, [plan, options, env, game, plain]);
 
   const tap = (e: PointerEvent<HTMLDivElement>) => {
     if (env.device !== 'touch') return;
@@ -288,9 +292,13 @@ export function Block({
   // Focus mode: the whole screen is the scene. No progress, count or timer is shown,
   // because knowing how far along you are changes how people respond.
   return (
-    <div ref={focusRoot} className={styles.focus} tabIndex={-1}>
-      <Scene ref={scene} />
-      <div ref={flies} className={styles.flies} aria-hidden="true" />
+    <div
+      ref={focusRoot}
+      className={plain ? `${styles.focus} ${styles.plain}` : styles.focus}
+      tabIndex={-1}
+    >
+      {!plain && <Scene ref={scene} />}
+      {!plain && <div ref={flies} className={styles.flies} aria-hidden="true" />}
       {game && (
         <div className={styles.hud} aria-hidden="true">
           <span ref={pointsEl} className={styles.points} data-testid="points">
@@ -307,16 +315,21 @@ export function Block({
         onPointerDown={tap}
         aria-hidden={ui.kind === 'trials'}
       >
-        <div ref={lantern} className={styles.lantern} data-testid="lantern">
-          <span className={styles.cap} />
-          <div className={styles.glass}>
-            {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
-            <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
-            {/* The mask (Spec 006): the glass mists over the digit's place. */}
-            <div ref={frost} className={styles.frost} data-testid="frost" data-on="false" />
+        {plain ? (
+          // Spec 008: the digit alone on the paper surface; the mask is drawn as text.
+          <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
+        ) : (
+          <div ref={lantern} className={styles.lantern} data-testid="lantern">
+            <span className={styles.cap} />
+            <div className={styles.glass}>
+              {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
+              <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
+              {/* The mask (Spec 006): the glass mists over the digit's place. */}
+              <div ref={frost} className={styles.frost} data-testid="frost" data-on="false" />
+            </div>
+            <span className={styles.base} />
           </div>
-          <span className={styles.base} />
-        </div>
+        )}
         {ui.kind === 'countdown' && (
           <div className={styles.countdown} data-testid="countdown">
             <div className={styles.dots} aria-hidden="true">

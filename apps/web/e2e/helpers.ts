@@ -19,8 +19,9 @@ export async function playBlock(page: Page): Promise<{ presses: number; probes: 
         if (!el) return { kind: 'done' as const };
         const index = Number(el.dataset.index ?? -1);
         const text = el.textContent ?? '';
-        // The mask is frost over an empty digit (Spec 006), so a digit is any non-empty text.
-        if (index !== last && text !== '') {
+        // The mask is frost over an empty digit (Spec 006), or the ⊗ itself in the plain
+        // variant (Spec 008), so a digit is any other non-empty text.
+        if (index !== last && text !== '' && text !== '⊗') {
           return { kind: 'digit' as const, index, digit: text };
         }
         return null;

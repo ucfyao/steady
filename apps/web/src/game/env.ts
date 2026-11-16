@@ -17,7 +17,7 @@ export interface PlayEnv {
   variantOverride?: Variant;
 }
 
-/** `calm` or `game` from a query string, or undefined. */
+/** `plain`, `calm` or `game` from a query string, or undefined. */
 export function parseVariant(search: string): Variant | undefined {
   const v = new URLSearchParams(search).get('variant');
   return VARIANTS.find((x) => x === v);
