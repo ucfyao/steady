@@ -86,7 +86,8 @@ export function Home() {
   return (
     <section className={styles.home}>
       <h1>Hi, {active?.name}</h1>
-      <p className={styles.lead}>Three minutes. Catch every digit, hold back on 3.</p>
+      {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
+      <p className={styles.lead}>Three minutes. Catch every digit, hold back on&nbsp;3.</p>
       {data && (
         <>
           <Card as="section" aria-labelledby="week-title">

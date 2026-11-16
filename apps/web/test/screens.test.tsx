@@ -182,6 +182,29 @@ describe('Your data', () => {
     expect(backend.calls.map((c) => c.method)).not.toContain('rename');
   });
 
+  it('keeps renaming and deleting in separate sections', async () => {
+    renderApp('/data');
+    await avatar('Player 1');
+    const nameSection = screen.getByRole('region', { name: 'Name on this device' });
+    const deleteSection = screen.getByRole('region', { name: 'Delete my data' });
+    expect(within(nameSection).getByRole('button', { name: 'Save name' })).toBeInTheDocument();
+    expect(within(nameSection).queryByRole('button', { name: /delete/i })).toBeNull();
+    expect(within(deleteSection).queryByRole('textbox')).toBeNull();
+  });
+
+  it('shows the delete button as secondary until the confirmation step', async () => {
+    renderApp('/data');
+    await avatar('Player 1');
+    const first = screen.getByRole('button', { name: 'Delete my data' });
+    expect(first.className).toMatch(/secondary/);
+    expect(first.className).not.toMatch(/danger/);
+
+    await userEvent.click(first);
+    expect(screen.getByRole('button', { name: /yes, delete everything/i }).className).toMatch(
+      /danger/,
+    );
+  });
+
   it('deletes only after confirmation', async () => {
     const backend = renderApp('/data');
     await avatar('Player 1');

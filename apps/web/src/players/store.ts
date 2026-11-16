@@ -65,3 +65,9 @@ export function removeProfile(s: ProfilesState, id: string): ProfilesState {
 
 export const activeProfile = (s: ProfilesState): Profile | null =>
   s.profiles.find((p) => p.id === s.activeId) ?? null;
+
+/** Adds an imported player, or switches to it if this device already has its token. */
+export function importProfile(s: ProfilesState, p: Profile): ProfilesState {
+  const existing = s.profiles.find((q) => q.token === p.token);
+  return existing ? { ...s, activeId: existing.id } : addProfile(s, p);
+}

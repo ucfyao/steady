@@ -29,6 +29,12 @@ const daysAgo = (d: number) => {
 const stat = (label: string) => screen.getByRole('group', { name: label });
 
 describe('Home', () => {
+  it('keeps "on 3." together, so the 3 never wraps onto a line of its own', async () => {
+    renderHome([]);
+    const lead = await screen.findByText(/^Three minutes\./);
+    expect(lead.textContent).toContain('on\u00a03.');
+  });
+
   it('greets the player, says what the check is, and starts it', async () => {
     renderHome([]);
     expect(await screen.findByRole('heading', { name: 'Hi, Player 1' })).toBeInTheDocument();

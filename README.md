@@ -12,13 +12,13 @@ Requires Node ≥ 24 (`.nvmrc`), pnpm 10 and Docker.
 pnpm install        # also builds @steady/core
 pnpm bootstrap      # creates .env, starts Postgres 17 (Docker, host port 5433), runs migrations
 pnpm dev            # web app on http://localhost:5173, API on http://localhost:4000/api
-pnpm seed:demo      # optional: a demo player with two weeks of history, to see Progress at once
+pnpm seed:demo      # optional: prints a link to a demo player with two weeks of history
 pnpm check          # lint, format check, typecheck, all tests (API tests need Docker running)
 ```
 
 Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about three minutes. Use **Add player** in the avatar menu (top right) to try a second player on the same device.
 
-To see Progress without playing ten sessions, run `pnpm seed:demo`. It adds a player with 10 sessions over the past two weeks (session 1 practice, sessions 2–6 the starting point, some with a check-in), scored by the same `scoreSession` as the API; only the key presses are simulated. It prints a one-line snippet to paste into the browser console at http://localhost:5173, which adds the player as "Demo" and opens Progress. The script writes to the database directly: the API accepts only a session that was just played.
+To see Progress without playing ten sessions, run `pnpm seed:demo`. It adds a player with 10 sessions over the past two weeks (session 1 practice, sessions 2–6 the starting point, some with a check-in), scored by the same `scoreSession` as the API; only the key presses are simulated. It prints an import link, `http://localhost:5173/import#token=…&name=Demo`: open it while `pnpm dev` is running and the app checks the token with the API, adds the player as "Demo", and opens its Progress. The token is in the URL hash, so the browser never sends it to the server or a request log, and the app removes it from the address bar at once. Opening the link again switches to the same player rather than adding a copy. The script writes to the database directly: the API accepts only a session that was just played.
 
 The Docker Compose project is always named `steady`, so every checkout and worktree of the repository shares one Postgres container and one data volume (`steady_pgdata`).
 
