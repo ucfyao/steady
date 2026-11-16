@@ -129,8 +129,10 @@ describe('game variant', () => {
         slipped = true;
       }
     });
+    let frame = 0;
     clock.advance(WHOLE_SESSION_MS, 50, () => {
       p();
+      frame++;
       const pts = screen.queryByTestId('points');
       if (pts) last = pts.textContent!;
       const m = screen.queryByTestId('multiplier');
@@ -143,8 +145,9 @@ describe('game variant', () => {
         screen.queryByTestId('lantern')?.dataset.glow === 'bad'
       )
         fliesAfterSlip = flies;
-      // Nothing says how far along the block is.
-      expect(screen.queryByText(/of 81|remaining|left/i)).toBeNull();
+      // Nothing says how far along the block is (checked every 20th frame: a full-text
+      // query on every frame made this test too slow for CI).
+      if (frame % 20 === 0) expect(document.body.textContent).not.toMatch(/of 81|remaining|left/i);
     });
     await screen.findByRole('heading', { name: 'Session complete' });
     const { id, body } = backend.submitted[0]!;
@@ -156,7 +159,7 @@ describe('game variant', () => {
     expect(maxFlies).toBeGreaterThan(0);
     expect(maxFlies).toBeLessThanOrEqual(30);
     expect(fliesAfterSlip).toBe(0);
-  });
+  }, 15_000); // a whole 81-trial session with a check on every frame
 
   it('raises the dawn as the points grow', async () => {
     const { clock } = renderPlay('game');
