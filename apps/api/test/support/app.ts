@@ -33,11 +33,8 @@ export interface TestApp {
   close(): Promise<void>;
 }
 
-/** The real app (same setup as main.ts) on a fresh Postgres 17 with committed migrations applied. */
-export async function startTestApp(
-  overrides: Partial<AppConfig> = {},
-  logDestination?: DestinationStream,
-): Promise<TestApp> {
+/** A fresh Postgres 17 with committed migrations applied. */
+export async function startMigratedDatabase() {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     'postgres:17-alpine',
   ).start();
@@ -45,15 +42,29 @@ export async function startTestApp(
   const pool = new pg.Pool({ connectionString: databaseUrl });
   const db = drizzle(pool, { schema });
   await migrate(db, { migrationsFolder: MIGRATIONS });
+  return { container, databaseUrl, pool, db };
+}
 
-  const config: AppConfig = {
+/** Test defaults: quiet logs, no rate limit, any port. */
+export function testConfig(databaseUrl: string, overrides: Partial<AppConfig> = {}): AppConfig {
+  return {
     databaseUrl,
     port: 0,
+    dbPoolMax: 10,
     logLevel: 'silent',
     prettyLogs: false,
     rateLimitPerMinute: false,
     ...overrides,
   };
+}
+
+/** The real app (same setup as main.ts) on a fresh Postgres 17 with committed migrations applied. */
+export async function startTestApp(
+  overrides: Partial<AppConfig> = {},
+  logDestination?: DestinationStream,
+): Promise<TestApp> {
+  const { container, databaseUrl, pool, db } = await startMigratedDatabase();
+  const config = testConfig(databaseUrl, overrides);
   const clock = new FakeClock();
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.register(config, logDestination)],
