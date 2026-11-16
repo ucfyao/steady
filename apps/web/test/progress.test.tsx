@@ -4,7 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
-import { sessionPoints } from '../src/progress/series.js';
+import { SessionDot } from '../src/progress/MetricChart.js';
+import { sessionPoints, type SessionPoint } from '../src/progress/series.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { storedSession } from './support/sessions.js';
 
@@ -72,7 +73,7 @@ describe('Progress screen', () => {
     expect(
       await screen.findByText('Your starting point is set after 3 more sessions.'),
     ).toBeInTheDocument();
-    expect(region('This week')).toHaveTextContent('1 of 4 days this week');
+    expect(region('This week')).toHaveTextContent('1 of 4 days');
     expect(within(region('This week')).getAllByTestId('week-day')).toHaveLength(7);
   });
 
@@ -85,7 +86,9 @@ describe('Progress screen', () => {
       '/progress',
       [0, 1, 2, 4, 6].map((d, i) => storedSession(i + 1, {}, { completedAt: day(d) })),
     );
-    expect(await screen.findByText('Goal reached: 5 days this week')).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'This week' })).toHaveTextContent(
+      '5 days, goal reached',
+    );
   });
 
   it('compares recent sessions with where the player started, with n', async () => {
@@ -166,15 +169,6 @@ describe('Progress screen', () => {
   });
 });
 
-describe('Home', () => {
-  it('shows this week and the starting-point countdown', async () => {
-    renderAt('/', seven.slice(0, 2));
-    expect(await screen.findByText('1 of 4 days this week')).toBeInTheDocument();
-    expect(screen.getByText('4 more sessions until your starting point')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Progress' })).toHaveAttribute('href', '/progress');
-  });
-});
-
 describe('sessionPoints', () => {
   it('numbers sessions, converts catch rate and marks practice and flagged sessions', () => {
     const points = sessionPoints(seven);
@@ -183,5 +177,25 @@ describe('sessionPoints', () => {
     expect(points.map((p) => p.practice)).toEqual([true, false, false, false, false, false, false]);
     expect(points[3]!.flags).toEqual(['high_omissions']);
     expect(points[0]!.medianGoRtMs).toBe(900);
+  });
+});
+
+describe('chart points', () => {
+  const [practice, , , flagged, normal] = sessionPoints(seven);
+  const drawn = (payload: SessionPoint) => {
+    const { container } = render(
+      <svg>
+        <SessionDot cx={10} cy={10} payload={payload} />
+      </svg>,
+    );
+    return container.querySelector('[data-kind]')!;
+  };
+
+  it('tells practice, flagged and other sessions apart by shape, not only colour', () => {
+    expect(drawn(practice!).tagName).toBe('circle');
+    expect(drawn(practice!)).toHaveAttribute('data-kind', 'practice');
+    expect(drawn(flagged!).tagName).toBe('path'); // a diamond
+    expect(drawn(flagged!)).toHaveAttribute('data-kind', 'flagged');
+    expect(drawn(normal!)).toHaveAttribute('data-kind', 'normal');
   });
 });

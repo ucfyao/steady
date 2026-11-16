@@ -9,6 +9,7 @@ import { WeekDots } from '../progress/WeekDots.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
+import styles from './Progress.module.css';
 
 type State =
   | { k: 'loading' }
@@ -75,9 +76,11 @@ export function Progress() {
   const { sessions, progress } = state;
   if (sessions.length === 0)
     return (
-      <section>
+      <section className={styles.progress}>
         <h1>Progress</h1>
-        <p>No sessions yet. Your progress appears here after your first check.</p>
+        <p className={styles.lead}>
+          No sessions yet. Your progress appears here after your first check.
+        </p>
         <Button to="/play" size="lg">
           Start today&apos;s check
         </Button>
@@ -89,7 +92,7 @@ export function Progress() {
   const view = metricView(metric);
 
   return (
-    <section className="progress">
+    <section className={styles.progress}>
       <h1>Progress</h1>
 
       <Card as="section" aria-labelledby="week-title">
@@ -100,7 +103,7 @@ export function Progress() {
       <Card as="section" aria-labelledby="recent-title">
         <h2 id="recent-title">Recent vs. where you started</h2>
         {summary.baseline && summary.recent ? (
-          <table className="compare-table">
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th scope="col">Metric</th>
@@ -110,18 +113,22 @@ export function Progress() {
             </thead>
             <tbody>
               {METRIC_VIEWS.map((m) => {
-                const cell = (s: { median: number | null; n: number }) =>
-                  s.median === null
-                    ? `– (n = ${s.n})`
-                    : `${m.format(m.show(s.median))} (n = ${s.n})`;
+                const shown = (s: { median: number | null; n: number }) => (
+                  <>
+                    <span className={styles.number}>
+                      {s.median === null ? '–' : m.format(m.show(s.median))}
+                    </span>{' '}
+                    <span className={styles.n}>(n = {s.n})</span>
+                  </>
+                );
                 return (
                   <tr key={m.key}>
                     <th scope="row">
                       {m.label}
-                      {m.hint && <span className="row-hint">{m.hint}</span>}
+                      {m.hint && <span className={styles.rowHint}>{m.hint}</span>}
                     </th>
-                    <td>{cell(summary.baseline![m.key])}</td>
-                    <td>{cell(summary.recent![m.key])}</td>
+                    <td>{shown(summary.baseline![m.key])}</td>
+                    <td>{shown(summary.recent![m.key])}</td>
                   </tr>
                 );
               })}
@@ -130,18 +137,43 @@ export function Progress() {
         ) : (
           <>
             <p>Your starting point is set after {moreSessions(summary.sessionsUntilBaseline)}.</p>
-            <p className="lead">Session 1 is practice; sessions 2–6 set where you started.</p>
+            <p className={styles.note}>
+              Session 1 is practice; sessions 2–6 set where you started.
+            </p>
           </>
         )}
       </Card>
 
-      <section aria-labelledby="time-title">
+      <section aria-labelledby="time-title" className={styles.block}>
         <h2 id="time-title">Over time</h2>
-        <p className="lead">
-          Speed and accuracy side by side. A hollow point is the practice session; an outlined point
-          has a note about that session.
-        </p>
-        <div className="charts">
+        <p className={styles.note}>Speed and accuracy side by side, one point per session.</p>
+        <ul className={styles.legend}>
+          <li>
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <circle cx="6" cy="6" r="3.5" className={styles.keyNormal} />
+            </svg>
+            A session
+          </li>
+          <li>
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <circle cx="6" cy="6" r="4" className={styles.keyPractice} />
+            </svg>
+            Practice
+          </li>
+          <li>
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M6 1L11 6L6 11L1 6Z" className={styles.keyFlagged} />
+            </svg>
+            Has a note (see the tooltip)
+          </li>
+          <li>
+            <svg viewBox="0 0 16 12" aria-hidden="true">
+              <line x1="0" y1="6" x2="16" y2="6" className={styles.keyBaseline} />
+            </svg>
+            Where you started
+          </li>
+        </ul>
+        <div className={styles.charts}>
           {METRIC_VIEWS.map((m) => {
             const b = summary.baseline?.[m.key].median ?? null;
             return (
@@ -157,9 +189,9 @@ export function Progress() {
         </div>
       </section>
 
-      <section aria-labelledby="explore-title">
+      <section aria-labelledby="explore-title" className={styles.block}>
         <h2 id="explore-title">Exploring patterns</h2>
-        <p className="lead">
+        <p className={styles.note}>
           Exploratory: each dot is one session. Sessions after a check-in are grouped by your
           answer. Practice is left out.
         </p>

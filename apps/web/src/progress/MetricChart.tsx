@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { FLAG_SHORT, type MetricView } from './metrics.js';
+import styles from './MetricChart.module.css';
 import type { SessionPoint } from './series.js';
 
 interface DotProps {
@@ -17,11 +18,27 @@ interface DotProps {
   payload?: SessionPoint;
 }
 
-/** Practice sessions are hollow; flagged sessions get a warning outline (Spec 004). */
-function SessionDot({ cx, cy, payload }: DotProps) {
+/**
+ * Practice sessions are a hollow circle; flagged sessions a hollow diamond in the warning
+ * colour (Spec 004). Shape tells them apart without relying on colour.
+ */
+export function SessionDot({ cx, cy, payload }: DotProps) {
   if (cx === undefined || cy === undefined || !payload) return null;
-  const kind = payload.practice ? 'practice' : payload.flags.length > 0 ? 'flagged' : 'normal';
-  return <circle cx={cx} cy={cy} r={kind === 'normal' ? 3.5 : 5} className={`dot dot-${kind}`} />;
+  if (payload.flags.length > 0 && !payload.practice) {
+    const r = 5.5;
+    return (
+      <path
+        d={`M${cx} ${cy - r}L${cx + r} ${cy}L${cx} ${cy + r}L${cx - r} ${cy}Z`}
+        className={styles.flagged}
+        data-kind="flagged"
+      />
+    );
+  }
+  return payload.practice ? (
+    <circle cx={cx} cy={cy} r={4.5} className={styles.practice} data-kind="practice" />
+  ) : (
+    <circle cx={cx} cy={cy} r={3.5} className={styles.normal} data-kind="normal" />
+  );
 }
 
 export function MetricChart({
@@ -41,20 +58,25 @@ export function MetricChart({
   const id = `chart-${view.key}`;
 
   return (
-    <figure className="chart" aria-labelledby={id}>
-      <figcaption>
+    <figure className={styles.chart} aria-labelledby={id}>
+      <figcaption className={styles.caption}>
         <h3 id={id}>{view.label}</h3>
-        <p className="chart-latest">
-          {latest
-            ? `Latest: ${view.format(latest.value!)} (session ${latest.session})`
-            : 'No value yet'}
-          {view.hint && <span className="chart-hint"> · {view.hint}</span>}
+        <p className={styles.hint}>{view.hint}</p>
+        <p className={styles.latest}>
+          {latest ? (
+            <>
+              Latest: <span className={styles.value}>{view.format(latest.value!)}</span> (session{' '}
+              {latest.session})
+            </>
+          ) : (
+            'No value yet'
+          )}
         </p>
       </figcaption>
-      <div className="chart-plot" aria-hidden="true">
+      <div className={styles.plot} aria-hidden="true">
         <ResponsiveContainer width="100%" height={170}>
           <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-            <CartesianGrid vertical={false} className="chart-grid" />
+            <CartesianGrid vertical={false} />
             <XAxis dataKey="session" tickLine={false} allowDecimals={false} />
             <YAxis
               width={64}
@@ -66,12 +88,12 @@ export function MetricChart({
             {baseline !== null && (
               <ReferenceLine
                 y={baseline}
-                className="chart-baseline"
                 strokeDasharray="4 4"
                 label={{ value: 'where you started', position: 'insideTopRight' }}
               />
             )}
             <Tooltip
+              wrapperClassName={styles.tooltip}
               formatter={(v) => (typeof v === 'number' ? view.format(v) : '–')}
               labelFormatter={(_, payload) => {
                 const p = payload[0]?.payload as SessionPoint | undefined;
@@ -88,7 +110,7 @@ export function MetricChart({
               type="monotone"
               dataKey="value"
               name={view.label}
-              className="chart-line"
+              className={styles.line}
               connectNulls
               isAnimationActive={false}
               dot={(props) => (

@@ -1,10 +1,53 @@
 import type { CompletedSession, ProgressSummary } from '@steady/core';
 import { useEffect, useState } from 'react';
 import { usePlayers } from '../players/usePlayers.js';
+import { lastCheckDay } from '../progress/lastCheck.js';
+import { metricView } from '../progress/metrics.js';
 import { WeekDots } from '../progress/WeekDots.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
+import styles from './Home.module.css';
 import { moreSessions } from './Progress.js';
+
+const catchRate = metricView('commissionRate');
+
+/** One number with a small label under it, read as "Catch rate, 75%". */
+function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
+  return (
+    <div role="group" aria-label={label} className={styles.stat}>
+      <span className={styles.value}>
+        {value}
+        {unit && <span className={styles.unit}> {unit}</span>}
+      </span>
+      <span className={styles.label}>{label}</span>
+    </div>
+  );
+}
+
+function LastCheck({ session }: { session: CompletedSession | undefined }) {
+  if (!session)
+    return (
+      <Card as="section" aria-labelledby="last-title">
+        <h2 id="last-title">Last check</h2>
+        <p className={styles.empty}>No checks yet. Your first one starts with a short practice.</p>
+      </Card>
+    );
+  const { score } = session;
+  return (
+    <Card as="section" aria-labelledby="last-title">
+      <h2 id="last-title">Last check · {lastCheckDay(session.completedAt, new Date())}</h2>
+      <div className={styles.stats}>
+        <Stat label="Catch rate" value={catchRate.format(catchRate.show(score.commissionRate))} />
+        <Stat label="Longest steady run" value={String(score.longestSteadyRun)} />
+        {score.medianGoRtMs === null ? (
+          <Stat label="Median response" value="–" unit="Not enough presses to measure" />
+        ) : (
+          <Stat label="Median response" value={String(Math.round(score.medianGoRtMs))} unit="ms" />
+        )}
+      </div>
+    </Card>
+  );
+}
 
 export function Home() {
   const { api, active } = usePlayers();
@@ -27,19 +70,24 @@ export function Home() {
   }, [api]);
 
   return (
-    <section>
+    <section className={styles.home}>
       <h1>Hi, {active?.name}</h1>
-      <p className="lead">A three-minute focus check. Catch every 3, keep a steady rhythm.</p>
+      <p className={styles.lead}>Three minutes. Catch every digit, hold back on 3.</p>
       {data && (
-        <Card>
-          <WeekDots completedAt={data.sessions.map((s) => s.completedAt)} />
-          <p>Sessions completed: {data.sessions.length}</p>
+        <>
+          <Card as="section" aria-labelledby="week-title">
+            <h2 id="week-title">This week</h2>
+            <WeekDots completedAt={data.sessions.map((s) => s.completedAt)} />
+          </Card>
+          <LastCheck session={data.sessions.at(-1)} />
           {data.summary.sessionsUntilBaseline > 0 && (
-            <p>{moreSessions(data.summary.sessionsUntilBaseline)} until your starting point</p>
+            <p className={styles.baseline}>
+              {moreSessions(data.summary.sessionsUntilBaseline)} until your starting point
+            </p>
           )}
-        </Card>
+        </>
       )}
-      <Button to="/play" size="lg">
+      <Button to="/play" size="lg" className={styles.start}>
         Start today&apos;s check
       </Button>
     </section>
