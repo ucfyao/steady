@@ -48,10 +48,41 @@
   color: var(--color-text-muted);
 }
 
-.hint {
+.note {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+/* The change against the reference: arrow and words, coloured only as a second cue. */
+.change {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.change[data-verdict='better'] {
+  color: var(--color-accent);
+}
+
+.change[data-verdict='worse'] {
+  color: var(--color-danger);
+}
+
+.ref {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-muted);
+}
+
+.term {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
   opacity: 0.85;
+}
+
+.footnote {
+  margin-top: var(--space-5);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 
 .about ul {

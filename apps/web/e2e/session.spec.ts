@@ -35,7 +35,7 @@ test('a new player practises, plays a full session and sees results and progress
   const ribbon = page.getByRole('img', { name: /session journey/i });
   await expect(ribbon.getByTestId('trial')).toHaveCount(126);
   await expect(ribbon.getByTestId('probe')).toHaveCount(4);
-  await expect(page.getByRole('group', { name: 'Missed digits' })).toContainText('0');
+  await expect(page.getByRole('group', { name: 'Digits missed' })).toContainText('0');
   const resultsUrl = page.url();
 
   await page.getByRole('link', { name: 'See your progress' }).click();
