@@ -8,6 +8,7 @@ coverage/
 .DS_Store
 .worktrees/
 .gstack/
+.superpowers/
 test-results/
 playwright-report/
 blob-report/
