@@ -52,6 +52,19 @@
   color: var(--color-text);
 }
 
+.empty {
+  display: grid;
+  place-items: center;
+  height: 170px;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 .plot {
   margin: 0 calc(-1 * var(--space-2));
 }

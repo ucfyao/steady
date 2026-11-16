@@ -1,5 +1,12 @@
 import type { ProbeAnswer, Submission } from '@steady/core';
-import { useEffect, useEffectEvent, useRef, useState, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from 'react';
 import { useFocusMode } from '../Layout.js';
 import { Button } from '../ui/Button.js';
 import styles from './Block.module.css';
@@ -182,22 +189,27 @@ export function Block({
         aria-hidden={ui.kind === 'trials'}
       >
         {ui.kind === 'countdown' && (
-          // Not a stimulus: a ring that fills, a serif sage number and a label, so it can
-          // never be mistaken for a digit (Spec 004).
+          // Not a stimulus, and no number: a "3" here is the very digit to hold back on
+          // (Spec 004). A ring fills over the countdown, under a label. With reduced motion it
+          // fills a third at a time instead of sweeping.
           <div className={styles.countdown} data-testid="countdown">
             <div className={styles.ring}>
               <svg viewBox="0 0 100 100" aria-hidden="true">
                 <circle className={styles.track} cx="50" cy="50" r="48" />
                 <circle
                   className={styles.arc}
-                  style={{ animationDuration: `${COUNTDOWN_S}s` }}
+                  style={
+                    {
+                      animationDuration: `${COUNTDOWN_S}s`,
+                      '--step-offset': ((ui.n - 1) / COUNTDOWN_S) * 100,
+                    } as CSSProperties
+                  }
                   cx="50"
                   cy="50"
                   r="48"
                   pathLength="100"
                 />
               </svg>
-              <span className={styles.count}>{ui.n}</span>
             </div>
             <p className={styles.ready}>
               {env.device === 'touch' ? 'Finger on the screen' : 'Finger on Space'}

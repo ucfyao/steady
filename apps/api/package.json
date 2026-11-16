@@ -11,7 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "seed:demo": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/demo/seed-demo.js"
+    "seed:demo": "node --env-file-if-exists=../../.env --import tsx src/demo/seed-demo.ts"
   },
   "dependencies": {
     "@nestjs/common": "12.5.0",
@@ -40,6 +40,7 @@
     "drizzle-kit": "0.31.11",
     "pino-pretty": "^13.2.0",
     "supertest": "^7.3.2",
+    "tsx": "^4.23.15",
     "unplugin-swc": "^2.0.0",
     "vitest": "^5.1.0"
   }

@@ -6,6 +6,7 @@
  */
 import {
   PROGRESS_CONFIG,
+  SART_CONFIG,
   median,
   type CompletedSession,
   type ProgressMetric,
@@ -35,6 +36,13 @@ export interface MetricDef {
 
 const percent = (x: number) => `${Math.round(x * 100)}%`;
 
+/** Digits to press for in a session: every trial except the 3s (112 of 126). */
+export const GO_TRIALS =
+  SART_CONFIG.digits.length * SART_CONFIG.copiesPerDigit - SART_CONFIG.copiesPerDigit;
+
+/** A count, with one decimal only when a median falls between two counts ("3.5"). */
+const count = (x: number) => String(Math.round(x * 10) / 10);
+
 export const METRICS: Record<ProgressMetric, MetricDef> = {
   commissionRate: {
     key: 'commissionRate',
@@ -53,8 +61,10 @@ export const METRICS: Record<ProgressMetric, MetricDef> = {
     description: 'Digits you let pass without pressing.',
     term: 'Omission errors',
     better: 'lower',
-    show: (v) => v,
-    format: percent,
+    // Shown as a count on every page: the number of digits is the same in every session,
+    // so a count compares exactly like the rate the server stores.
+    show: (v) => v * GO_TRIALS,
+    format: count,
     phrase: 'catching every digit',
     moved: { up: 'More missed', down: 'Fewer missed' },
   },
@@ -156,8 +166,8 @@ const medianOrNull = (xs: (number | null)[]) => {
 /**
  * What a session is compared with (Spec 004, Results), by its place in the player's
  * history, so a session's comparison never changes later:
- * - the practice session: nothing;
- * - a session with only practice before it: nothing;
+ * - the first session (not counted: the player is getting used to the pace): nothing;
+ * - a session with only the first one before it: nothing;
  * - a session in the baseline window (sessions 2–6): the median of the earlier non-practice
  *   sessions (their server scores);
  * - a later session: the server's baseline.
@@ -203,8 +213,8 @@ const list = (xs: string[]) =>
 export function headline(reference: Reference, comparisons: readonly Comparison[]): string {
   if (reference.kind === 'none')
     return reference.reason === 'first'
-      ? 'Your first check is done. It counts as practice, so there is nothing to compare yet.'
-      : 'Nothing to compare with yet: your first check was practice. From your next check on, Steady compares with your earlier ones.';
+      ? `Your first full check is done. It is for getting used to the pace, so it does not count toward your starting point. Your starting point is built from your next ${PROGRESS_CONFIG.baselineSessions} checks.`
+      : `Nothing to compare with yet: your first check was for getting used to the pace. Your starting point is built from this check and the next ${PROGRESS_CONFIG.baselineSessions - 1}.`;
   const ref = referenceName(reference);
   if (comparisons.length === 0) return `Not enough presses to compare with ${ref}.`;
   const phrases = (v: Verdict) =>

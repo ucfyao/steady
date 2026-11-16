@@ -5,7 +5,7 @@ import {
   type PlanTrial,
   type ProbeAnswer,
 } from '@steady/core';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
@@ -149,12 +149,24 @@ describe('Results', () => {
     );
   });
 
-  it('uses plain names, with the research term as small print', async () => {
+  it('keeps each tile to the number and a plain name; the research terms are in About these measures', async () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
     await screen.findByRole('group', { name: '3s held back' });
-    expect(tile('3s held back')).toHaveTextContent(/catch rate/i);
-    expect(tile('How much your timing varied')).toHaveTextContent(/rhythm variability/i);
-    expect(tile('Typical response time')).toHaveTextContent(/median response time/i);
+    // The count sits on the number's line, not on a line of its own.
+    expect(within(tile('3s held back')).getByTestId('value')).toHaveTextContent(/^93%\s*13 of 14$/);
+    for (const name of ['3s held back', 'How much your timing varied', 'Typical response time'])
+      expect(tile(name)).not.toHaveTextContent(/catch rate|rhythm variability|median response/i);
+
+    // A disclosure, closed at first, that works by click or tap (no hover needed).
+    const about = screen.getByText('About these measures').closest('details')!;
+    expect(about).not.toHaveAttribute('open');
+    fireEvent.click(screen.getByText('About these measures'));
+    expect(about).toHaveAttribute('open');
+    expect(about).toHaveTextContent(/3s held back.*catch rate \(1 − commission errors\)/i);
+    expect(about).toHaveTextContent(/digits missed.*omission errors/i);
+    expect(about).toHaveTextContent(/typical response time.*median response time/i);
+    expect(about).toHaveTextContent(/how much your timing varied.*rhythm variability \(RT CV\)/i);
+    expect(about).toHaveTextContent(/longest steady run/i);
   });
 });
 
@@ -170,9 +182,25 @@ describe('Results: the conclusion and comparisons', () => {
   it('is neutral after the first session', async () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } }, [mixed]);
     await expectConclusion(
-      'Your first check is done. It counts as practice, so there is nothing to compare yet.',
+      'Your first full check is done. It is for getting used to the pace, so it does not count toward your starting point. Your starting point is built from your next 5 checks.',
     );
     expect(screen.queryByTestId('change')).toBeNull();
+    // The player has just done the practice round: this full check is never called practice.
+    expect(screen.getByRole('main')).not.toHaveTextContent(/practice/i);
+  });
+
+  it('counts digits missed, and compares with a count too', async () => {
+    // Baseline: 4 of the 112 digits missed in each of sessions 2–6; this session: 7.
+    const target = storedSession(7, { ...usual, omissions: 7, omissionRate: 7 / 112 });
+    renderResults({ pathname: '/results/s7', state: { session: target } }, [
+      ...before(6, { ...usual, omissions: 4, omissionRate: 4 / 112 }),
+      target,
+    ]);
+    await expectConclusion(/below at catching every digit|Below where you started/);
+    const missed = tile('Digits missed');
+    expect(within(missed).getByTestId('value')).toHaveTextContent(/^7$/);
+    expect(within(missed).getByTestId('change')).toHaveTextContent('More missed · 4 before');
+    expect(missed).not.toHaveTextContent('%');
   });
 
   it('compares with where you started once the baseline exists, with arrows and words', async () => {
@@ -221,7 +249,7 @@ describe('Results: the conclusion and comparisons', () => {
   });
 
   it('compares with the earlier checks before the baseline exists', async () => {
-    // Session 4: compared with sessions 2 and 3 (session 1 is practice).
+    // Session 4: compared with sessions 2 and 3 (session 1 does not count).
     renderResults({ pathname: '/results/s1', state: { session: mixed } }, [
       ...before(3, usual),
       mixed,

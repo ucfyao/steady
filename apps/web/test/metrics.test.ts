@@ -42,6 +42,18 @@ describe('metric definitions', () => {
     expect(METRICS.commissionRate.format(0.75)).toBe('75%');
     expect(METRICS.medianGoRtMs.format(401.6)).toBe('402 ms');
   });
+
+  it('shows digits missed as a count out of the 112 digits, never a percentage', () => {
+    // 126 trials, 14 of them 3s (Spec 001): 112 digits to press for.
+    const m = METRICS.omissionRate;
+    expect(m.format(m.show(4 / 112))).toBe('4');
+    expect(m.format(m.show(0))).toBe('0');
+    // The median of an even number of sessions can fall between two counts.
+    expect(m.format(m.show(3.5 / 112))).toBe('3.5');
+    expect(m.format(m.show(7 / 112))).not.toMatch(/%/);
+    // The comparison's reference is in the same unit.
+    expect(compareMetric('omissionRate', 7 / 112, 4 / 112)?.reference).toBeCloseTo(4, 9);
+  });
 });
 
 describe('compareMetric', () => {
@@ -217,11 +229,13 @@ describe('headline', () => {
   });
 
   it('is neutral when there is nothing to compare with', () => {
+    // Session 1 is not part of the starting point, but it is not called practice: the
+    // player has just done the practice round, and this was a full check.
     expect(headline({ kind: 'none', reason: 'first' }, [])).toBe(
-      'Your first check is done. It counts as practice, so there is nothing to compare yet.',
+      'Your first full check is done. It is for getting used to the pace, so it does not count toward your starting point. Your starting point is built from your next 5 checks.',
     );
     expect(headline({ kind: 'none', reason: 'practiceOnly' }, [])).toBe(
-      'Nothing to compare with yet: your first check was practice. From your next check on, Steady compares with your earlier ones.',
+      'Nothing to compare with yet: your first check was for getting used to the pace. Your starting point is built from this check and the next 4.',
     );
   });
 

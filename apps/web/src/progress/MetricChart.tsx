@@ -22,7 +22,7 @@ interface DotProps {
 }
 
 /**
- * Practice sessions are a hollow circle; flagged sessions a hollow diamond in the warning
+ * The first session (not counted) is a hollow circle; flagged sessions a hollow diamond in the warning
  * colour (Spec 004). Shape tells them apart without relying on colour.
  */
 export function SessionDot({ cx, cy, payload }: DotProps) {
@@ -45,6 +45,9 @@ export function SessionDot({ cx, cy, payload }: DotProps) {
 }
 
 const ARROW = { higher: '↑', lower: '↓' } as const;
+
+/** A line, and so a trend, needs two sessions; until then the chart's place says so. */
+export const MIN_POINTS = 2;
 
 /**
  * One metric over time (Spec 004): straight lines between sessions, and no text inside the
@@ -101,53 +104,60 @@ export function MetricChart({
           )}
         </p>
       </figcaption>
-      <div className={styles.plot} aria-hidden="true">
-        <ResponsiveContainer width="100%" height={170}>
-          <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="session" tickLine={false} allowDecimals={false} />
-            <YAxis
-              width={64}
-              tickLine={false}
-              axisLine={false}
-              ticks={axis?.ticks}
-              tickFormatter={label}
-              domain={axis ? [axis.ticks[0]!, axis.ticks.at(-1)!] : ['auto', 'auto']}
-            />
-            {baseline !== null && <ReferenceLine y={baseline} strokeDasharray="4 4" />}
-            <Tooltip
-              wrapperClassName={styles.tooltip}
-              formatter={(v) => (typeof v === 'number' ? def.format(v) : '–')}
-              labelFormatter={(_, payload) => {
-                const p = payload[0]?.payload as SessionPoint | undefined;
-                if (!p) return '';
-                const notes = [
-                  p.practice ? 'practice' : null,
-                  ...p.flags.map((f) => FLAG_SHORT[f]),
-                ].filter(Boolean);
-                const date = new Date(p.completedAt).toLocaleDateString();
-                return `Session ${p.session}, ${date}${notes.length ? ` (${notes.join(', ')})` : ''}`;
-              }}
-            />
-            <Line
-              type="linear"
-              dataKey="value"
-              name={def.name}
-              className={styles.line}
-              connectNulls
-              isAnimationActive={false}
-              dot={(props) => (
-                <SessionDot
-                  key={`dot-${props.index}`}
-                  cx={props.cx}
-                  cy={props.cy}
-                  payload={props.payload as SessionPoint}
-                />
-              )}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {points.length < MIN_POINTS ? (
+        <p className={styles.empty}>
+          Finish {MIN_POINTS - points.length} more check
+          {MIN_POINTS - points.length === 1 ? '' : 's'} to see a trend.
+        </p>
+      ) : (
+        <div className={styles.plot} aria-hidden="true">
+          <ResponsiveContainer width="100%" height={170}>
+            <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="session" tickLine={false} allowDecimals={false} />
+              <YAxis
+                width={64}
+                tickLine={false}
+                axisLine={false}
+                ticks={axis?.ticks}
+                tickFormatter={label}
+                domain={axis ? [axis.ticks[0]!, axis.ticks.at(-1)!] : ['auto', 'auto']}
+              />
+              {baseline !== null && <ReferenceLine y={baseline} strokeDasharray="4 4" />}
+              <Tooltip
+                wrapperClassName={styles.tooltip}
+                formatter={(v) => (typeof v === 'number' ? def.format(v) : '–')}
+                labelFormatter={(_, payload) => {
+                  const p = payload[0]?.payload as SessionPoint | undefined;
+                  if (!p) return '';
+                  const notes = [
+                    p.practice ? 'first check, not counted' : null,
+                    ...p.flags.map((f) => FLAG_SHORT[f]),
+                  ].filter(Boolean);
+                  const date = new Date(p.completedAt).toLocaleDateString();
+                  return `Session ${p.session}, ${date}${notes.length ? ` (${notes.join(', ')})` : ''}`;
+                }}
+              />
+              <Line
+                type="linear"
+                dataKey="value"
+                name={def.name}
+                className={styles.line}
+                connectNulls
+                isAnimationActive={false}
+                dot={(props) => (
+                  <SessionDot
+                    key={`dot-${props.index}`}
+                    cx={props.cx}
+                    cy={props.cy}
+                    payload={props.payload as SessionPoint}
+                  />
+                )}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </figure>
   );
 }
