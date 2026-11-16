@@ -6,7 +6,7 @@ A three-minute daily focus check built on the Sustained Attention to Response Ta
 
 ## Quick start
 
-Requires Node ≥ 24 (`.nvmrc`), pnpm 10 and Docker.
+Requires Node ≥ 24 (`nvm use` reads `.nvmrc`), pnpm 10 (`corepack enable` provides the version pinned in `package.json`) and Docker running. The first `pnpm bootstrap` pulls the `postgres:17-alpine` image, which can take a minute.
 
 ```bash
 pnpm install        # also builds @steady/core
@@ -41,9 +41,36 @@ specs/           one folder per feature (GitHub Spec Kit layout: spec.md, plan.m
 docs/            design note and AI-assisted development log
 ```
 
+## Data model and API
+
+Two tables (`apps/api/src/db/schema.ts`):
+
+| Table      | Columns                                                                                                                                                                       | Notes                                                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `players`  | `id`, `token_hash` (unique), `created_at`                                                                                                                                     | Nothing personal: a player is only the hash of their token                                                                                 |
+| `sessions` | `id`, `player_id` → `players` (cascade delete), `seed`, `trials`, `probe_after`, `check_in`, `device`, `started_at`, `completed_at`, `submission`, `score`, `scoring_version` | One row per session; trials, raw submission and score are JSONB. Indexed on `(player_id, completed_at)`. `completed_at` is null while open |
+
+All routes are under `/api`, and all need `Authorization: Bearer <token>` except the two marked public:
+
+| Route                       | What it does                                                                                                               |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `POST /players` (public)    | Creates a player; returns the token once                                                                                   |
+| `DELETE /me`                | Deletes the player and all their sessions                                                                                  |
+| `POST /sessions`            | Starts a session: the server picks the seed, stores the exact trials and returns them (never the seed)                     |
+| `POST /sessions/:id/submit` | Validates the responses against the stored trials and the server's clock, scores them with `scoreSession`, and stores both |
+| `GET /sessions`             | The player's completed sessions with their scores                                                                          |
+| `GET /progress`             | Baseline, recent performance and the exploratory comparisons, all computed by `@steady/core`                               |
+| `GET /health` (public)      | Database health                                                                                                            |
+
+A session's life: `POST /sessions` → play in the browser (timing recorded from frame timestamps) → `POST /sessions/:id/submit` → `400` if the responses do not match the trials, `422` if the timing is implausible or the session expired, otherwise scored and stored → Results and Progress read it back. An unsubmitted session expires after 30 minutes and is never scored.
+
+## Deployment
+
+Production runs on Vercel (two projects: `apps/web` static, `apps/api` as one serverless function) with Supabase as PostgreSQL. Pushes to `main` deploy automatically; migrations are a manual step before merging. See [docs/deployment.md](docs/deployment.md) for setup, releasing and troubleshooting.
+
 ## Design note
 
-See [docs/design-note.md](docs/design-note.md): which task I chose and why, how it plays, how it is scored, how progress is shown, and the trade-offs.
+See [docs/design-note.md](docs/design-note.md): which task and which apps I looked at, how it plays and what brings people back, how it is scored and what counts as a good result, how progress is shown, an operator view designed but not built, and the trade-offs.
 
 ## Key technical decisions
 
@@ -83,7 +110,7 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **Identity:** a player is an anonymous token kept in this browser. There are no accounts and no recovery: clearing site data loses the history. This keeps the server free of personal data; real accounts (or employer SSO) would be the next step.
 - **Trust:** the server checks that a submission is plausible (length, timing, duration) and flags machine-like timing, but browser input cannot be fully trusted. It never labels a session as cheating.
 - **Leaving the page voids a session,** because timing would be interrupted. The open session expires after 30 minutes without being scored.
-- **Not built:** deployment, offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use).
+- **Not built:** offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use), and an operator or employer view (designed in [docs/operator-view.md](docs/operator-view.md), not built: aggregates need real players).
 
 ## Time spent
 

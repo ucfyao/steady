@@ -62,7 +62,7 @@ Rejected submissions (steps 2 and 4) store nothing; the session stays open. A se
 
 - `helmet` headers; JSON body limit 32 kB.
 - Rate limits with `@nestjs/throttler`: 120 requests/min per client by default, 10/min for `POST /api/players` [P].
-- Environment validated with Zod at startup (`DATABASE_URL`, `API_PORT` default 4000, `LOG_LEVEL`, `NODE_ENV`); the app refuses to start on bad config.
+- Environment validated with Zod at startup (`DATABASE_URL`, `API_PORT` default 4000, `DB_POOL_MAX` default 10, `LOG_LEVEL`, `NODE_ENV`); the app refuses to start on bad config.
 - Docker Compose maps Postgres to host port 5433 so it does not clash with a local Postgres.
 - Structured logs (`nestjs-pino`) with the `Authorization` header redacted.
 - Graceful shutdown closes the DB pool.

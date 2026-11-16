@@ -3,6 +3,8 @@ import { z } from 'zod';
 const EnvSchema = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'must be a postgres:// URL'),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+  // Connections per process. Keep it small on serverless, where each instance has its own pool.
+  DB_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
@@ -10,6 +12,7 @@ const EnvSchema = z.object({
 export interface AppConfig {
   databaseUrl: string;
   port: number;
+  dbPoolMax: number;
   logLevel: z.infer<typeof EnvSchema>['LOG_LEVEL'];
   prettyLogs: boolean;
   /** Requests per minute per client; `false` turns rate limiting off (tests only). */
@@ -29,6 +32,7 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   return {
     databaseUrl: e.DATABASE_URL,
     port: e.API_PORT,
+    dbPoolMax: e.DB_POOL_MAX,
     logLevel: e.LOG_LEVEL,
     prettyLogs: e.NODE_ENV === 'development',
     rateLimitPerMinute: 120, // [P]
