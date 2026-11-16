@@ -7,11 +7,11 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 
 - `pnpm install`: installs dependencies and builds `@steady/core`. Run it first in every new worktree.
 - `pnpm bootstrap`: `.env`, Postgres 17 in Docker (host port 5433), migrations
-- `pnpm dev`: web app on port 5173 (proxies `/api`) and API on port 4000, both in watch mode
+- `pnpm dev`: web app on port 5173 (proxies `/api`) and API on port 4000, both in watch mode, with `@steady/core` rebuilt on change
 - `pnpm --filter @steady/api db:generate`: after changing `apps/api/src/db/schema.ts`; commit the generated SQL
 - `pnpm --filter @steady/core test`: core tests only
-- `pnpm --filter @steady/core build`: ESM build with `.d.ts` into `packages/core/dist`. Run it after changing `packages/core/src` so the API sees the change.
-- `pnpm check`: lint, format check, typecheck, tests. **Must pass before every commit.** CI runs the same command on every PR. API tests need Docker.
+- `pnpm --filter @steady/core build`: ESM build with `.d.ts` into `packages/core/dist`. `pnpm dev` and `pnpm check` run it for you; run it yourself before other commands after changing `packages/core/src`.
+- `pnpm check`: core build, lint, format check, typecheck, tests. **Must pass before every commit.** CI runs the same command, then `pnpm build`, on every PR. API tests need Docker.
 
 ## Layout and boundaries
 

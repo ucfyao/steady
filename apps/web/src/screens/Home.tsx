@@ -74,7 +74,7 @@ function LastCheck({ session, best }: { session: CompletedSession; best: number 
         ) : (
           <Stat label={response.name} value={String(Math.round(score.medianGoRtMs))} unit="ms" />
         )}
-        {best !== null && <Stat label="Personal best" value={String(best)} unit="points" />}
+        {best !== null && <Stat label="Personal best" value={`dawn ${best}%`} />}
       </div>
     </Card>
   );
@@ -87,20 +87,24 @@ export function Home() {
     summary: ProgressSummary;
     variant: Variant;
   } | null>(null);
+  const [failed, setFailed] = useState(false);
+  // Bumped by "Try again" to load the history once more.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
     Promise.all([api.listSessions(), api.getProgress(), api.getMe()])
-      .then(
-        ([sessions, progress, me]) =>
-          !cancelled && setData({ sessions, summary: progress.summary, variant: me.variant }),
-      )
-      .catch(() => !cancelled && setData(null));
+      .then(([sessions, progress, me]) => {
+        if (cancelled) return;
+        setData({ sessions, summary: progress.summary, variant: me.variant });
+        setFailed(false);
+      })
+      .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, attempt]);
 
   const game = data?.variant === 'game';
   const lastGame = game ? data.sessions.filter((s) => s.variant === 'game').at(-1) : undefined;
@@ -123,6 +127,14 @@ export function Home() {
           </Button>
         </div>
       </section>
+      {failed && (
+        <div role="alert" className="error">
+          <p>Could not load your history.</p>
+          <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
+            Try again
+          </Button>
+        </div>
+      )}
       {data && data.sessions.length === 0 && <Welcome />}
       {data && data.sessions.length > 0 && (
         <>

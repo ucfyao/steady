@@ -13,7 +13,7 @@ pnpm install        # also builds @steady/core
 pnpm bootstrap      # creates .env, starts Postgres 17 (Docker, host port 5433), runs migrations
 pnpm dev            # web app on http://localhost:5173, API on http://localhost:4000/api
 pnpm seed:demo      # optional: prints a link to a demo player with two weeks of history
-pnpm check          # lint, format check, typecheck, all tests (API tests need Docker running)
+pnpm check          # core build, lint, format check, typecheck, all tests (API tests need Docker running)
 ```
 
 Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about two minutes. Use **Add player** in the avatar menu (top right) to try a second player on the same device.

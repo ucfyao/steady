@@ -1,5 +1,6 @@
 import { PROGRESS_CONFIG, type CompletedSession } from '@steady/core';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
@@ -117,6 +118,28 @@ describe('Home', () => {
     expect(await screen.findByRole('region', { name: 'Last 7 days' })).toHaveTextContent(
       '4 days, goal reached',
     );
+  });
+});
+
+describe('Home: loading the history fails', () => {
+  it('says so and lets the player try again, instead of hiding the history', async () => {
+    const backend = fakeBackend();
+    backend.sessions.set(tokenN(1), [storedSession(1, {}, { completedAt: daysAgo(0) })]);
+    backend.control.failListOnce = true;
+    render(
+      <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
+        <MemoryRouter initialEntries={['/']}>
+          <AppRoutes />
+        </MemoryRouter>
+      </PlayersProvider>,
+    );
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Could not load your history.');
+    expect(screen.queryByRole('region', { name: 'What Steady does' })).toBeNull();
+
+    await userEvent.click(within(alert).getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('region', { name: 'Last 7 days' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 

@@ -58,7 +58,7 @@ const NONE = '';
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Play({ env: injected }: { env?: PlayEnv }) {
-  const { api } = usePlayers();
+  const { api, active } = usePlayers();
   const navigate = useNavigate();
   const [env] = useState(() => injected ?? browserEnv());
   const [step, setStep] = useState<Step>({ k: 'loading' });
@@ -117,7 +117,10 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     setStep({ k: 'submitting', session, submission });
     try {
       const completed = await api.submitSession(session.id, submission);
-      navigate(`/results/${completed.id}`, { state: { session: completed } });
+      // The state is tied to this player, so a later switch does not show it to another one.
+      navigate(`/results/${completed.id}`, {
+        state: { session: completed, playerId: active?.id },
+      });
     } catch (e) {
       const error = e instanceof ApiError ? e : new ApiError('server', message(e));
       setStep({ k: 'submit-error', session, submission, error });

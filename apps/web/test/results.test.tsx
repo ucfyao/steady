@@ -6,10 +6,12 @@ import {
   type ProbeAnswer,
 } from '@steady/core';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
+import { saveProfiles } from '../src/players/store.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { storedSession } from './support/sessions.js';
 
@@ -132,6 +134,26 @@ describe('Results', () => {
     const backend = renderResults('/results/s1');
     expect(await screen.findByRole('group', { name: '3s held back' })).toBeInTheDocument();
     expect(backend.calls.map((c) => c.method)).toContain('listSessions');
+  });
+
+  it("does not show the previous player's session after switching player", async () => {
+    // Two players on this device; Ana has just finished s1 (Play hands it over in the state).
+    saveProfiles(localStorage, {
+      profiles: [
+        { id: 'ana', name: 'Ana', token: tokenN(1) },
+        { id: 'ben', name: 'Ben', token: tokenN(2) },
+      ],
+      activeId: 'ana',
+    });
+    renderResults({ pathname: '/results/s1', state: { session: mixed, playerId: 'ana' } });
+    expect(await screen.findByRole('group', { name: '3s held back' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Player: Ana' }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Ben' }));
+
+    // Same URL and navigation state, but Ben has no sessions.
+    expect(await screen.findByRole('heading', { name: 'Session not found' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: '3s held back' })).toBeNull();
   });
 
   it('shows "Session not found" for an id the player does not have', async () => {
