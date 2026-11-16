@@ -14,7 +14,7 @@ export class SessionsController {
     @PlayerId() playerId: string,
     @Body(new ZodValidationPipe(StartSessionSchema)) body: z.infer<typeof StartSessionSchema>,
   ) {
-    return this.sessions.start(playerId, body.checkIn ?? null, body.device);
+    return this.sessions.start(playerId, body.checkIn ?? null, body.device, body.variant);
   }
 
   /** The body is validated against this session's plan inside the service (Spec 001). */

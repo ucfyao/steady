@@ -1,4 +1,6 @@
-import { Controller, Delete, HttpCode, Inject, Post } from '@nestjs/common';
+import { randomInt } from 'node:crypto';
+import { Controller, Delete, Get, HttpCode, Inject, NotFoundException, Post } from '@nestjs/common';
+import { VARIANTS } from '@steady/core';
 import { Throttle } from '@nestjs/throttler';
 import { eq } from 'drizzle-orm';
 import { PlayerId } from '../auth/player-id.decorator.js';
@@ -17,8 +19,21 @@ export class PlayersController {
   @Post('players')
   async create() {
     const token = newToken();
-    await this.db.insert(players).values({ tokenHash: hashToken(token) });
+    // [P] Spec 006 §5: 50/50 between the variants, kept for the player's whole history.
+    const variant = VARIANTS[randomInt(VARIANTS.length)]!;
+    await this.db.insert(players).values({ tokenHash: hashToken(token), variant });
     return { token };
+  }
+
+  /** The player's A/B variant (Spec 006), so the practice round can already show it. */
+  @Get('me')
+  async me(@PlayerId() playerId: string) {
+    const [row] = await this.db
+      .select({ variant: players.variant })
+      .from(players)
+      .where(eq(players.id, playerId));
+    if (!row) throw new NotFoundException();
+    return { variant: row.variant };
   }
 
   /** Deletes the player; their sessions go with them (ON DELETE CASCADE). */

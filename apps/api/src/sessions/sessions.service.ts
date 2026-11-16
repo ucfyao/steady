@@ -19,11 +19,12 @@ import {
   type CompletedSession,
   type StartedSession,
   type Submission,
+  type Variant,
 } from '@steady/core';
 import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
 import { CLOCK, type Clock } from '../clock.js';
 import { DB, type Db } from '../db/db.module.js';
-import { sessions } from '../db/schema.js';
+import { players, sessions } from '../db/schema.js';
 
 type SessionRow = typeof sessions.$inferSelect;
 
@@ -41,6 +42,7 @@ function toCompleted(row: SessionRow): CompletedSession {
     completedAt: row.completedAt.toISOString(),
     checkIn: row.checkIn ?? null,
     device: row.device,
+    variant: row.variant,
     score: row.score,
   };
 }
@@ -57,7 +59,9 @@ export class SessionsService {
     playerId: string,
     checkIn: CheckIn | null,
     device: InputDevice,
+    override?: Variant,
   ): Promise<StartedSession> {
+    const variant = override ?? (await this.variantOf(playerId));
     const seed = randomInt(2 ** 31 - 1); // server-chosen; fits a Postgres integer
     const { trials, probeAfter } = createSessionPlan(seed);
     const [row] = await this.db
@@ -69,10 +73,16 @@ export class SessionsService {
         probeAfter,
         checkIn,
         device,
+        variant,
         startedAt: this.clock.now(),
       })
       .returning({ id: sessions.id, startedAt: sessions.startedAt });
-    return { id: row!.id, startedAt: row!.startedAt.toISOString(), plan: { trials, probeAfter } };
+    return {
+      id: row!.id,
+      startedAt: row!.startedAt.toISOString(),
+      variant,
+      plan: { trials, probeAfter },
+    };
   }
 
   async submit(playerId: string, id: string, body: unknown): Promise<CompletedSession> {
@@ -115,6 +125,15 @@ export class SessionsService {
       .where(and(eq(sessions.playerId, playerId), isNotNull(sessions.completedAt)))
       .orderBy(asc(sessions.completedAt));
     return rows.map(toCompleted);
+  }
+
+  private async variantOf(playerId: string): Promise<Variant> {
+    const [row] = await this.db
+      .select({ variant: players.variant })
+      .from(players)
+      .where(eq(players.id, playerId));
+    if (!row) throw new NotFoundException();
+    return row.variant;
   }
 
   private async find(playerId: string, id: string): Promise<SessionRow> {

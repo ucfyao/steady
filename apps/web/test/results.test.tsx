@@ -29,6 +29,7 @@ function completed(id: string, rtFor: (t: PlanTrial) => number | null): Complete
     completedAt: '2026-11-16T09:03:00.000Z',
     checkIn: null,
     device: 'keyboard',
+    variant: 'calm',
     score: scoreSession(plan, { rts: plan.trials.map(rtFor), probeAnswers: ANSWERS }),
   };
 }
@@ -278,5 +279,31 @@ describe('Results: the session journey in three parts', () => {
     expect(legend).not.toHaveTextContent('Pressed on a 3');
     expect(legend).not.toHaveTextContent('Too early');
     expect(legend).not.toHaveTextContent('Steady press');
+  });
+});
+
+describe('Results: the game first (Spec 006 §4)', () => {
+  it('shows points, longest streak and dawn for a game session', async () => {
+    const game = { ...mixed, id: 'g1', variant: 'game' as const };
+    renderResults({ pathname: '/results/g1', state: { session: game } }, [game]);
+    const block = await screen.findByRole('region', { name: 'Your game' });
+    expect(block).toHaveTextContent(`${game.score.points} points`);
+    expect(block).toHaveTextContent(`Longest streak: ${game.score.longestSteadyRun}`);
+    // Dawn = points ÷ the points of an all-correct session, rounded down.
+    const best = plan.trials.reduce(
+      (acc, t) => {
+        const streak = acc.streak + 1;
+        const mult = streak >= 30 ? 5 : streak >= 15 ? 3 : streak >= 5 ? 2 : 1;
+        return { streak, total: acc.total + (t.isTarget ? 30 : 10) * mult };
+      },
+      { streak: 0, total: 0 },
+    ).total;
+    expect(block).toHaveTextContent(`Dawn ${Math.floor((game.score.points / best) * 100)}%`);
+  });
+
+  it('shows no game block for a calm session', async () => {
+    renderResults({ pathname: '/results/s1', state: { session: mixed } });
+    await screen.findByRole('group', { name: '3s held back' });
+    expect(screen.queryByRole('region', { name: 'Your game' })).toBeNull();
   });
 });

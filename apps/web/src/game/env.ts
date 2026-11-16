@@ -1,4 +1,4 @@
-import type { InputDevice } from '@steady/core';
+import { VARIANTS, type InputDevice, type Variant } from '@steady/core';
 import { detectDevice } from './device.js';
 
 /**
@@ -13,7 +13,19 @@ export interface PlayEnv {
   /** Calls `cb` when the page becomes hidden; returns an unsubscribe function. */
   onHidden(cb: () => void): () => void;
   device: InputDevice;
+  /** A play-test override from `?variant=` when the app was opened (Spec 006 §5). */
+  variantOverride?: Variant;
 }
+
+/** `calm` or `game` from a query string, or undefined. */
+export function parseVariant(search: string): Variant | undefined {
+  const v = new URLSearchParams(search).get('variant');
+  return VARIANTS.find((x) => x === v);
+}
+
+/** Read once when the app loads, so it lasts until the app is reopened without it. */
+const STARTUP_OVERRIDE =
+  typeof window === 'undefined' ? undefined : parseVariant(window.location.search);
 
 export function browserEnv(): PlayEnv {
   return {
@@ -26,5 +38,6 @@ export function browserEnv(): PlayEnv {
       return () => document.removeEventListener('visibilitychange', listener);
     },
     device: detectDevice(),
+    variantOverride: STARTUP_OVERRIDE,
   };
 }

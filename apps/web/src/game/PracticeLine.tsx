@@ -14,8 +14,8 @@ function tipText(s: PracticeSummary, device: InputDevice): string {
     }
     case 'missed':
       return s.missed === 1
-        ? `One digit passed without a press. ${press} for every digit except 3: a press still counts after the digit turns into ⊗.`
-        : `${s.missed} digits passed without a press. ${press} for every digit except 3: a press still counts after the digit turns into ⊗.`;
+        ? `One digit passed without a press. ${press} for every digit except 3: a press still counts after the glass mists over.`
+        : `${s.missed} digits passed without a press. ${press} for every digit except 3: a press still counts after the glass mists over.`;
     case 'too-early':
       return `${s.tooEarly === 1 ? 'One press' : `${s.tooEarly} presses`} came before the digit could really be seen. Wait for each digit, then ${press.toLowerCase()}.`;
     case 'clean':

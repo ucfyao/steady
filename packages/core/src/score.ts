@@ -1,4 +1,5 @@
 import { SART_CONFIG as C } from './config.js';
+import { scorePoints } from './points.js';
 import { coefficientOfVariation, median, probit } from './stats.js';
 import type {
   BehaviourFlag,
@@ -86,6 +87,7 @@ export function scoreSession(plan: SessionPlan, submission: Submission): Session
     rtCv,
     dPrime: probit(H) - probit(F),
     longestSteadyRun,
+    points: scorePoints(trialOutcomes),
     trialOutcomes,
     probes,
     flags,

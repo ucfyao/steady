@@ -9,6 +9,7 @@ import {
   type CompletedSession,
   type StartedSession,
   type Submission,
+  type Variant,
 } from '@steady/core';
 import { vi } from 'vitest';
 import { ApiError, type Api } from '../../src/api/client.js';
@@ -37,7 +38,8 @@ export function fakeBackend() {
   const calls: { token: string | null; method: string }[] = [];
   const unauthorized = new Set<string>();
   const sessions = new Map<string, CompletedSession[]>();
-  const control = { failCreate: false, failSubmitOnce: false };
+  /** `variant`: what GET /api/me and a new session report (the player's A/B group). */
+  const control = { failCreate: false, failSubmitOnce: false, variant: 'calm' as Variant };
   const started: { token: string | null; body: Parameters<Api['startSession']>[0] }[] = [];
   const submitted: { id: string; body: Submission }[] = [];
   const plans = new Map<string, StartedSession>();
@@ -57,7 +59,12 @@ export function fakeBackend() {
         call('startSession');
         const id = `session-${plans.size + 1}`;
         const { trials, probeAfter } = createSessionPlan(1000 + plans.size);
-        const session = { id, startedAt: new Date(0).toISOString(), plan: { trials, probeAfter } };
+        const session: StartedSession = {
+          id,
+          startedAt: new Date(0).toISOString(),
+          variant: body.variant ?? control.variant,
+          plan: { trials, probeAfter },
+        };
         plans.set(id, session);
         started.push({ token, body });
         return session;
@@ -77,9 +84,11 @@ export function fakeBackend() {
           completedAt: new Date(150_000).toISOString(),
           checkIn: null,
           device: started.at(-1)!.body.device,
+          variant: plans.get(id)!.variant,
           score: scoreSession({ seed: 0, ...plan }, body),
         };
       },
+      getMe: async () => (call('getMe'), { variant: control.variant }),
       listSessions: async () => (call('listSessions'), sessions.get(token ?? '') ?? []),
       getProgress: async () => {
         call('getProgress');

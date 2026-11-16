@@ -1,27 +1,32 @@
-import type { ProbeAnswer, Submission } from '@steady/core';
 import {
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-  type CSSProperties,
-  type PointerEvent,
-} from 'react';
+  createPointsCounter,
+  maxPoints,
+  SART_CONFIG,
+  type ProbeAnswer,
+  type Submission,
+  type TrialOutcome,
+  type Variant,
+} from '@steady/core';
+import { useEffect, useEffectEvent, useRef, useState, type PointerEvent } from 'react';
 import { useFocusMode } from '../Layout.js';
 import { Button } from '../ui/Button.js';
 import styles from './Block.module.css';
 import type { PlayEnv } from './env.js';
 import { TrialRunner, type Outcome, type RunnerOptions, type RunnerPlan } from './runner.js';
+import { Scene } from './Scene.js';
 
 const COUNTDOWN_S = 3;
+/** Spec 006: three words, one a second. No number, so no 3 appears before the trials. */
+const COUNTDOWN_WORDS = ['Go', 'Set', 'Ready'] as const; // indexed by seconds left − 1
 /** [R] PsyToolkit SART: five font sizes (48–120 pt), kept as ratios of the largest. */
 const FONT_PX = [48, 72, 94, 100, 120] as const;
 /**
- * The largest size is `--digit-max` (about 240 px, smaller on a phone; Block.module.css).
+ * The largest size is `--digit-max` (Block.module.css), sized to the lantern's glass.
  * Built once, so a frame only assigns a ready-made string, as before.
  */
 const FONT_SIZE = FONT_PX.map((px) => `calc(var(--digit-max) * ${px / 120})`);
-const MASK = '⊗';
+/** Spec 006: at most this many fireflies on screen. */
+const MAX_FLIES = 30;
 
 /** Practice feedback (Spec 004): one or two words in a coloured pill, readable in 800 ms. */
 const FEEDBACK: Record<Outcome, { text: string; good: boolean }> = {
@@ -46,31 +51,43 @@ type Ui =
   | { kind: 'resume' };
 
 /**
- * One block of trials (practice or the real session). The digit is written straight
- * into the DOM inside the animation-frame callback, so it is on screen in the frame
- * whose timestamp becomes its onset; React renders only the countdown, feedback and probe.
+ * One block of trials (practice or the real session) on the lantern scene (Spec 006).
+ * The digit, the frost, the glow and the game layer are written straight into the DOM, so
+ * the digit is on screen in the frame whose timestamp becomes its onset and React renders
+ * only the countdown, feedback and probe.
  */
 export function Block({
   plan,
   options,
   env,
+  variant,
   onDone,
   onVoid,
   hint,
 }: {
   plan: RunnerPlan;
   options?: RunnerOptions;
-  /** The rule, in one quiet line under the digit. */
+  /** The rule, in one quiet line under the lantern. */
   hint: string;
   env: PlayEnv;
+  variant: Variant;
   onDone(submission: Submission): void;
   onVoid(): void;
 }) {
   const stimulus = useRef<HTMLDivElement>(null);
+  const frost = useRef<HTMLDivElement>(null);
+  const lantern = useRef<HTMLDivElement>(null);
+  const scene = useRef<HTMLDivElement>(null);
+  const flies = useRef<HTMLDivElement>(null);
+  const pointsEl = useRef<HTMLSpanElement>(null);
+  const multEl = useRef<HTMLSpanElement>(null);
   const runnerRef = useRef<TrialRunner | null>(null);
+  /** Set by the effect: records a press and lights the lantern. */
+  const pressRef = useRef<((time: number, repeat?: boolean) => void) | null>(null);
   const [ui, setUi] = useState<Ui>({ kind: 'countdown', n: COUNTDOWN_S });
   const focusRoot = useRef<HTMLDivElement>(null);
   const done = useEffectEvent(onDone);
+  const game = variant === 'game';
   useFocusMode();
 
   // Focus moves into the block, off the button that started it (which is now gone).
@@ -86,10 +103,84 @@ export function Block({
     let started = false;
     let shown = '';
 
-    const draw = (el: HTMLDivElement, text: string, size: string, index?: number) => {
+    // ---- The game layer (Spec 006 §2): core's counter, display only, never sent. ----
+    const counter = createPointsCounter();
+    const best = maxPoints(plan.trials);
+    /** Trials already counted, by a press or by their window closing. */
+    const counted = new Set<number>();
+    let current = -1;
+
+    const scatter = () => {
+      for (const f of flies.current?.querySelectorAll<HTMLElement>('[data-testid="firefly"]') ??
+        []) {
+        if (f.dataset.gone) continue;
+        f.dataset.gone = 'true';
+        f.classList.add(styles.gone!);
+        setTimeout(() => f.remove(), 800);
+      }
+    };
+    const addFly = () => {
+      const box = flies.current;
+      if (!box) return;
+      const alive = box.querySelectorAll('[data-testid="firefly"]:not([data-gone])');
+      if (alive.length >= MAX_FLIES) return;
+      const f = document.createElement('i');
+      f.dataset.testid = 'firefly';
+      f.className = styles.fly!;
+      f.style.left = `${8 + Math.random() * 84}%`;
+      f.style.top = `${12 + Math.random() * 60}%`;
+      f.style.setProperty('--dx', `${Math.round(Math.random() * 40 - 20)}px`);
+      f.style.setProperty('--dy', `${Math.round(Math.random() * 40 - 20)}px`);
+      box.appendChild(f);
+    };
+    const float = (gained: number) => {
+      const box = flies.current;
+      if (!box) return;
+      const f = document.createElement('span');
+      f.className = styles.float!;
+      f.textContent = `+${gained}`;
+      box.appendChild(f);
+      setTimeout(() => f.remove(), 700);
+    };
+
+    /** One trial's outcome, in trial order: points, fireflies and dawn (game variant). */
+    const count = (index: number, outcome: TrialOutcome) => {
+      if (counted.has(index)) return;
+      counted.add(index);
+      if (!game) return;
+      const step = counter.add(outcome);
+      if (pointsEl.current) pointsEl.current.textContent = String(step.total);
+      if (multEl.current) multEl.current.textContent = `×${step.multiplier}`;
+      if (step.gained > 0) {
+        addFly();
+        float(step.gained);
+      } else scatter();
+      const root = scene.current;
+      if (root) {
+        root.style.setProperty('--dawn', (best ? step.total / best : 0).toFixed(3));
+        root.style.setProperty('--streak', Math.min(1, step.streak / MAX_FLIES).toFixed(3));
+      }
+    };
+    /** A trial whose window closed without a press: a held-back 3, or a missed digit. */
+    const close = (index: number) => {
+      if (index < 0 || counted.has(index)) return;
+      count(index, plan.trials[index]!.isTarget ? 'caught' : 'omission');
+    };
+    const lightUp = (index: number, outcome: TrialOutcome) => {
+      const el = lantern.current;
+      if (el) el.dataset.glow = outcome === 'steady' ? 'ok' : 'bad';
+      // A press that arrives after its trial was already closed (at most a frame late)
+      // changes nothing here; the server's count is the one that is stored.
+      count(index, outcome);
+    };
+
+    const draw = (text: string, size: string, misted: boolean, index?: number) => {
+      const el = stimulus.current;
+      if (!el) return;
       el.textContent = text;
       el.style.fontSize = size;
       if (index !== undefined) el.dataset.index = String(index);
+      if (frost.current) frost.current.dataset.on = String(misted);
     };
 
     const tick = (t: number) => {
@@ -111,12 +202,17 @@ export function Block({
       }
 
       const view = runner.frame(t);
-      const el = stimulus.current;
-      if (el) {
-        if (view.phase === 'stimulus')
-          draw(el, String(view.digit), FONT_SIZE[view.fontSize]!, view.index);
-        else if (view.phase === 'mask') draw(el, MASK, FONT_SIZE[2]!);
-        else draw(el, '', FONT_SIZE[2]!);
+      if (view.phase === 'stimulus') {
+        if (view.index !== current) {
+          close(current);
+          current = view.index;
+          if (lantern.current) delete lantern.current.dataset.glow;
+        }
+        draw(String(view.digit), FONT_SIZE[view.fontSize]!, false, view.index);
+      } else if (view.phase === 'mask') draw('', FONT_SIZE[2]!, true);
+      else {
+        close(current);
+        draw('', FONT_SIZE[2]!, false);
       }
 
       const key =
@@ -151,10 +247,22 @@ export function Block({
       voided();
     });
 
+    const press = (time: number, repeat?: boolean) => {
+      const r = runner.press(time, { repeat });
+      if (!r) return;
+      const outcome: TrialOutcome = r.isTarget
+        ? 'commission'
+        : r.rt < SART_CONFIG.anticipationMs
+          ? 'anticipation'
+          : 'steady';
+      lightUp(r.index, outcome);
+    };
+    pressRef.current = press;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault(); // no scrolling, no activating a focused button
-        if (env.device === 'keyboard') runner.press(env.pressTime(e), { repeat: e.repeat });
+        if (env.device === 'keyboard') press(env.pressTime(e), e.repeat);
       }
       const probeKey = ANSWERS.find((a) => a.key === e.key);
       if (probeKey) runner.answer(probeKey.answer, env.pressTime(e));
@@ -167,57 +275,64 @@ export function Block({
       unsubscribe();
       window.removeEventListener('keydown', onKey);
     };
-  }, [plan, options, env]);
+  }, [plan, options, env, game]);
 
   const tap = (e: PointerEvent<HTMLDivElement>) => {
     if (env.device !== 'touch') return;
     e.preventDefault();
-    runnerRef.current?.press(env.pressTime(e.nativeEvent));
+    pressRef.current?.(env.pressTime(e.nativeEvent));
   };
 
   const answer = (a: ProbeAnswer, event: Event) =>
     runnerRef.current?.answer(a, env.pressTime(event));
 
-  // Focus mode: the whole screen is the stage. No progress, count or timer is shown,
+  const left = ui.kind === 'countdown' ? ui.n : 0;
+
+  // Focus mode: the whole screen is the scene. No progress, count or timer is shown,
   // because knowing how far along you are changes how people respond.
   return (
     <div ref={focusRoot} className={styles.focus} tabIndex={-1}>
+      <Scene ref={scene} />
+      <div ref={flies} className={styles.flies} aria-hidden="true" />
+      {game && (
+        <div className={styles.hud} aria-hidden="true">
+          <span ref={pointsEl} className={styles.points} data-testid="points">
+            0
+          </span>
+          <span ref={multEl} className={styles.mult} data-testid="multiplier">
+            ×1
+          </span>
+        </div>
+      )}
       <div
         className={styles.stage}
         data-testid="tap-area"
         onPointerDown={tap}
         aria-hidden={ui.kind === 'trials'}
       >
+        <div ref={lantern} className={styles.lantern} data-testid="lantern">
+          <span className={styles.cap} />
+          <div className={styles.glass}>
+            {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
+            <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
+            {/* The mask (Spec 006): the glass mists over the digit's place. */}
+            <div ref={frost} className={styles.frost} data-testid="frost" data-on="false" />
+          </div>
+          <span className={styles.base} />
+        </div>
         {ui.kind === 'countdown' && (
-          // Not a stimulus, and no number: a "3" here is the very digit to hold back on
-          // (Spec 004). A ring fills over the countdown, under a label. With reduced motion it
-          // fills a third at a time instead of sweeping.
           <div className={styles.countdown} data-testid="countdown">
-            <div className={styles.ring}>
-              <svg viewBox="0 0 100 100" aria-hidden="true">
-                <circle className={styles.track} cx="50" cy="50" r="48" />
-                <circle
-                  className={styles.arc}
-                  style={
-                    {
-                      animationDuration: `${COUNTDOWN_S}s`,
-                      '--step-offset': ((ui.n - 1) / COUNTDOWN_S) * 100,
-                    } as CSSProperties
-                  }
-                  cx="50"
-                  cy="50"
-                  r="48"
-                  pathLength="100"
-                />
-              </svg>
+            <div className={styles.dots} aria-hidden="true">
+              {Array.from({ length: COUNTDOWN_S }, (_, i) => (
+                <i key={i} className={i < COUNTDOWN_S - left + 1 ? styles.on : undefined} />
+              ))}
             </div>
+            <p className={styles.word}>{COUNTDOWN_WORDS[left - 1]}</p>
             <p className={styles.ready}>
               {env.device === 'touch' ? 'Finger on the screen' : 'Finger on Space'}
             </p>
           </div>
         )}
-        {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
-        <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
         {ui.kind === 'feedback' && (
           <p
             data-testid="feedback"
@@ -245,6 +360,7 @@ export function Block({
               </Button>
             ))}
           </div>
+          {game && <p className={styles.probeNote}>Your answer never changes your points.</p>}
         </div>
       )}
 

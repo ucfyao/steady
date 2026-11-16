@@ -122,6 +122,7 @@ export function PlayersProvider({
       createPlayer: () => inner.createPlayer(),
       startSession: (body) => inner.startSession(body).catch(forget),
       submitSession: (id, submission) => inner.submitSession(id, submission).catch(forget),
+      getMe: () => inner.getMe().catch(forget),
       listSessions: () => inner.listSessions().catch(forget),
       getProgress: () => inner.getProgress().catch(forget),
       deleteMe: () => inner.deleteMe().catch(forget),

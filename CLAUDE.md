@@ -21,6 +21,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 - `apps/web` (React) talks only to the API through `src/api/client.ts` and uses core's types; it never computes a score. Screens are remounted per player (`<Outlet key>`), so none may cache another player's data.
 - API tests use the real app (`test/support/app.ts`) on Testcontainers Postgres with `FakeClock`; do not mock the database.
 - **Scores are computed only on the server, by `scoreSession`.** A client must never compute or submit a score.
+- **Game points are not a measurement (Spec 006).** The browser may show a live count with core's `createPointsCounter`, but never sends it; the stored points are the server's `scorePoints`.
 - Every tunable rule lives in `packages/core/src/config.ts`, marked `[R]` (research) or `[P]` (product decision). Do not hard-code thresholds anywhere else.
 - A change to how scores are computed must bump `SART_CONFIG.scoringVersion`.
 

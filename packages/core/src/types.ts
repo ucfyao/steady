@@ -5,6 +5,13 @@ export type ProbeAnswer = (typeof PROBE_ANSWERS)[number];
 export const INPUT_DEVICES = ['keyboard', 'touch'] as const;
 export type InputDevice = (typeof INPUT_DEVICES)[number];
 
+/**
+ * The A/B split (Spec 006 §5): `calm` shows the lantern only; `game` adds points, the
+ * multiplier, fireflies and dawn.
+ */
+export const VARIANTS = ['calm', 'game'] as const;
+export type Variant = (typeof VARIANTS)[number];
+
 export const SLEEP_LEVELS = ['poor', 'ok', 'good'] as const;
 export const STRESS_LEVELS = ['low', 'medium', 'high'] as const;
 
@@ -59,6 +66,8 @@ export interface SessionScore {
   rtCv: number | null;
   dPrime: number;
   longestSteadyRun: number;
+  /** Game points from `scorePoints(trialOutcomes)` (scoring version 4, Spec 006). */
+  points: number;
   /** One per trial, in plan order (scoring version 2). */
   trialOutcomes: TrialOutcome[];
   probes: ProbeResult[];
@@ -108,6 +117,8 @@ export interface GroupComparison {
 export interface StartedSession {
   id: string;
   startedAt: string;
+  /** What this session shows (Spec 006). */
+  variant: Variant;
   plan: Pick<SessionPlan, 'trials' | 'probeAfter'>;
 }
 
@@ -117,6 +128,7 @@ export interface CompletedSession {
   completedAt: string;
   checkIn: CheckIn | null;
   device: InputDevice;
+  variant: Variant;
   score: SessionScore;
 }
 

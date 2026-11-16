@@ -168,3 +168,35 @@
   gap: var(--space-3);
   margin-top: var(--space-8);
 }
+
+/* The game first (Spec 006): points large, then the streak and the dawn. */
+.game {
+  padding: var(--space-5);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: linear-gradient(160deg, #1b2340, #3c3b52);
+  color: #ece6da;
+}
+
+.game h2 {
+  color: rgb(236 230 218 / 0.8);
+}
+
+.gamePoints {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.gamePoints b {
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-regular);
+  color: #ffd696;
+  margin-right: var(--space-2);
+}
+
+.gameLine {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: rgb(236 230 218 / 0.75);
+}

@@ -33,20 +33,20 @@ const columns = async (table: string) =>
 const newPlayer = async () =>
   (
     await pool.query<{ id: string }>(
-      `insert into players (token_hash) values (md5(random()::text)) returning id`,
+      `insert into players (token_hash, variant) values (md5(random()::text), 'calm') returning id`,
     )
   ).rows[0]!.id;
 
 const newSession = (playerId: string) =>
   pool.query(
-    `insert into sessions (player_id, seed, trials, probe_after, device, started_at)
-     values ($1, 1, '[]', '[]', 'keyboard', now())`,
+    `insert into sessions (player_id, seed, trials, probe_after, device, variant, started_at)
+     values ($1, 1, '[]', '[]', 'keyboard', 'calm', now())`,
     [playerId],
   );
 
 describe('committed migrations (Spec 003 storage)', () => {
   it('create players with only an id, a token hash and a timestamp', async () => {
-    expect(await columns('players')).toEqual(['created_at', 'id', 'token_hash']);
+    expect(await columns('players')).toEqual(['created_at', 'id', 'token_hash', 'variant']);
   });
 
   it('create sessions with trials, raw submission and score kept per row', async () => {
@@ -63,6 +63,7 @@ describe('committed migrations (Spec 003 storage)', () => {
       'started_at',
       'submission?',
       'trials',
+      'variant',
     ]);
   });
 
@@ -83,10 +84,10 @@ describe('committed migrations (Spec 003 storage)', () => {
   });
 
   it('reject a duplicate token hash', async () => {
-    await pool.query(`insert into players (token_hash) values ('same')`);
-    await expect(pool.query(`insert into players (token_hash) values ('same')`)).rejects.toThrow(
-      /unique/,
-    );
+    await pool.query(`insert into players (token_hash, variant) values ('same', 'calm')`);
+    await expect(
+      pool.query(`insert into players (token_hash, variant) values ('same', 'calm')`),
+    ).rejects.toThrow(/unique/);
   });
 });
 
@@ -95,8 +96,8 @@ describe('migration 0002 (Spec 005): sessions of the old length are deleted', ()
     JSON.stringify(Array.from({ length: n }, (_, index) => ({ index })));
   const sessionWith = (playerId: string, n: number) =>
     pool.query(
-      `insert into sessions (player_id, seed, trials, probe_after, device, started_at)
-       values ($1, 1, $2, '[]', 'keyboard', now())`,
+      `insert into sessions (player_id, seed, trials, probe_after, device, variant, started_at)
+       values ($1, 1, $2, '[]', 'keyboard', 'calm', now())`,
       [playerId, trials(n)],
     );
 
