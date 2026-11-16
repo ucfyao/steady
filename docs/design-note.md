@@ -2,9 +2,9 @@
 
 ## 1. The idea
 
-Steady is a calm attention game built on the **Sustained Attention to Response Task (SART)**, with brief **thought probes** that ask "where was your mind just now?". It shows how accurate, fast and steady your attention was today and helps you notice when your mind drifts. It does not promise to make you smarter. Attention changes from day to day, so results are shown against your own history, alongside an optional sleep/stress check-in.
+Steady is a calm attention game built on the **Sustained Attention to Response Task (SART)**, with brief **thought probes** that ask "where was your mind just now?". It shows how accurate, fast and steady your attention was today, compared with your own history, next to an optional sleep and stress check-in. It does not promise to make you smarter.
 
-**[R]** marks claims from published research; **[P]** marks my own product decisions, which research has not validated.
+**[R]** marks claims from published research; **[P]** marks my own product decisions. The exact rules are in `specs/` and `packages/core/src/config.ts`.
 
 ## 2. What I looked at
 
@@ -14,96 +14,71 @@ Steady is a calm attention game built on the **Sustained Attention to Response T
 | N-back            | Working memory                                                     | Hard to learn; transfer claims contested                       |
 | Task switching    | Cognitive flexibility; fits a workday full of interruptions        | Strong alternative                                             |
 | PVT               | Vigilance; very sensitive to sleep loss [R] (Basner & Dinges 2011) | Little to engage players                                       |
+| Breath counting   | Validated measure of mindfulness [R] (Levinson et al. 2014)        | A browser cannot verify people's own counts                    |
 | **SART + probes** | **Sustained attention plus self-reflection**                       | **Selected**                                                   |
 
-Breath counting is a validated behavioural measure of mindfulness [R] (Levinson et al. 2014), but scoring depends on people counting their own breaths, which a browser cannot verify.
+| App      | What it does                                                                                                                  | What I took or avoided                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Lumosity | Many short games; a performance index (LPI); premium members see their LPI as a percentile against members of their age group | Took short daily sessions. Avoided a single index, percentiles and overclaiming |
+| Elevate  | Skill games with performance tracking that shows "how you compare with others"                                                | Avoided comparing players: you are compared only with your own history          |
 
 **Why SART**
 
-- **It measures something linked to wellbeing.** In one experience-sampling study of about 2,250 adults, minds wandered in 46.9% of samples, and wandering was associated with lower happiness [R] (Killingsworth & Gilbert 2010).
-- **It connects to mindfulness.** In one study, 8 minutes of mindful breathing reduced behavioural markers of mind-wandering on the SART compared with relaxation or reading [R] (Mrazek et al. 2012).
-- **Its markers are well studied.** RT variability, anticipations and omissions are associated with disengagement [R] (Cheyne et al. 2009). Higher RT variability in the trials just before a probe is associated with off-task reports [R] (Bastian & Sackur 2013 in the SART; Seli et al. 2013b in a rhythm task). This is a **group-level association**. Steady shows it as a reflection prompt, not as a detector of mind-wandering.
+- **It measures something linked to wellbeing.** Minds wandered in 46.9% of experience samples, and wandering was associated with lower happiness [R] (Killingsworth & Gilbert 2010).
+- **It connects to mindfulness.** 8 minutes of mindful breathing reduced SART markers of mind-wandering [R] (Mrazek et al. 2012).
+- **Its markers are well studied.** RT variability, anticipations and omissions are associated with disengagement [R] (Cheyne et al. 2009), and higher variability just before a probe with off-task reports [R] (Bastian & Sackur 2013; Seli et al. 2013b). This is a group-level association, so Steady shows it as a reflection prompt, not a detector.
 - **It doesn't overclaim.** Evidence for broad transfer from brain training is weak [R] (Simons et al. 2016), and the FTC fined Lumosity $2M in 2016 for unsubstantiated claims.
 
-## 3. How it plays
+## 3. How it plays, and what brings people back
 
-- **Task [R]:** digits 1–9; press for every digit except **3**. Each trial is 250 ms digit + 900 ms mask, a fixed 1150 ms. Font size varies across 5 sizes, and the same digit never appears twice in a row (Robertson et al. 1997; PsyToolkit).
-- **Length [P]:** 126 trials (14 of each digit, so 11% no-go, as in the original) take 144.9 s. With 4 probes, a countdown and the check-in, a session takes **about 3 minutes**. It is shorter than the standard 225 trials, so error rates are noisier, and this shortened version has not been validated.
-- **Sequence [P]:** the server creates a seed when the session starts. The seed determines a balanced sequence (exactly 14 of each digit, drawn without ever repeating the previous digit, and no 3 in the first 5 warm-up trials) and the probe positions (after a go trial, 25–35 trials apart). A probe **pauses** the trial clock.
-
-### Making it a game, not a lab task [P]
-
-The SART is monotonous by design, so the gamification is restrained, and it must not change how people respond.
-
-- **Clear goal and practice:** "Catch every 3, keep a steady rhythm." The rules are shown as numbered steps with an example before practice and before every session, and say up front that everyone presses on some 3s. The first session includes an 18-trial practice round with feedback after each trial, as in the standard training block; it **starts slow (800 ms digit) and ends at the real speed [P]**, because a first play-test at full speed felt impossible to keep up with. The real session always uses the standard timing, so results stay comparable.
-- **No live score during the main block.** A live score would change how people respond. Visuals stay calm and never affect stimulus timing.
-- **The reward comes afterwards:** a _session journey_ ribbon shows every trial (steady stretches, caught and missed 3s, where you said you drifted), plus your longest steady run.
-- **Weekly target (4 of 7 days) instead of a daily streak; no leaderboards.** Comparing attention scores with colleagues would discourage honest use.
+- **Task [R]:** digits 1–9; press for every digit except **3**. Each trial is a 250 ms digit and a 900 ms mask, in 5 font sizes (Robertson et al. 1997; PsyToolkit).
+- **Length [P]:** 126 trials (11% no-go, as in the original) with 4 probes take **about 3 minutes**. That is shorter than the standard 225 trials, so error rates are noisier, and this version has not been validated.
+- **Fair sequences [P]:** the server picks a seed for each session; it fixes a balanced digit order and the probe positions, and is never sent to the browser.
+- **Practice [P]:** the rules are shown as steps before every session and say that everyone presses on some 3s. A first play-test at full speed was impossible to follow, so the first session's practice **starts slow and ends at the real speed**. The real session always uses the standard timing, so results stay comparable.
+- **No live score** during the block, since it would change how people respond. The reward comes afterwards: a _session journey_ ribbon of every trial and your longest steady run.
+- **Weekly target (4 of 7 days), not a daily streak.** A streak drops to zero after one missed day, but missing one opportunity did not materially affect habit formation in a 12-week study [R] (Lally et al. 2010). A focus check is also most useful on a bad day, and a flexible target removes the pressure to play only to keep a count [P].
+- **No leaderboards or percentiles:** comparing attention with colleagues would discourage honest use, and a shortened task has no norms to rank against.
+- **Coming back pays off in comparison, not points:** from session 3, Results compares today with your earlier sessions, and from session 7 with where you started.
 
 ## 4. Scoring
 
-All scoring runs **on the server, from the raw trial data**, which is stored unchanged. The client sends responses and timings, never scores. Results carry a `scoring_version`, so they can be recomputed when the rules change. There is no composite score:
+All scoring runs **on the server, from the raw trial data**, which is stored unchanged with a `scoring_version`, so history can be re-scored when the rules change. The client never sends a score. There is no composite score:
 
-| Metric                | Definition                                                                                                                                                                                                 |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Commission error rate | Presses on a 3 ÷ 14 ("Caught 12 of 14 threes")                                                                                                                                                             |
-| Omission rate         | Missed presses on go digits ÷ 112                                                                                                                                                                          |
-| Median go RT          | Median RT of correct go trials, excluding transition trials                                                                                                                                                |
-| RT variability (CV)   | SD ÷ mean of the same trial set; lower = steadier                                                                                                                                                          |
-| d′ (secondary)        | The response is _withholding_: hit = withheld on a 3, false alarm = withheld on a go digit. `z(H) − z(F)`, with log-linear correction [R] (Hautus 1995; Stanislaw & Todorov 1999). Labelled noisy (n = 14) |
+| Metric                | Definition                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------------- |
+| Commission error rate | Presses on a 3 ÷ 14, shown as catch rate ("Caught 12 of 14 threes")                       |
+| Omission rate         | Missed presses on go digits ÷ 112                                                         |
+| Median go RT          | Median RT of correct go trials                                                            |
+| RT variability (CV)   | SD ÷ mean of the same trials; lower = steadier                                            |
+| d′ (secondary)        | Log-linear corrected [R] (Hautus 1995; Stanislaw & Todorov 1999); labelled noisy (n = 14) |
 
-- **Transition trials [P]:** the first 5 trials of a session and the 3 after each probe. The scoring rule identifies them from trial index and probe positions; they are not flagged at capture time. They count towards accuracy but are excluded from RT statistics, because slowing after an interruption is not mind-wandering. This is my analysis rule, not part of the standard SART, and it is versioned so it can change.
-- **Speed–accuracy trade-off [R]:** slower responding reduces SART errors (Seli et al. 2013a). Errors are always shown next to median RT and never ranked alone.
+- **What counts as a good result:** there is no pass mark. In standard SART studies people typically press on 30–50% of no-go digits and miss 5–10% of go digits [R] (Wilson et al. 2016), so pressing on some 3s is normal. Those figures come from longer versions and other samples, so they are not shown as norms; a result is judged against the player's own history (§6).
+- **Speed–accuracy trade-off [R]:** slower responding reduces errors (Seli et al. 2013a), so errors are always shown next to median RT and never ranked alone.
+- **Mistakes and outliers [P]:** presses under 100 ms are anticipations; the 1150 ms response window bounds the slow end. The first 5 trials and the 3 after each probe count for accuracy but not for RT, because slowing after an interruption is not mind-wandering. With fewer than 10 usable RTs, RT statistics are left empty rather than estimated.
 
 ## 5. Data integrity vs. behaviour
 
-- **Technical validity, checked strictly; a failure means the session is rejected:**
-  - the trial count and order match the seed;
-  - at most one response per trial;
-  - timestamps are present and increasing;
-  - total duration is within tolerance.
-
-  Leaving the tab during play voids the session: nothing is submitted, and the open session expires after 30 minutes without ever being scored or shown in results or progress. Only complete sessions count.
-
-- **Behavioural flags, descriptive only:**
-  - many omissions;
-  - many anticipations (RT < 100 ms) [P]. The cut-off is a pre-declared heuristic borrowed from the PVT, where RTs < 100 ms count as false starts (Basner & Dinges 2011), not an established SART standard;
-  - unusually regular timing (RT CV < 0.05) [P].
-
-  Flagged sessions **stay in trends**, with a visible marker. Excluding them automatically would hide exactly the players whose attention is struggling.
-
-The server never labels a session as cheating. Integrity checks make faking results costly, but browser timing can't be fully trusted.
+- **Technical problems reject a session:** trials that do not match the server's plan, more than one response per trial, timestamps out of order, or a session that finished faster than its trials allow. Leaving the tab voids a session; an unsubmitted one expires after 30 minutes and is never scored.
+- **Behaviour is only flagged [P]:** many omissions, many anticipations (the 100 ms cut-off is borrowed from the PVT's false-start rule, Basner & Dinges 2011), or machine-like regular timing (RT CV < 0.05). Flagged sessions **stay in trends** with a marker: excluding them would hide exactly the players who are struggling.
+- The server never labels a session as cheating. The checks make faking costly, but browser input can't be fully trusted.
 
 ## 6. Progress
 
-- **Initial baseline [P]:** the median of valid sessions 2–6. Once set, it stays fixed. Session 1 is marked as practice and still plotted.
-- **Recent performance [P]:** the median of the last 5 sessions, updated continuously. The card reads "recent vs. where you started", which keeps both reference points unambiguous. Each row shows the change with an arrow and words, and "better" or "below" where a metric has a better direction; response time is only faster or slower. One sentence at the top of Progress sums this up in the same words as Results.
-- **Charts:** catch rate, omissions, median RT and RT variability, shown side by side so speed and accuracy are always visible next to variability.
-- **Check-in comparisons are exploratory:**
-  - They sit in a collapsed "Exploring patterns" block, below the summary, the charts and the session list.
-  - The split by sleep or stress is drawn only once **two groups have at least 10 sessions**; until then the block says only how many more sessions it needs. Each group shown is raw per-session dots with n and its median; smaller groups are listed, not drawn, so no median rests on a handful of sessions.
-  - The text summary is worded as "a pattern so far, not a cause".
-  - Pre-probe variability is shown in the same descriptive way, as its own part: it always compares timing variation before each probe, whatever metric the sleep and stress plots show.
+- **Starting point [P]:** the median of sessions 2–6, fixed once set (session 1 is practice). **Recent [P]:** the median of the last 5 sessions. Progress reads "recent vs. where you started", with an arrow and words per metric, and one summary sentence in the same words as Results.
+- **Noise band [P]:** a change within ordinary session-to-session noise reads "Similar" (≈), not better or worse: for example, one extra caught 3 is not progress.
+- **Charts:** catch rate, omissions, median RT and RT variability side by side, so speed and accuracy are always seen together.
+- **Exploratory patterns** are collapsed below the charts. A sleep or stress split is drawn only once two groups have **at least 10 sessions**, as raw dots with `n` and a median, and is worded "a pattern so far, not a cause". Variability before probes is shown in the same descriptive way.
 
 ## 7. Privacy and security
 
-- **Anonymous player identity:**
-  - Creating a player returns a random 256-bit token once. The client keeps it, and the server stores only its SHA-256 hash.
-  - A NestJS guard resolves the player from `Authorization: Bearer <token>` on every request.
-  - Player IDs are never taken from URLs or request bodies. Every query is scoped to the resolved player.
-  - Integration tests assert that requests for another player's sessions return 404.
-- **Minimal data:** no name, email or other personal details; only results and the optional check-in. `DELETE /me` removes everything.
-- **Limitation:** this identifies players but does not authenticate them. There is no recovery by design, so a lost token means a lost history.
-- **Future extension:** employer tenancy and SSO, with employers seeing aggregates only. That design would follow the OAIC's APP 3 and APP 11 guidance for sensitive information.
+- **Anonymous players:** a player is a random 256-bit token; the server stores only its SHA-256 hash. Player IDs never come from URLs or bodies, every query is scoped to the token's player, and another player's session is a `404`. No name or email is stored, and `DELETE /me` removes everything. There is no recovery by design.
+- **Operator view, designed but not built:** an employer or operator would see aggregates only, with separate sign-in, at least 10 players per group and no drill-down to a person (OAIC APP 3 and APP 11). It is not built because aggregates need real players, and charts from invented data would break §6. Design and wireframe: [operator-view.md](operator-view.md).
 
 ## 8. Trade-offs and limitations
 
-- **Every session keeps its exact trials and raw responses** (126 trials plus probes) in exchange for results that can be recomputed and audited. The scoring logic is pure functions and is the most heavily tested part. Stack details are in the README.
-- **Not a clinical tool.**
-  - Browser timing adds jitter, and touch and keyboard RTs differ. Each session uses one input method (Space on a keyboard, or tapping on a touch screen), and that device is stored with the session.
-  - Practice effects inflate early gains.
-  - All insights are within-person and exploratory.
-- **With more time:** an n-of-1 experiment where each player sometimes does mindful breathing first, assigned at random; a speed–accuracy-corrected error score; and a task-switching mode.
+- **Storing exact trials and raw responses** costs space but makes every result recomputable and auditable.
+- **Not a clinical tool:** browser timing adds jitter; keyboard and touch differ, so each session records its input device; practice effects inflate early gains; all insights are within-person and exploratory.
+- **With more time:** an n-of-1 experiment where players sometimes do mindful breathing first, assigned at random; a speed–accuracy-corrected error score; a task-switching mode.
 
 ## Sources
 
@@ -120,5 +95,9 @@ The server never labels a session as cheating. Integrity checks make faking resu
 - Simons, D. J. et al. (2016). Do "brain-training" programs work? _Psychological Science in the Public Interest_, 17(3), 103–186. https://doi.org/10.1177/1529100616661983
 - FTC (2016). Lumosity to pay $2 million to settle FTC deceptive advertising charges. https://www.ftc.gov/news-events/news/press-releases/2016/01/lumosity-pay-2-million-settle-ftc-deceptive-advertising-charges-its-brain-training-program
 - Basner, M., & Dinges, D. F. (2011). Maximizing sensitivity of the PVT to sleep loss. _Sleep_, 34(5), 581–591. https://pmc.ncbi.nlm.nih.gov/articles/PMC3079937
+- Lally, P., van Jaarsveld, C. H. M., Potts, H. W. W., & Wardle, J. (2010). How are habits formed: Modelling habit formation in the real world. _European Journal of Social Psychology_, 40(6), 998–1009. https://doi.org/10.1002/ejsp.674
+- Wilson, K. M., Finkbeiner, K. M., de Joux, N. R., Russell, P. N., & Helton, W. S. (2016). Go-stimuli proportion influences response strategy in a sustained attention to response task. _Experimental Brain Research_, 234(10), 2989–2998. https://doi.org/10.1007/s00221-016-4701-x
+- Lumosity Help Center. Can I see how I compare to other Lumosity members? https://lumositybeta.zendesk.com/hc/en-us/articles/31133254146199-Can-I-see-how-I-compare-to-other-Lumosity-members
+- Elevate app features (The Mind Company). https://themindcompany.com/apps/elevate
 - Levinson, D. B. et al. (2014). A mind you can count on: Validating breath counting as a behavioral measure of mindfulness. _Frontiers in Psychology_, 5, 1202. https://doi.org/10.3389/fpsyg.2014.01202
 - OAIC. Australian Privacy Principles guidelines (APP 3, APP 11). https://www.oaic.gov.au/privacy/australian-privacy-principles
