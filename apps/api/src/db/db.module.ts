@@ -15,7 +15,7 @@ const POOL = Symbol('POOL');
       provide: POOL,
       inject: [APP_CONFIG],
       useFactory: (config: AppConfig) => {
-        const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 10 });
+        const pool = new pg.Pool({ connectionString: config.databaseUrl, max: config.dbPoolMax });
         // An idle client can lose its connection (e.g. the database restarts). Without a
         // listener, pg's 'error' event is unhandled and crashes the process; the next
         // query simply gets a new connection or fails with a normal error instead.

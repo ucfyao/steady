@@ -41,6 +41,10 @@ specs/           one folder per feature (GitHub Spec Kit layout: spec.md, plan.m
 docs/            design note and AI-assisted development log
 ```
 
+## Deployment
+
+Production runs on Vercel (two projects: `apps/web` static, `apps/api` as one serverless function) with Supabase as PostgreSQL. Pushes to `main` deploy automatically; migrations are a manual step before merging. See [docs/deployment.md](docs/deployment.md) for setup, releasing and troubleshooting.
+
 ## Design note
 
 See [docs/design-note.md](docs/design-note.md): which task I chose and why, how it plays, how it is scored, how progress is shown, and the trade-offs.
@@ -83,7 +87,7 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **Identity:** a player is an anonymous token kept in this browser. There are no accounts and no recovery: clearing site data loses the history. This keeps the server free of personal data; real accounts (or employer SSO) would be the next step.
 - **Trust:** the server checks that a submission is plausible (length, timing, duration) and flags machine-like timing, but browser input cannot be fully trusted. It never labels a session as cheating.
 - **Leaving the page voids a session,** because timing would be interrupted. The open session expires after 30 minutes without being scored.
-- **Not built:** deployment, offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use).
+- **Not built:** offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use).
 
 ## Time spent
 
