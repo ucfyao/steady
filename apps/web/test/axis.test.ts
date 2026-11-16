@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { yAxis } from '../src/progress/axis.js';
 import { AXIS_FORMAT } from '../src/progress/metrics.js';
 
-const fmt = AXIS_FORMAT.omissionRate;
+const fmt = AXIS_FORMAT.rtCv;
 
 describe('yAxis (Progress charts)', () => {
-  it('uses one decimal when whole percents would repeat (missed digits 2–4%)', () => {
+  it('uses one decimal when whole percents would repeat (timing varied 2–4%)', () => {
     // The reported bug: recharts ticks at 2, 2.5, 3, 3.5, 4% were shown as 2%, 3%, 3%, 4%, 4%.
     const axis = yAxis([0.021, 0.03, 0.038], fmt)!;
     expect(axis.ticks.map((t) => +(t * 100).toFixed(6))).toEqual([2, 2.5, 3, 3.5, 4]);
@@ -30,6 +30,10 @@ describe('yAxis (Progress charts)', () => {
         expect(ticks.at(-1)).toBeGreaterThanOrEqual(lo + width - 1e-9);
       }
     }
+  });
+
+  it('labels digits missed as counts, like Results', () => {
+    expect(yAxis([3, 4, 7], AXIS_FORMAT.omissionRate)!.labels).toEqual(['3', '4', '5', '6', '7']);
   });
 
   it('works for milliseconds and a single value', () => {

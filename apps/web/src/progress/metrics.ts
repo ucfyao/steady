@@ -10,10 +10,11 @@ const fixed = (x: number, decimals = 0) =>
   decimals === 0 ? String(Math.round(x)) : x.toFixed(decimals);
 const percent: AxisFormat = (x, decimals) => `${fixed(x * 100, decimals)}%`;
 const ms: AxisFormat = (x, decimals) => `${fixed(x, decimals)} ms`;
+const count: AxisFormat = (x, decimals) => fixed(x, decimals);
 
 export const AXIS_FORMAT: Record<ProgressMetric, AxisFormat> = {
   commissionRate: percent,
-  omissionRate: percent,
+  omissionRate: count,
   medianGoRtMs: ms,
   rtCv: percent,
 };

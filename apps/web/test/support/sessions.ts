@@ -17,8 +17,9 @@ export function storedSession(
       scoringVersion: 2,
       commissions: 0,
       commissionRate: 0.2,
-      omissions: 0,
-      omissionRate: 0.05,
+      // 6 of the 112 digits (Spec 001), so the count and the rate agree.
+      omissions: 6,
+      omissionRate: 6 / 112,
       anticipations: 0,
       medianGoRtMs: 400,
       rtCv: 0.2,

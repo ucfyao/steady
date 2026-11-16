@@ -7,6 +7,7 @@ import {
   type ProgressResponse,
 } from '@steady/core';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import {
   METRICS,
   METRIC_ORDER,
@@ -16,8 +17,8 @@ import {
 } from '../metrics/metrics.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { GroupDots } from '../progress/GroupDots.js';
-import { MetricChart } from '../progress/MetricChart.js';
-import { AXIS_FORMAT } from '../progress/metrics.js';
+import { MIN_POINTS, MetricChart } from '../progress/MetricChart.js';
+import { AXIS_FORMAT, FLAG_SHORT } from '../progress/metrics.js';
 import { sessionPoints, type SessionPoint } from '../progress/series.js';
 import { SessionList } from '../progress/SessionList.js';
 import { WeekDots } from '../progress/WeekDots.js';
@@ -55,7 +56,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 const POINT_VALUE: Record<ProgressMetric, (p: SessionPoint) => number | null> = {
   commissionRate: (p) => p.catchRate,
-  omissionRate: (p) => p.omissionRate,
+  omissionRate: (p) => METRICS.omissionRate.show(p.omissionRate),
   medianGoRtMs: (p) => p.medianGoRtMs,
   rtCv: (p) => p.rtCv,
 };
@@ -130,7 +131,8 @@ export function Progress() {
           <>
             <p>Your starting point is set after {moreSessions(summary.sessionsUntilBaseline)}.</p>
             <p className={styles.note}>
-              Session 1 is practice; sessions 2–6 set where you started.
+              Your first check is for getting used to the pace and does not count; checks 2–6 set
+              where you started.
             </p>
           </>
         )}
@@ -139,34 +141,38 @@ export function Progress() {
       <section aria-labelledby="time-title" className={styles.block}>
         <h2 id="time-title">Over time</h2>
         <p className={styles.note}>Speed and accuracy side by side, one point per session.</p>
-        <ul className={styles.legend}>
-          <li>
-            <svg viewBox="0 0 12 12" aria-hidden="true">
-              <circle cx="6" cy="6" r="3.5" className={styles.keyNormal} />
-            </svg>
-            A session
-          </li>
-          <li>
-            <svg viewBox="0 0 12 12" aria-hidden="true">
-              <circle cx="6" cy="6" r="4" className={styles.keyPractice} />
-            </svg>
-            Practice
-          </li>
-          <li>
-            <svg viewBox="0 0 12 12" aria-hidden="true">
-              <path d="M6 1L11 6L6 11L1 6Z" className={styles.keyFlagged} />
-            </svg>
-            Has a note (see the tooltip)
-          </li>
-          {summary.baseline && (
+        {points.length >= MIN_POINTS && (
+          <ul className={styles.legend}>
             <li>
-              <svg viewBox="0 0 16 12" aria-hidden="true">
-                <line x1="0" y1="6" x2="16" y2="6" className={styles.keyBaseline} />
+              <svg viewBox="0 0 12 12" aria-hidden="true">
+                <circle cx="6" cy="6" r="3.5" className={styles.keyNormal} />
               </svg>
-              Where you started
+              A session
             </li>
-          )}
-        </ul>
+            <li>
+              <svg viewBox="0 0 12 12" aria-hidden="true">
+                <circle cx="6" cy="6" r="4" className={styles.keyPractice} />
+              </svg>
+              First check (not counted)
+            </li>
+            {notedPoints(points).length > 0 && (
+              <li>
+                <svg viewBox="0 0 12 12" aria-hidden="true">
+                  <path d="M6 1L11 6L6 11L1 6Z" className={styles.keyFlagged} />
+                </svg>
+                Has a note (listed below the charts)
+              </li>
+            )}
+            {summary.baseline && (
+              <li>
+                <svg viewBox="0 0 16 12" aria-hidden="true">
+                  <line x1="0" y1="6" x2="16" y2="6" className={styles.keyBaseline} />
+                </svg>
+                Where you started
+              </li>
+            )}
+          </ul>
+        )}
         <div className={styles.charts}>
           {METRIC_ORDER.map((key) => {
             const b = summary.baseline?.[key].median ?? null;
@@ -181,6 +187,7 @@ export function Progress() {
             );
           })}
         </div>
+        <SessionNotes points={points} sessions={sessions} />
       </section>
 
       <section aria-labelledby="sessions-title" className={styles.block}>
@@ -201,8 +208,8 @@ export function Progress() {
         <section aria-labelledby="checkin-title" className={styles.part}>
           <h3 id="checkin-title">After a check-in</h3>
           <p className={styles.note}>
-            Each dot is one session, grouped by how you answered the check-in before it. Practice is
-            left out.
+            Each dot is one session, grouped by how you answered the check-in before it. Your first
+            check is left out.
           </p>
           <ChipGroup<ProgressMetric>
             legend="Compare"
@@ -267,6 +274,41 @@ export function Progress() {
           </GroupDots>
         </div>
       </details>
+    </section>
+  );
+}
+
+/** The sessions drawn as a diamond: a flag, outside the first (not counted) session. */
+const notedPoints = (points: SessionPoint[]) =>
+  points.filter((p) => p.flags.length > 0 && !p.practice);
+
+/**
+ * The sessions drawn as a diamond, with their notes in words and a link to their Results,
+ * so the notes are readable without hovering a point (a phone has no hover).
+ */
+function SessionNotes({
+  points,
+  sessions,
+}: {
+  points: SessionPoint[];
+  sessions: CompletedSession[];
+}) {
+  const noted = notedPoints(points);
+  if (points.length < MIN_POINTS || noted.length === 0) return null;
+  return (
+    <section aria-labelledby="notes-title" className={styles.notes}>
+      <h3 id="notes-title">Sessions with a note</h3>
+      <ul>
+        {noted.map((p) => (
+          <li key={p.session}>
+            <svg viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M6 1L11 6L6 11L1 6Z" className={styles.keyFlagged} />
+            </svg>
+            <Link to={`/results/${sessions[p.session - 1]!.id}`}>Session {p.session}</Link>
+            <span>{p.flags.map((f) => FLAG_SHORT[f]).join(', ')}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

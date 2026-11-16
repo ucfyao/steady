@@ -318,6 +318,22 @@ describe('Focus mode', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument(); // back after the block
   });
 
+  it('counts down without any number, so no 3 appears before the trials', async () => {
+    const { clock } = renderPlay({ returning: true });
+    await startFromCheckIn();
+    await countdown();
+    // Every step of the 3 s countdown: a ring and a label, never a digit anywhere.
+    for (let t = 0; t < 2900; t += 100) {
+      expect(screen.getByTestId('countdown')).toHaveTextContent('Finger on Space');
+      expect(document.body.textContent).not.toMatch(/[0-9]/);
+      clock.advance(100);
+    }
+    // The trials still start on time, at 3 s.
+    clock.advance(200);
+    expect(screen.queryByTestId('countdown')).toBeNull();
+    expect(screen.getByTestId('stimulus').textContent).toMatch(/^[0-9]$/);
+  });
+
   it('does not re-render React for each trial', async () => {
     const { clock, renders } = renderPlay({ returning: true });
     await startFromCheckIn();

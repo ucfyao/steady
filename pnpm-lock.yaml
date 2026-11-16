@@ -108,6 +108,9 @@ importers:
       supertest:
         specifier: ^7.3.2
         version: 7.3.2
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       unplugin-swc:
         specifier: ^2.0.0
         version: 2.0.0(@swc/core@1.16.22)(esbuild@0.28.2)(rolldown@1.2.19)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
