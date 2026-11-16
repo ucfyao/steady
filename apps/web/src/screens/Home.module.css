@@ -4,8 +4,8 @@
 }
 
 .lead {
-  margin-bottom: var(--space-7);
-  color: var(--color-text-muted);
+  margin-bottom: var(--space-5);
+  color: rgb(236 230 218 / 0.8);
   /* Wraps naturally ("on 3." is kept together by a no-break space in Home.tsx); "pretty"
      only avoids a short last line, so "on 3." does not end up alone on a phone. */
   text-wrap: pretty;
@@ -13,7 +13,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
   gap: var(--space-4);
 }
 
@@ -57,8 +57,15 @@
   color: var(--color-text-muted);
 }
 
-.start {
-  margin-top: var(--space-8);
+.hero .start {
+  width: 100%;
+  background: #ffd696;
+  border-color: #ffd696;
+  color: #2b2925;
+}
+
+.hero .start:hover {
+  background: #ffe2a0;
 }
 
 .points {
@@ -69,4 +76,74 @@
 
 .points li + li {
   margin-top: var(--space-1);
+}
+
+/* The hero (Spec 007): the lantern's night scene, always dark, with the greeting on it. */
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 22rem;
+  margin-bottom: var(--space-6);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border-radius: var(--radius-md);
+  color: #ece6da;
+  background: #1b2340;
+}
+
+/* A dark wash under the text, so it stays readable however far the sky got to dawn. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, rgb(20 22 40 / 0.7) 100%);
+  pointer-events: none;
+}
+
+.heroText {
+  position: relative;
+  z-index: 1;
+}
+
+.heroText h1 {
+  color: #ece6da;
+}
+
+/* A small unlit lantern, drawn in CSS (the shapes of the focus-mode lantern). */
+.heroLantern {
+  position: absolute;
+  top: var(--space-6);
+  right: var(--space-6);
+  width: 3.5rem;
+  height: 4.25rem;
+  border-radius: 44% 44% 40% 40% / 30% 30% 26% 26%;
+  background: rgb(246 242 234 / 0.92);
+  box-shadow: 0 0 30px 6px rgb(255 214 150 / 0.35);
+}
+
+.heroLantern::before,
+.heroLantern::after {
+  content: '';
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  height: 0.4rem;
+  border-radius: 3px;
+  background: #3d332b;
+}
+
+.heroLantern::before {
+  top: -0.3rem;
+}
+
+.heroLantern::after {
+  bottom: -0.3rem;
+}
+
+.sky {
+  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
+  font-size: var(--text-sm);
+  color: #ffd696;
 }

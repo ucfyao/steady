@@ -1,4 +1,5 @@
 import {
+  type Variant,
   PROGRESS_CONFIG,
   SART_CONFIG,
   type CompletedSession,
@@ -21,6 +22,7 @@ import { MIN_POINTS, MetricChart } from '../progress/MetricChart.js';
 import { AXIS_FORMAT, FLAG_SHORT } from '../progress/metrics.js';
 import { sessionPoints, type SessionPoint } from '../progress/series.js';
 import { SessionList } from '../progress/SessionList.js';
+import { Skies } from '../progress/Skies.js';
 import { WeekDots } from '../progress/WeekDots.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
@@ -30,7 +32,7 @@ import styles from './Progress.module.css';
 type State =
   | { k: 'loading' }
   | { k: 'error'; message: string }
-  | { k: 'ready'; sessions: CompletedSession[]; progress: ProgressResponse };
+  | { k: 'ready'; sessions: CompletedSession[]; progress: ProgressResponse; variant: Variant };
 
 const SLEEP = { poor: 'Poor', ok: 'OK', good: 'Good' };
 const STRESS = { low: 'Low', medium: 'Medium', high: 'High' };
@@ -73,8 +75,11 @@ export function Progress() {
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    Promise.all([api.listSessions(), api.getProgress()])
-      .then(([sessions, progress]) => !cancelled && setState({ k: 'ready', sessions, progress }))
+    Promise.all([api.listSessions(), api.getProgress(), api.getMe()])
+      .then(
+        ([sessions, progress, me]) =>
+          !cancelled && setState({ k: 'ready', sessions, progress, variant: me.variant }),
+      )
       .catch(
         (e: unknown) =>
           !cancelled &&
@@ -117,6 +122,8 @@ export function Progress() {
       <p className={styles.lead} data-testid="summary">
         {progressHeadline(summary)}
       </p>
+
+      {state.variant === 'game' && <Skies sessions={sessions} />}
 
       <Card as="section" aria-labelledby="week-title">
         <h2 id="week-title">Last 7 days</h2>

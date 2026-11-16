@@ -1,5 +1,7 @@
-import type { CompletedSession, ProgressSummary } from '@steady/core';
+import type { CompletedSession, ProgressSummary, Variant } from '@steady/core';
 import { useEffect, useState } from 'react';
+import { dawnPercent, personalBest } from '../game/dawn.js';
+import { Scene } from '../game/Scene.js';
 import { METRICS } from '../metrics/metrics.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { lastCheckDay } from '../progress/lastCheck.js';
@@ -56,7 +58,7 @@ function Welcome() {
   );
 }
 
-function LastCheck({ session }: { session: CompletedSession }) {
+function LastCheck({ session, best }: { session: CompletedSession; best: number | null }) {
   const { score } = session;
   return (
     <Card as="section" aria-labelledby="last-title">
@@ -72,6 +74,7 @@ function LastCheck({ session }: { session: CompletedSession }) {
         ) : (
           <Stat label={response.name} value={String(Math.round(score.medianGoRtMs))} unit="ms" />
         )}
+        {best !== null && <Stat label="Personal best" value={String(best)} unit="points" />}
       </div>
     </Card>
   );
@@ -82,14 +85,16 @@ export function Home() {
   const [data, setData] = useState<{
     sessions: CompletedSession[];
     summary: ProgressSummary;
+    variant: Variant;
   } | null>(null);
 
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    Promise.all([api.listSessions(), api.getProgress()])
+    Promise.all([api.listSessions(), api.getProgress(), api.getMe()])
       .then(
-        ([sessions, progress]) => !cancelled && setData({ sessions, summary: progress.summary }),
+        ([sessions, progress, me]) =>
+          !cancelled && setData({ sessions, summary: progress.summary, variant: me.variant }),
       )
       .catch(() => !cancelled && setData(null));
     return () => {
@@ -97,11 +102,27 @@ export function Home() {
     };
   }, [api]);
 
+  const game = data?.variant === 'game';
+  const lastGame = game ? data.sessions.filter((s) => s.variant === 'game').at(-1) : undefined;
+  const lastSky = lastGame ? dawnPercent(lastGame.score) : null;
+  const best = game ? personalBest(data.sessions) : null;
+
   return (
     <section className={styles.home}>
-      <h1>Hi, {active?.name}</h1>
-      {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
-      <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
+      {/* The lantern's scene (Spec 007 §1); a game player sees the last sky they reached. */}
+      <section aria-label="Today's check" className={styles.hero}>
+        <Scene ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))} />
+        <span className={styles.heroLantern} aria-hidden="true" />
+        <div className={styles.heroText}>
+          <h1 id="hero-title">Hi, {active?.name}</h1>
+          {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
+          <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
+          {lastSky !== null && <p className={styles.sky}>Last sky: dawn {lastSky}%</p>}
+          <Button to="/play" size="lg" className={styles.start}>
+            Start today&apos;s check
+          </Button>
+        </div>
+      </section>
       {data && data.sessions.length === 0 && <Welcome />}
       {data && data.sessions.length > 0 && (
         <>
@@ -109,7 +130,7 @@ export function Home() {
             <h2 id="week-title">Last 7 days</h2>
             <WeekDots completedAt={data.sessions.map((s) => s.completedAt)} />
           </Card>
-          <LastCheck session={data.sessions.at(-1)!} />
+          <LastCheck session={data.sessions.at(-1)!} best={best} />
           {data.summary.sessionsUntilBaseline > 0 && (
             <p className={styles.baseline}>
               {moreSessions(data.summary.sessionsUntilBaseline)} until your starting point
@@ -117,9 +138,6 @@ export function Home() {
           )}
         </>
       )}
-      <Button to="/play" size="lg" className={styles.start}>
-        Start today&apos;s check
-      </Button>
     </section>
   );
 }
