@@ -38,8 +38,25 @@ const seven = COMMISSION.map((c, i) =>
   }),
 );
 
+// 11 sessions: practice, baseline = sessions 2–6, recent = sessions 7–11. Worked out by hand:
+//   catch rate:  baseline 1 − .3 = 70%, recent 1 − .1 = 90% (beyond the 0.1 band): ↑ better
+//   missed:      .05 both: ≈ similar
+//   response:    400 → 350 ms (beyond 20 ms): ↓ faster, neither better nor below;
+//                session 9 has no median, so recent n = 4
+//   variation:   20% → 26% (beyond 0.02): ↑ less even, below
+const improving = Array.from({ length: 11 }, (_, i) =>
+  i < 6
+    ? storedSession(i + 1, { commissionRate: 0.3, medianGoRtMs: 400, rtCv: 0.2 })
+    : storedSession(i + 1, {
+        commissionRate: 0.1,
+        medianGoRtMs: i === 8 ? null : 350,
+        rtCv: 0.26,
+      }),
+);
+
 // 22 sessions: practice, 10 after poor sleep, 10 after good sleep, one without a check-in.
-//   catch rate: poor 1 − .3 = 70%, good 1 − .1 = 90%; rhythm variability: poor 30%, good 20%
+//   catch rate: poor 1 − .3 = 70%, good 1 − .1 = 90%; timing variation: poor 30%, good 20%
+//   before a probe: on task 10% (n = 10), elsewhere 30% (n = 10), drifting 25% (n = 1)
 const withCheckIns = [
   storedSession(1, {}, { checkIn: { sleep: 'poor' } }),
   ...Array.from({ length: 10 }, (_, i) =>
@@ -48,7 +65,11 @@ const withCheckIns = [
       { commissionRate: 0.3, rtCv: 0.3 },
       {
         checkIn: { sleep: 'poor' },
-        probes: i === 0 ? [{ afterIndex: 30, answer: 'drifting', preProbeCv: 0.25 }] : [],
+        probes: [
+          { afterIndex: 30, answer: 'on_task', preProbeCv: 0.1 },
+          { afterIndex: 60, answer: 'elsewhere', preProbeCv: 0.3 },
+          ...(i === 0 ? [{ afterIndex: 90, answer: 'drifting' as const, preProbeCv: 0.25 }] : []),
+        ],
       },
     ),
   ),
@@ -57,6 +78,24 @@ const withCheckIns = [
   ),
   storedSession(22),
 ];
+
+// Practice, 10 after poor sleep, 8 after good sleep, no probes.
+const oneLarge = [
+  storedSession(1, {}, { checkIn: { sleep: 'poor' } }),
+  ...Array.from({ length: 10 }, (_, i) =>
+    storedSession(i + 2, { commissionRate: 0.3 }, { checkIn: { sleep: 'poor' } }),
+  ),
+  ...Array.from({ length: 8 }, (_, i) =>
+    storedSession(i + 12, { commissionRate: 0.1 }, { checkIn: { sleep: 'good' } }),
+  ),
+];
+
+/** Opens the collapsed Exploring patterns block. */
+async function openExploring() {
+  const toggle = await screen.findByText('Exploring patterns');
+  fireEvent.click(toggle);
+  return toggle.closest('details')!;
+}
 
 describe('Progress screen', () => {
   it('invites a player with no sessions to play', async () => {
@@ -68,10 +107,13 @@ describe('Progress screen', () => {
     );
   });
 
-  it('counts down to the starting point and shows the last 7 days', async () => {
+  it('counts down to the starting point in the summary and the table, and shows the week', async () => {
     renderAt('/progress', seven.slice(0, 3));
+    expect(await screen.findByTestId('summary')).toHaveTextContent(
+      '3 more sessions until your starting point. Until then, the charts show each check.',
+    );
     expect(
-      await screen.findByText('Your starting point is set after 3 more sessions.'),
+      screen.getByText('Your starting point is set after 3 more sessions.'),
     ).toBeInTheDocument();
     expect(region('Last 7 days')).toHaveTextContent('1 of 4 days');
     expect(within(region('Last 7 days')).getAllByTestId('week-day')).toHaveLength(7);
@@ -91,81 +133,170 @@ describe('Progress screen', () => {
     );
   });
 
-  it('compares recent sessions with where the player started, with n', async () => {
-    renderAt('/progress', seven);
+  it('sums up the recent checks against where the player started', async () => {
+    renderAt('/progress', improving);
+    expect(await screen.findByTestId('summary')).toHaveTextContent(
+      'Your last 5 checks: better than where you started at holding back on 3s, below at keeping an even rhythm.',
+    );
+  });
+
+  it('compares recent with where the player started, with arrows and better or below', async () => {
+    renderAt('/progress', improving);
     const card = await screen.findByRole('region', { name: 'Recent vs. where you started' });
+    const row = (name: RegExp) => within(card).getByRole('row', { name });
     const cells = (name: RegExp) =>
-      within(within(card).getByRole('row', { name }))
+      within(row(name))
         .getAllByRole('cell')
         .map((c) => c.textContent);
-    expect(cells(/catch rate/i)).toEqual(['80% (n = 5)', '90% (n = 5)']);
-    expect(cells(/median response/i)).toEqual(['400 ms (n = 5)', '390 ms (n = 5)']);
-    expect(within(card).queryByText(/better|worse/i)).toBeNull();
-  });
-
-  it('captions each chart with its latest value', async () => {
-    renderAt('/progress', seven);
-    const chart = await screen.findByRole('figure', { name: 'Catch rate' });
-    expect(chart).toHaveTextContent('Latest: 100% (session 7)');
-    expect(screen.getByRole('figure', { name: 'Median response' })).toHaveTextContent(
-      'Latest: 350 ms (session 7)',
+    expect(within(row(/3s held back/)).getByRole('rowheader')).toHaveTextContent(
+      '3s held backHigher is better',
+    );
+    expect(cells(/3s held back/)).toEqual(['70%', '90%', '↑ More held back · better']);
+    expect(cells(/Digits missed/)).toEqual(['5%', '5%', '≈ Similar']);
+    expect(cells(/Typical response time/)).toEqual(['400 ms', '350 ms', '↓ Faster']);
+    expect(cells(/How much your timing varied/)).toEqual(['20%', '26%', '↑ Less even · below']);
+    // Colour is only a second cue: the verdict is also in words.
+    expect(within(row(/3s held back/)).getByTestId('change')).toHaveAttribute(
+      'data-verdict',
+      'better',
+    );
+    expect(within(row(/timing varied/)).getByTestId('change')).toHaveAttribute(
+      'data-verdict',
+      'worse',
+    );
+    // n is in the tooltip and the footnote, not next to each number.
+    expect(within(row(/Typical response time/)).getAllByRole('cell')[1]).toHaveAttribute(
+      'title',
+      'Median of 4 sessions',
+    );
+    expect(within(row(/3s held back/)).getAllByRole('cell')[0]).toHaveAttribute(
+      'title',
+      'Median of 5 sessions',
+    );
+    expect(card).not.toHaveTextContent('n =');
+    expect(card).toHaveTextContent(
+      'Where you started: the middle of sessions 2–6. Recent: the middle of your last 5 checks. Typical response time, recent: 4 sessions (the others had too few presses).',
     );
   });
 
-  it('shows group dots with n, and a pattern sentence only when both groups have 10', async () => {
+  it('captions each chart with its better direction, latest value and where the player started', async () => {
+    renderAt('/progress', improving);
+    const chart = await screen.findByRole('figure', { name: '3s held back' });
+    expect(chart).toHaveTextContent('Higher is better');
+    expect(chart).toHaveTextContent('Latest: 90% (session 11)');
+    expect(chart).toHaveTextContent('Where you started: 70%');
+    const rt = screen.getByRole('figure', { name: 'Typical response time' });
+    expect(rt).toHaveTextContent('Neither way is better');
+    expect(rt).toHaveTextContent('Latest: 350 ms (session 11)');
+    expect(screen.getByRole('figure', { name: 'Digits missed' })).toHaveTextContent(
+      'Lower is better',
+    );
+  });
+
+  it('does not mention where the player started before it exists', async () => {
+    renderAt('/progress', seven.slice(0, 3));
+    const chart = await screen.findByRole('figure', { name: '3s held back' });
+    expect(chart).not.toHaveTextContent('Where you started');
+  });
+
+  it('lists the latest 10 sessions, newest first, each linking to its results', async () => {
+    const twelve = Array.from({ length: 12 }, (_, i) =>
+      storedSession(i + 1, { commissionRate: 0.25, medianGoRtMs: 401.6 }),
+    );
+    renderAt('/progress', twelve);
+    const list = await screen.findByRole('region', { name: 'Your sessions' });
+    const links = () => within(list).getAllByRole('link');
+    expect(links()).toHaveLength(10);
+    expect(links()[0]).toHaveAttribute('href', '/results/s12');
+    expect(links()[0]).toHaveTextContent('Session 12');
+    expect(links()[0]).toHaveTextContent('75%');
+    expect(links()[0]).toHaveTextContent('402 ms');
+    expect(links()[9]).toHaveAttribute('href', '/results/s3');
+
+    fireEvent.click(within(list).getByRole('button', { name: 'Show all 12 sessions' }));
+    expect(links()).toHaveLength(12);
+    expect(links()[11]).toHaveAttribute('href', '/results/s1');
+    expect(links()[11]).toHaveTextContent('Practice');
+    expect(links()[10]).not.toHaveTextContent('Practice');
+
+    fireEvent.click(within(list).getByRole('button', { name: 'Show only the latest 10' }));
+    expect(links()).toHaveLength(10);
+  });
+
+  it('has no Show all button for 10 sessions or fewer', async () => {
+    renderAt('/progress', seven);
+    const list = await screen.findByRole('region', { name: 'Your sessions' });
+    expect(within(list).getAllByRole('link')).toHaveLength(7);
+    expect(within(list).queryByRole('button')).toBeNull();
+  });
+
+  it('keeps Exploring patterns collapsed until opened', async () => {
     renderAt('/progress', withCheckIns);
-    const sleep = await screen.findByRole('region', { name: 'Sleep' });
+    const toggle = await screen.findByText('Exploring patterns');
+    const details = toggle.closest('details')!;
+    expect(details).not.toHaveAttribute('open');
+    fireEvent.click(toggle);
+    expect(details).toHaveAttribute('open');
+  });
+
+  it('draws only answers with a median, with an axis, and the pattern sentence', async () => {
+    renderAt('/progress', withCheckIns);
+    await openExploring();
+    const sleep = region('Sleep');
     expect(within(sleep).getByText('Poor · n = 10')).toBeInTheDocument();
-    expect(within(sleep).getByText('OK · n = 0')).toBeInTheDocument();
     expect(within(sleep).getByText('Good · n = 10')).toBeInTheDocument();
+    expect(within(sleep).queryByText('OK · n = 0')).toBeNull();
+    expect(sleep).toHaveTextContent('Not shown yet (fewer than 10 sessions): OK, n = 0');
     expect(within(sleep).getAllByTestId('group-median')).toHaveLength(2);
     expect(within(sleep).getAllByTestId('group-dot')).toHaveLength(20);
+    // Values 70% and 90%: steps of 5% (Spec 004 axis rules).
+    expect(
+      within(sleep)
+        .getAllByTestId('axis-tick')
+        .map((t) => t.textContent),
+    ).toEqual(['70%', '75%', '80%', '85%', '90%']);
+    expect(sleep).toHaveTextContent('3s held back · Higher is better');
     expect(sleep).toHaveTextContent(
-      'So far, your median catch rate was 70% after poor sleep and 90% after good sleep. This is a pattern so far, not a cause.',
+      'So far, “3s held back” had a median of 70% after poor sleep and 90% after good sleep. This is a pattern so far, not a cause.',
     );
-
-    const stress = region('Stress');
-    expect(stress).toHaveTextContent('Each group needs at least 10 sessions');
-    expect(within(stress).queryByText(/pattern so far/)).toBeNull();
   });
 
-  it('draws the one median that exists but no sentence when only one group has 10', async () => {
-    // practice, 10 after poor sleep, 8 after good sleep
-    const oneLarge = [
-      storedSession(1, {}, { checkIn: { sleep: 'poor' } }),
-      ...Array.from({ length: 10 }, (_, i) =>
-        storedSession(i + 2, { commissionRate: 0.3 }, { checkIn: { sleep: 'poor' } }),
-      ),
-      ...Array.from({ length: 8 }, (_, i) =>
-        storedSession(i + 12, { commissionRate: 0.1 }, { checkIn: { sleep: 'good' } }),
-      ),
-    ];
+  it('collapses a part to how many more sessions it needs', async () => {
     renderAt('/progress', oneLarge);
-    const sleep = await screen.findByRole('region', { name: 'Sleep' });
-    expect(within(sleep).getByText('Good · n = 8')).toBeInTheDocument();
-    expect(within(sleep).getAllByTestId('group-median')).toHaveLength(1);
-    expect(sleep).toHaveTextContent('Each group needs at least 10 sessions');
+    await openExploring();
+    // Sleep: poor 10, good 8 → 2 more. Stress: none → 10 + 10.
+    const sleep = region('Sleep');
+    expect(sleep).toHaveTextContent('Needs at least 2 more sessions with a check-in.');
+    expect(within(sleep).queryAllByTestId('group-dot')).toHaveLength(0);
+    expect(within(sleep).queryAllByTestId('group-median')).toHaveLength(0);
     expect(sleep).not.toHaveTextContent(/pattern so far/);
-  });
-
-  it('switches the compared metric', async () => {
-    renderAt('/progress', withCheckIns);
-    const picker = await screen.findByRole('group', { name: 'Compare' });
-    expect(within(picker).getByRole('radio', { name: 'Catch rate' })).toBeChecked();
-    fireEvent.click(within(picker).getByRole('radio', { name: 'Rhythm variability' }));
-    expect(region('Sleep')).toHaveTextContent(
-      'So far, your median rhythm variability was 30% after poor sleep and 20% after good sleep.',
+    expect(region('Stress')).toHaveTextContent('Needs at least 20 more sessions with a check-in.');
+    // No probe answers: 20 answers at 4 per session → 5 sessions.
+    expect(region('Before each “where was your mind?”')).toHaveTextContent(
+      'Needs at least 5 more sessions.',
     );
   });
 
-  it('shows pre-probe variability by answer the same way', async () => {
+  it('switches the metric for check-ins only; the pre-probe part keeps its own measure', async () => {
     renderAt('/progress', withCheckIns);
-    const preProbe = await screen.findByRole('region', {
-      name: 'Before each "where was your mind?"',
-    });
-    expect(within(preProbe).getByText('Drifting · n = 1')).toBeInTheDocument();
-    expect(within(preProbe).queryAllByTestId('group-median')).toHaveLength(0);
-    expect(preProbe).toHaveTextContent('Each group needs at least 10 sessions');
+    await openExploring();
+    const preProbe = region('Before each “where was your mind?”');
+    expect(preProbe).toHaveTextContent(
+      'how much your timing varied over the 8 digits just before each question',
+    );
+    const before = preProbe.textContent;
+    expect(preProbe).toHaveTextContent(
+      'So far, how much your timing varied just before a question had a median of 10% when you answered on task and 30% when you answered elsewhere. This is a pattern so far, not a cause.',
+    );
+    expect(preProbe).toHaveTextContent('Not shown yet (fewer than 10 answers): Drifting, n = 1');
+
+    const picker = screen.getByRole('group', { name: 'Compare' });
+    expect(within(picker).getByRole('radio', { name: '3s held back' })).toBeChecked();
+    fireEvent.click(within(picker).getByRole('radio', { name: 'How much your timing varied' }));
+    expect(region('Sleep')).toHaveTextContent(
+      'So far, “How much your timing varied” had a median of 30% after poor sleep and 20% after good sleep.',
+    );
+    expect(region('Before each “where was your mind?”').textContent).toBe(before);
   });
 });
 

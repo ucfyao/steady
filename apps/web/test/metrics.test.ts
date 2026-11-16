@@ -5,7 +5,9 @@ import {
   METRIC_ORDER,
   chooseReference,
   compareMetric,
+  directionText,
   headline,
+  progressHeadline,
   referenceName,
   type Comparison,
   type Reference,
@@ -268,5 +270,63 @@ describe('headline', () => {
       verdicts.map((u) => headline(baseline, [cmp('commissionRate', v), cmp('rtCv', u)])),
     );
     for (const t of texts) expect(t).not.toMatch(/focus|attention|tired|distract|fail|bad|poor/i);
+  });
+});
+
+describe('directionText', () => {
+  it('says which way is better, and that neither is for response time', () => {
+    expect(directionText('commissionRate')).toBe('Higher is better');
+    expect(directionText('omissionRate')).toBe('Lower is better');
+    expect(directionText('rtCv')).toBe('Lower is better');
+    expect(directionText('medianGoRtMs')).toBe('Neither way is better');
+  });
+});
+
+describe('progressHeadline', () => {
+  const set = (c: number, o: number, rt: number | null, cv: number | null): MetricSet => ({
+    commissionRate: { median: c, n: 5 },
+    omissionRate: { median: o, n: 5 },
+    medianGoRtMs: { median: rt, n: 5 },
+    rtCv: { median: cv, n: 5 },
+  });
+  const summary = (
+    baseline: MetricSet | null,
+    recent: MetricSet | null,
+    until = 0,
+  ): ProgressSummary => ({
+    totalSessions: 6 - until,
+    practiceSessions: 1,
+    sessionsUntilBaseline: until,
+    baseline,
+    recent,
+  });
+
+  it('counts down before the baseline exists', () => {
+    expect(progressHeadline(summary(null, null, 3))).toBe(
+      '3 more sessions until your starting point. Until then, the charts show each check.',
+    );
+    expect(progressHeadline(summary(null, null, 1))).toBe(
+      '1 more session until your starting point. Until then, the charts show each check.',
+    );
+  });
+
+  it('compares the recent medians with the baseline, in the Results wording', () => {
+    // Catch rate 80% → 95% (beyond the 0.1 band): better. Missed 5% → 5%: similar.
+    // Response 400 → 370 ms: faster, which is neither. Variation 20% → 25% (beyond 0.02): below.
+    expect(progressHeadline(summary(set(0.2, 0.05, 400, 0.2), set(0.05, 0.05, 370, 0.25)))).toBe(
+      'Your last 5 checks: better than where you started at holding back on 3s, below at keeping an even rhythm.',
+    );
+    // Everything inside the bands; response 400 → 430 ms is slower.
+    expect(progressHeadline(summary(set(0.2, 0.05, 400, 0.2), set(0.15, 0.06, 430, 0.21)))).toBe(
+      'Your last 5 checks: close to where you started on every measure, and slower.',
+    );
+  });
+
+  it('only describes: no words that judge the player', () => {
+    const t = progressHeadline(summary(set(0.2, 0.05, 400, 0.2), set(0.5, 0.2, 300, 0.4)));
+    expect(t).toBe(
+      'Your last 5 checks: below where you started at holding back on 3s, catching every digit and keeping an even rhythm.',
+    );
+    expect(t).not.toMatch(/focus|attention|tired|distract|fail|bad|poor/i);
   });
 });

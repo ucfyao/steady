@@ -70,10 +70,10 @@ describe('Home', () => {
       ),
     ]);
     const last = await screen.findByRole('region', { name: 'Last check · Today' });
-    // Catch rate = 1 − commissionRate (Spec 002), as on Results.
-    expect(within(last).getByRole('group', { name: 'Catch rate' })).toHaveTextContent('75%');
+    // 3s held back = catch rate = 1 − commissionRate (Spec 002), named as on Results.
+    expect(within(last).getByRole('group', { name: '3s held back' })).toHaveTextContent('75%');
     expect(stat('Longest steady run')).toHaveTextContent('41');
-    expect(stat('Median response')).toHaveTextContent('388 ms');
+    expect(stat('Typical response time')).toHaveTextContent('388 ms');
     expect(screen.getByRole('region', { name: 'Last 7 days' })).toHaveTextContent('2 of 4 days');
     expect(screen.getByText('4 more sessions until your starting point')).toBeInTheDocument();
   });
@@ -88,7 +88,9 @@ describe('Home', () => {
     );
     await screen.findByRole('region', { name: /^Last check · / });
     // A dash and a short note on its own line, aligned like the other two stats.
-    expect(stat('Median response')).toHaveTextContent(/^—Not enough dataMedian response$/);
+    expect(stat('Typical response time')).toHaveTextContent(
+      /^—Not enough dataTypical response time$/,
+    );
     expect(screen.getByText('Not enough data')).toHaveClass(/note/);
     expect(screen.queryByText(/until your starting point/)).toBeNull();
   });

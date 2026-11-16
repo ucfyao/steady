@@ -1,0 +1,114 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Session | 3s held back | response time | › ; on a phone the two numbers go under the date. */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 7rem 10.5rem auto;
+  grid-template-areas: 'when held rt go';
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--space-1);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.row:hover {
+  background: var(--color-surface-sunken);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.when {
+  grid-area: when;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+}
+
+.session {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-medium);
+}
+
+.date {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.tag {
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat:nth-of-type(2) {
+  grid-area: held;
+}
+
+.stat:nth-of-type(3) {
+  grid-area: rt;
+}
+
+.number {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  line-height: 1.2;
+}
+
+.label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.chevron {
+  grid-area: go;
+  font-size: var(--text-xl);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 539px) {
+  .row {
+    grid-template-columns: 1fr 1fr auto;
+    grid-template-areas:
+      'when when go'
+      'held rt go';
+  }
+}
+
+.more {
+  margin-top: var(--space-3);
+  padding: var(--space-2) 0;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.more:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
