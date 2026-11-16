@@ -130,5 +130,13 @@ describe('Results', () => {
     renderResults('/results/someone-else');
     expect(await screen.findByRole('heading', { name: 'Session not found' })).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /session journey/i })).toBeNull();
+    // The shared status page: a reason, a primary and a secondary action.
+    const page = screen.getByRole('region', { name: 'Session not found' });
+    expect(page).toHaveTextContent(/does not belong to the current player/i);
+    expect(within(page).getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
+    expect(within(page).getByRole('link', { name: 'See your progress' })).toHaveAttribute(
+      'href',
+      '/progress',
+    );
   });
 });

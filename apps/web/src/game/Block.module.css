@@ -35,37 +35,93 @@
   color: var(--color-text);
 }
 
-.countdown,
-.feedback {
-  position: absolute;
-  inset: auto var(--space-4);
-  margin: 0;
-  text-align: center;
-  color: var(--color-text-muted);
-}
-
 .countdown {
-  font-family: var(--font-serif);
-  font-size: var(--text-3xl);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
 }
 
-/* Practice feedback can be a short sentence; the tick stays large. */
-.feedback {
+.ring {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 11rem;
+  height: 11rem;
+}
+
+.ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.track,
+.arc {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.track {
+  stroke: var(--color-border);
+}
+
+/* Fills over the 3 s countdown. With reduced motion it is simply a full ring. */
+.arc {
+  stroke: var(--color-accent-soft);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: fill 3s linear;
+}
+
+@keyframes fill {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+/* Serif, sage and smaller than any digit: the stimulus is Inter, bold, near-black. */
+.count {
+  font-family: var(--font-serif);
+  font-size: 4.5rem;
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.ready {
+  margin: 0;
+  font-family: var(--font-serif);
   font-size: var(--text-xl);
 }
 
-.hit,
-.caught {
-  color: var(--color-link);
+/* Practice feedback: a short word or two in a pill, green when right, red when not. */
+.feedback {
+  position: absolute;
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
 }
 
-.hit {
-  font-size: var(--text-3xl);
+.good {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
 }
 
-.commission,
-.omission {
+.bad {
+  background: var(--color-danger-tint);
   color: var(--color-danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arc {
+    animation: none;
+  }
 }
 
 .probe {

@@ -25,6 +25,11 @@
   --color-danger: #a3402f;
   --color-on-danger: #f6f2ea;
   --color-focus: #3f5a45;
+  /* Tints: soft backgrounds for pills, tips and status marks (flow design, 2026-11-16) */
+  --color-accent-tint: #e1eadf; /* behind accent text: 6.4:1 */
+  --color-danger-tint: #f3ddd6; /* behind danger text: 5.1:1 */
+  --color-surface-sunken: #ebe5d8; /* a tip box on the content surface */
+  --color-mark: #e4ddcf; /* small round icon behind a list point */
 
   /* Colour: the results ribbon (unchanged until the results screen is redesigned) */
   --color-viz-steady: #7fb8aa;
@@ -103,6 +108,10 @@
     --color-danger: #e8907f;
     --color-on-danger: #1d1b18;
     --color-focus: #a9c6ad;
+    --color-accent-tint: #2f3b31;
+    --color-danger-tint: #4a2c26;
+    --color-surface-sunken: #2f2b26;
+    --color-mark: #3a362f;
     --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
 
     --color-viz-steady: #3f7f71;

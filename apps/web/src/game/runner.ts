@@ -19,8 +19,11 @@ export interface RunnerOptions {
   feedbackMs?: number;
 }
 
-/** Practice feedback for one trial. Not a score: it is never sent anywhere. */
-export type Outcome = 'caught' | 'commission' | 'omission' | 'hit';
+/**
+ * Practice feedback for one trial. Not a score: it is never sent anywhere.
+ * `early`: a press on a digit under core's anticipation threshold.
+ */
+export type Outcome = 'caught' | 'commission' | 'omission' | 'hit' | 'early';
 
 export type RunnerView =
   | { phase: 'waiting' }
@@ -151,9 +154,10 @@ export class TrialRunner {
   }
 
   private outcome(index: number): Outcome {
-    const pressed = this.rts[index] !== null;
-    if (this.trials[index]!.isTarget) return pressed ? 'commission' : 'caught';
-    return pressed ? 'hit' : 'omission';
+    const rt = this.rts[index]!;
+    if (this.trials[index]!.isTarget) return rt === null ? 'caught' : 'commission';
+    if (rt === null) return 'omission';
+    return rt < SART_CONFIG.anticipationMs ? 'early' : 'hit';
   }
 
   private show(view: RunnerView): RunnerView {

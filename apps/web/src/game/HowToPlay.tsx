@@ -1,29 +1,12 @@
 import type { InputDevice } from '@steady/core';
 import styles from './HowToPlay.module.css';
 
-const MASK = '⊗';
-
-/** The rules, shown before practice and from "How to play" (Spec 004). */
+/** The rules in short (Spec 004, step 1): the 5 / 8 / 3 example and one paragraph. */
 export function HowToPlay({ device }: { device: InputDevice }) {
-  const action = device === 'touch' ? 'Tap the screen' : 'Press Space';
   const press = device === 'touch' ? 'Tap' : 'Press';
   return (
-    <section className={styles.howTo} aria-labelledby="how-to-title">
-      <h2 id="how-to-title">How to play</h2>
-      <ol className={styles.steps}>
-        <li>
-          A digit flashes in the middle of the screen, then turns into{' '}
-          <span className={styles.mask}>{MASK}</span>.
-        </li>
-        <li>
-          <strong>{action}</strong> for every digit, as soon as you see it.
-        </li>
-        <li>
-          <strong>But not for 3.</strong> When you see a 3, hold back.
-        </li>
-        <li>A press still counts while {MASK} is showing, so you have just over a second.</li>
-      </ol>
-      <div className={styles.example} aria-hidden="true">
+    <section className={styles.howTo} aria-label="How to play">
+      <div className={styles.example}>
         <figure>
           <span className={styles.digit}>5</span>
           <figcaption>{press}</figcaption>
@@ -37,9 +20,16 @@ export function HowToPlay({ device }: { device: InputDevice }) {
           <figcaption>Hold back</figcaption>
         </figure>
       </div>
-      <p className={styles.note}>
-        3s are rare and come fast, so everyone presses on some of them by habit. That is what this
-        check measures. Speed and accuracy matter equally.
+      <p className={styles.rule}>
+        {device === 'touch' ? (
+          'Tap the screen'
+        ) : (
+          <>
+            Press <kbd className={styles.key}>Space</kbd>
+          </>
+        )}{' '}
+        as soon as you see a digit. 3s are rare, so your finger will want to press anyway. That
+        moment is what Steady measures.
       </p>
     </section>
   );

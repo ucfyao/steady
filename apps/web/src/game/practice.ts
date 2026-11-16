@@ -47,3 +47,57 @@ export function createPracticePlan(seed: number): {
   }
   throw new Error('could not build a practice sequence');
 }
+
+export interface PracticeSummary {
+  heldBack: number;
+  targets: number;
+  caught: number;
+  digits: number;
+  tooEarly: number;
+  pressedOn3: number;
+  missed: number;
+}
+
+/**
+ * Practice result (Spec 004). Computed in the browser for the player only; never sent or
+ * saved. A press under core's anticipation threshold is "too early", not a caught digit.
+ */
+export function summarisePractice(trials: PlanTrial[], rts: (number | null)[]): PracticeSummary {
+  const s: PracticeSummary = {
+    heldBack: 0,
+    targets: 0,
+    caught: 0,
+    digits: 0,
+    tooEarly: 0,
+    pressedOn3: 0,
+    missed: 0,
+  };
+  trials.forEach((trial, i) => {
+    const rt = rts[i] ?? null;
+    if (trial.isTarget) {
+      s.targets++;
+      if (rt === null) s.heldBack++;
+      else s.pressedOn3++;
+      return;
+    }
+    s.digits++;
+    if (rt === null) s.missed++;
+    else if (rt < SART_CONFIG.anticipationMs) s.tooEarly++;
+    else s.caught++;
+  });
+  return s;
+}
+
+export type PracticeTip = 'pressed-3' | 'missed' | 'too-early' | 'clean';
+
+/** The one tip after practice: about the most common slip (ties: 3s, then misses). */
+export function practiceTip(s: PracticeSummary): PracticeTip {
+  const slips: [PracticeTip, number][] = [
+    ['pressed-3', s.pressedOn3],
+    ['missed', s.missed],
+    ['too-early', s.tooEarly],
+  ];
+  let best: [PracticeTip, number] = ['clean', 0];
+  for (const slip of slips) if (slip[1] > best[1]) best = slip;
+  return best[0];
+}

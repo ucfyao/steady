@@ -1,0 +1,41 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  min-height: 50vh;
+  text-align: center;
+}
+
+.ring {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 3px solid var(--color-accent-soft);
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+.label {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+  }
+}

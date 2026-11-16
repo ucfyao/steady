@@ -16,11 +16,13 @@ const FONT_PX = [48, 72, 94, 100, 120] as const;
 const FONT_SIZE = FONT_PX.map((px) => `calc(var(--digit-max) * ${px / 120})`);
 const MASK = '⊗';
 
-const FEEDBACK: Record<Outcome, string> = {
-  hit: '✓',
-  caught: 'Caught it',
-  commission: 'That was a 3, let it pass',
-  omission: 'Missed one, press for every digit except 3',
+/** Practice feedback (Spec 004): one or two words in a coloured pill, readable in 800 ms. */
+const FEEDBACK: Record<Outcome, { text: string; good: boolean }> = {
+  hit: { text: '✓ Nice', good: true },
+  caught: { text: 'Held back ✓', good: true },
+  commission: { text: 'That was a 3', good: false },
+  omission: { text: 'Missed', good: false },
+  early: { text: 'Too soon', good: false },
 };
 
 const ANSWERS: { answer: ProbeAnswer; label: string; key: string }[] = [
@@ -179,11 +181,38 @@ export function Block({
         onPointerDown={tap}
         aria-hidden={ui.kind === 'trials'}
       >
-        {ui.kind === 'countdown' && <p className={styles.countdown}>{ui.n}</p>}
+        {ui.kind === 'countdown' && (
+          // Not a stimulus: a ring that fills, a serif sage number and a label, so it can
+          // never be mistaken for a digit (Spec 004).
+          <div className={styles.countdown} data-testid="countdown">
+            <div className={styles.ring}>
+              <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle className={styles.track} cx="50" cy="50" r="48" />
+                <circle
+                  className={styles.arc}
+                  style={{ animationDuration: `${COUNTDOWN_S}s` }}
+                  cx="50"
+                  cy="50"
+                  r="48"
+                  pathLength="100"
+                />
+              </svg>
+              <span className={styles.count}>{ui.n}</span>
+            </div>
+            <p className={styles.ready}>
+              {env.device === 'touch' ? 'Finger on the screen' : 'Finger on Space'}
+            </p>
+          </div>
+        )}
         {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
         <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
         {ui.kind === 'feedback' && (
-          <p className={`${styles.feedback} ${styles[ui.outcome]}`}>{FEEDBACK[ui.outcome]}</p>
+          <p
+            data-testid="feedback"
+            className={`${styles.feedback} ${FEEDBACK[ui.outcome].good ? styles.good : styles.bad}`}
+          >
+            {FEEDBACK[ui.outcome].text}
+          </p>
         )}
       </div>
 
@@ -207,7 +236,7 @@ export function Block({
         </div>
       )}
 
-      <p className={styles.hint}>{hint}</p>
+      <p className={styles.hint}>{ui.kind === 'countdown' ? 'Starting…' : hint}</p>
     </div>
   );
 }

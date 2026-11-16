@@ -1,0 +1,43 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 28rem;
+  margin: var(--space-9) auto;
+  text-align: center;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: var(--space-5);
+  border-radius: 50%;
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+}
+
+.neutral {
+  background: var(--color-mark);
+  color: var(--color-text-muted);
+}
+
+.warning {
+  background: var(--color-danger-tint);
+  color: var(--color-danger);
+}
+
+.reason {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-8);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
