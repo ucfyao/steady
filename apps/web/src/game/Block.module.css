@@ -69,7 +69,7 @@
   stroke: var(--color-border);
 }
 
-/* Fills over the 3 s countdown. With reduced motion it is simply a full ring. */
+/* Fills over the 3 s countdown. With reduced motion it fills a third each second instead. */
 .arc {
   stroke: var(--color-accent-soft);
   stroke-linecap: round;
@@ -82,14 +82,6 @@
   from {
     stroke-dashoffset: 100;
   }
-}
-
-/* Serif, sage and smaller than any digit: the stimulus is Inter, bold, near-black. */
-.count {
-  font-family: var(--font-serif);
-  font-size: 4.5rem;
-  line-height: 1;
-  color: var(--color-accent);
 }
 
 .ready {
@@ -121,6 +113,7 @@
 @media (prefers-reduced-motion: reduce) {
   .arc {
     animation: none;
+    stroke-dashoffset: var(--step-offset);
   }
 }
 

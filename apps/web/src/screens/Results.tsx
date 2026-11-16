@@ -1,5 +1,4 @@
 import {
-  SART_CONFIG,
   type BehaviourFlag,
   type CompletedSession,
   type ProgressMetric,
@@ -8,6 +7,7 @@ import {
 import { useEffect, useState } from 'react';
 import {
   METRICS,
+  METRIC_ORDER,
   chooseReference,
   compareMetric,
   headline,
@@ -39,9 +39,6 @@ type History =
   | { k: 'loading' }
   | { k: 'ready'; sessions: CompletedSession[]; summary: ProgressSummary }
   | { k: 'error'; message: string };
-
-const GO_TRIALS =
-  SART_CONFIG.digits.length * SART_CONFIG.copiesPerDigit - SART_CONFIG.copiesPerDigit;
 
 export function Results() {
   const { id } = useParams();
@@ -127,7 +124,6 @@ export function Results() {
         <div className={styles.stats}>
           <Stat
             label={m.commissionRate.name}
-            term={m.commissionRate.term}
             value={m.commissionRate.format(m.commissionRate.show(score.commissionRate))}
             note={threes > 0 ? `${caught} of ${threes}` : undefined}
             change={compare('commissionRate')}
@@ -135,14 +131,12 @@ export function Results() {
           />
           <Stat
             label={m.omissionRate.name}
-            term={m.omissionRate.term}
-            value={String(score.omissions)}
+            value={m.omissionRate.format(m.omissionRate.show(score.omissionRate))}
             change={compare('omissionRate')}
-            formatRef={(r) => String(Math.round(r * GO_TRIALS))}
+            formatRef={m.omissionRate.format}
           />
           <Stat
             label={m.medianGoRtMs.name}
-            term={m.medianGoRtMs.term}
             value={score.medianGoRtMs === null ? NOT_ENOUGH : `${Math.round(score.medianGoRtMs)}`}
             unit={score.medianGoRtMs === null ? undefined : 'ms'}
             change={compare('medianGoRtMs')}
@@ -150,27 +144,22 @@ export function Results() {
           />
           <Stat
             label={m.rtCv.name}
-            term={m.rtCv.term}
             value={score.rtCv === null ? NOT_ENOUGH : m.rtCv.format(score.rtCv)}
             change={compare('rtCv')}
             formatRef={m.rtCv.format}
           />
-          <Stat
-            label="Longest steady run"
-            term="Presses in a row without a slip"
-            value={String(score.longestSteadyRun)}
-            unit="trials"
-          />
+          <Stat label={STEADY_RUN.name} value={String(score.longestSteadyRun)} unit="trials" />
         </div>
         {reference && reference.kind !== 'none' && comparisons.length > 0 && (
           <p className={styles.footnote}>
             Arrows show this session compared with {referenceName(reference)}
             {reference.kind === 'baseline'
               ? ' (the middle of sessions 2–6)'
-              : ' (the middle value; your first check was practice)'}
+              : ' (the middle value; your first check does not count)'}
             . One session up or down is normal.
           </p>
         )}
+        <AboutMeasures />
       </Card>
 
       <Card as="section" aria-labelledby="journey-title">
@@ -206,13 +195,49 @@ export function Results() {
   );
 }
 
-/** A big serif number over a plain label, its change against the reference, and the term. */
+const STEADY_RUN = {
+  name: 'Longest steady run',
+  description:
+    'The most digits in a row without a slip: no press on a 3, no missed digit, no early press.',
+};
+
+/**
+ * The research terms and a sentence for each number, out of the tiles (Spec 004). A native
+ * disclosure, so it opens by click, tap or keyboard, with no hover needed.
+ */
+function AboutMeasures() {
+  const items = [
+    ...METRIC_ORDER.map((k) => ({
+      name: METRICS[k].name,
+      description: METRICS[k].description,
+      term: METRICS[k].term,
+    })),
+    { ...STEADY_RUN, term: null },
+  ];
+  return (
+    <details className={styles.measures}>
+      <summary>About these measures</summary>
+      <dl>
+        {items.map((i) => (
+          <div key={i.name}>
+            <dt>{i.name}</dt>
+            <dd>
+              {i.description}
+              {i.term && <span className={styles.term}> Research term: {i.term}.</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
+}
+
+/** A big serif number (with its count on the same line), a plain label and its change. */
 function Stat({
   label,
   value,
   unit,
   note,
-  term,
   change,
   formatRef,
 }: {
@@ -220,18 +245,19 @@ function Stat({
   value: string;
   unit?: string;
   note?: string;
-  term: string;
   change?: Comparison | null;
   formatRef?: (shown: number) => string;
 }) {
   const measured = value !== NOT_ENOUGH;
   return (
     <div className={styles.stat} role="group" aria-label={label}>
-      <span className={measured ? styles.value : styles.notMeasured}>
-        {value}
-        {unit && <span className={styles.unit}> {unit}</span>}
+      <span className={styles.line} data-testid="value">
+        <span className={measured ? styles.value : styles.notMeasured}>
+          {value}
+          {unit && <span className={styles.unit}> {unit}</span>}
+        </span>
+        {note && <span className={styles.note}> {note}</span>}
       </span>
-      {note && <span className={styles.note}>{note}</span>}
       <span className={styles.label}>{label}</span>
       {change && (
         <span className={styles.change} data-testid="change" data-verdict={change.verdict}>
@@ -240,7 +266,6 @@ function Stat({
           {formatRef && <span className={styles.ref}> · {formatRef(change.reference)} before</span>}
         </span>
       )}
-      <span className={styles.term}>{term}</span>
     </div>
   );
 }

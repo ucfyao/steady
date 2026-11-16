@@ -23,7 +23,7 @@ try {
   const link = `${WEB_URL}/import#${new URLSearchParams({ token, name: NAME }).toString()}`;
   console.log(`
 Created a demo player with 10 sessions over the past two weeks
-(session 1 practice, sessions 2-6 the starting point, some with a check-in).
+(session 1 not counted, sessions 2-6 the starting point, some with a check-in).
 
 With \`pnpm dev\` running, open this link to add it as "${NAME}" and see its Progress:
 

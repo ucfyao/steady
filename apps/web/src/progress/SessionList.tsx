@@ -27,7 +27,7 @@ export function SessionList({ sessions }: { sessions: CompletedSession[] }) {
                 <span className={styles.session}>Session {n}</span>
                 <span className={styles.date}>{sessionWhen(s.completedAt)}</span>
                 {n <= PROGRESS_CONFIG.practiceSessions && (
-                  <span className={styles.tag}>Practice</span>
+                  <span className={styles.tag}>Not counted</span>
                 )}
               </span>
               <span className={styles.stat}>

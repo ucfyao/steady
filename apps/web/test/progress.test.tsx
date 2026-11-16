@@ -40,7 +40,7 @@ const seven = COMMISSION.map((c, i) =>
 
 // 11 sessions: practice, baseline = sessions 2–6, recent = sessions 7–11. Worked out by hand:
 //   catch rate:  baseline 1 − .3 = 70%, recent 1 − .1 = 90% (beyond the 0.1 band): ↑ better
-//   missed:      .05 both: ≈ similar
+//   missed:      6 of 112 both: ≈ similar
 //   response:    400 → 350 ms (beyond 20 ms): ↓ faster, neither better nor below;
 //                session 9 has no median, so recent n = 4
 //   variation:   20% → 26% (beyond 0.02): ↑ less even, below
@@ -152,7 +152,8 @@ describe('Progress screen', () => {
       '3s held backHigher is better',
     );
     expect(cells(/3s held back/)).toEqual(['70%', '90%', '↑ More held back · better']);
-    expect(cells(/Digits missed/)).toEqual(['5%', '5%', '≈ Similar']);
+    // Digits missed is a count, as on Results.
+    expect(cells(/Digits missed/)).toEqual(['6', '6', '≈ Similar']);
     expect(cells(/Typical response time/)).toEqual(['400 ms', '350 ms', '↓ Faster']);
     expect(cells(/How much your timing varied/)).toEqual(['20%', '26%', '↑ Less even · below']);
     // Colour is only a second cue: the verdict is also in words.
@@ -188,9 +189,57 @@ describe('Progress screen', () => {
     const rt = screen.getByRole('figure', { name: 'Typical response time' });
     expect(rt).toHaveTextContent('Neither way is better');
     expect(rt).toHaveTextContent('Latest: 350 ms (session 11)');
-    expect(screen.getByRole('figure', { name: 'Digits missed' })).toHaveTextContent(
-      'Lower is better',
+    const missed = screen.getByRole('figure', { name: 'Digits missed' });
+    expect(missed).toHaveTextContent('Lower is better');
+    expect(missed).toHaveTextContent('Latest: 6 (session 11)');
+    expect(missed).not.toHaveTextContent('%');
+  });
+
+  it('shows an empty state instead of a chart until there are two sessions', async () => {
+    renderAt('/progress', seven.slice(0, 1));
+    const charts = await screen.findAllByRole('figure');
+    expect(charts).toHaveLength(4);
+    for (const chart of charts) {
+      expect(chart).toHaveTextContent('Finish 1 more check to see a trend.');
+      expect(chart.querySelector('.recharts-wrapper, svg')).toBeNull();
+    }
+    // With nothing drawn, there is no legend of marks either.
+    expect(screen.queryByText('A session')).toBeNull();
+  });
+
+  it('draws the charts from the second session on', async () => {
+    renderAt('/progress', seven.slice(0, 2));
+    await screen.findAllByRole('figure');
+    expect(screen.queryByText(/to see a trend/)).toBeNull();
+    expect(screen.getByText('A session')).toBeInTheDocument();
+  });
+
+  it('never calls the first full check practice, and marks it as not counted', async () => {
+    renderAt('/progress', seven.slice(0, 2));
+    await screen.findAllByRole('figure');
+    expect(screen.getByRole('main')).not.toHaveTextContent(/practice/i);
+    expect(screen.getByText('First check (not counted)')).toBeInTheDocument();
+    expect(region('Recent vs. where you started')).toHaveTextContent(
+      'Your first check is for getting used to the pace and does not count; checks 2–6 set where you started.',
     );
+  });
+
+  it('lists the sessions with a note under the charts, so no hover is needed', async () => {
+    renderAt('/progress', seven);
+    const notes = await screen.findByRole('region', { name: 'Sessions with a note' });
+    const links = within(notes).getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/results/s4');
+    expect(links[0]).toHaveTextContent('Session 4');
+    expect(notes).toHaveTextContent('many missed digits');
+    expect(screen.getByText('Has a note (listed below the charts)')).toBeInTheDocument();
+    expect(screen.queryByText(/see the tooltip/)).toBeNull();
+  });
+
+  it('has no list of notes when no session has one', async () => {
+    renderAt('/progress', improving);
+    await screen.findAllByRole('figure');
+    expect(screen.queryByRole('region', { name: 'Sessions with a note' })).toBeNull();
   });
 
   it('does not mention where the player started before it exists', async () => {
@@ -216,8 +265,8 @@ describe('Progress screen', () => {
     fireEvent.click(within(list).getByRole('button', { name: 'Show all 12 sessions' }));
     expect(links()).toHaveLength(12);
     expect(links()[11]).toHaveAttribute('href', '/results/s1');
-    expect(links()[11]).toHaveTextContent('Practice');
-    expect(links()[10]).not.toHaveTextContent('Practice');
+    expect(links()[11]).toHaveTextContent('Not counted');
+    expect(links()[10]).not.toHaveTextContent('Not counted');
 
     fireEvent.click(within(list).getByRole('button', { name: 'Show only the latest 10' }));
     expect(links()).toHaveLength(10);

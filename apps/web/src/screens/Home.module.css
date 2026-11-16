@@ -6,8 +6,7 @@
 .lead {
   margin-bottom: var(--space-7);
   color: var(--color-text-muted);
-  /* Two even lines on a phone instead of a long line and a short one. */
-  text-wrap: balance;
+  /* Wraps naturally; only "on 3." is kept together (a no-break space in Home.tsx). */
 }
 
 .stats {
