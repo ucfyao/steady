@@ -3,21 +3,27 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
-import { dawnPercent, personalBest } from '../src/game/dawn.js';
+import { dawnPercent, personalBest, sessionPoints } from '../src/game/dawn.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { storedSession } from './support/sessions.js';
 
-// Spec 007. Outcomes for 5 trials: 4 digits then a 3. All correct: 4 × 10 + 30 × 2 = 100
-// points (Spec 006 §2), so a session's dawn is simply its points out of 100 here.
-const FIVE: TrialOutcome[] = ['steady', 'steady', 'steady', 'steady', 'caught'];
+// Spec 007. Points are never stored; they come from a session's outcomes. Every test
+// session has 10 digits and no 3: k steady presses, then misses. Worked out by hand from
+// Spec 006 §2: k = 4 → 40, 5 → 60, 6 → 80, 7 → 100, 8 → 120, all 10 → 4 × 10 + 6 × 20 = 160.
+const outcomes = (k: number): TrialOutcome[] =>
+  Array.from({ length: 10 }, (_, i) => (i < k ? 'steady' : 'omission'));
 
 const daysAgo = (d: number) => {
   const t = new Date();
   return new Date(t.getFullYear(), t.getMonth(), t.getDate() - d, 12);
 };
-const game = (n: number, points: number, ago = 10 - n) =>
-  storedSession(n, { points, trialOutcomes: FIVE }, { variant: 'game', completedAt: daysAgo(ago) });
+const game = (n: number, steady: number, ago = 20 - n) =>
+  storedSession(
+    n,
+    { trialOutcomes: outcomes(steady) },
+    { variant: 'game', completedAt: daysAgo(ago) },
+  );
 
 function renderAt(path: string, sessions: CompletedSession[], variant: Variant = 'calm') {
   const backend = fakeBackend();
@@ -34,16 +40,22 @@ function renderAt(path: string, sessions: CompletedSession[], variant: Variant =
 }
 
 describe('dawnPercent and personalBest', () => {
+  it('derives the points from the outcomes', () => {
+    expect(sessionPoints({ trialOutcomes: outcomes(5) })).toBe(60);
+    expect(sessionPoints({ trialOutcomes: [] })).toBe(0);
+  });
+
   it('is 100 for a perfect session, rounds down, and 0 without points', () => {
-    expect(dawnPercent({ points: 100, trialOutcomes: FIVE })).toBe(100);
-    expect(dawnPercent({ points: 49.9, trialOutcomes: FIVE })).toBe(49);
-    expect(dawnPercent({ points: 0, trialOutcomes: FIVE })).toBe(0);
-    expect(dawnPercent({ points: 0, trialOutcomes: [] })).toBe(0);
+    expect(dawnPercent({ trialOutcomes: outcomes(10) })).toBe(100);
+    expect(dawnPercent({ trialOutcomes: outcomes(6) })).toBe(50); // 80 of 160
+    expect(dawnPercent({ trialOutcomes: outcomes(5) })).toBe(37); // 60 of 160 = 37.5
+    expect(dawnPercent({ trialOutcomes: outcomes(0) })).toBe(0);
+    expect(dawnPercent({ trialOutcomes: [] })).toBe(0);
   });
 
   it('takes the largest points of game sessions only', () => {
-    const calm = storedSession(9, { points: 9999 });
-    expect(personalBest([game(1, 40), game(2, 70), calm])).toBe(70);
+    const calm = storedSession(9, { trialOutcomes: outcomes(10) });
+    expect(personalBest([game(1, 4), game(2, 7), calm])).toBe(100);
     expect(personalBest([calm])).toBeNull();
   });
 });
@@ -71,14 +83,14 @@ describe('Home (Spec 007 §1)', () => {
   });
 
   it('for a game player: the personal best and the last sky', async () => {
-    renderAt('/', [game(1, 40), game(2, 90), game(3, 60, 0)], 'game');
+    renderAt('/', [game(1, 4), game(2, 7), game(3, 5, 0)], 'game');
     const last = await screen.findByRole('region', { name: 'Last check · Today' });
     expect(within(last).getByRole('group', { name: 'Personal best' })).toHaveTextContent(
-      '90 points',
+      '100 points',
     );
     const hero = screen.getByRole('region', { name: "Today's check" });
-    expect(hero).toHaveTextContent('Last sky: dawn 60%');
-    expect(within(hero).getByTestId('scene').style.getPropertyValue('--dawn')).toBe('0.600');
+    expect(hero).toHaveTextContent('Last sky: dawn 37%');
+    expect(within(hero).getByTestId('scene').style.getPropertyValue('--dawn')).toBe('0.370');
   });
 
   it('for a calm player: no personal best and no last sky', async () => {
@@ -96,26 +108,26 @@ describe('Results: personal best (Spec 007 §2)', () => {
   };
 
   it('says New personal best when the points beat every earlier game session', async () => {
-    const t = game(3, 95, 0);
-    expect(await open(t, [game(1, 40), game(2, 90), t])).toHaveTextContent('New personal best');
+    const t = game(3, 8, 0); // 120
+    expect(await open(t, [game(1, 4), game(2, 7), t])).toHaveTextContent('New personal best');
   });
 
   it('not for a tie, the first game session, or below the best', async () => {
-    const tie = game(3, 90, 0);
-    expect(await open(tie, [game(1, 40), game(2, 90), tie])).not.toHaveTextContent(
+    const tie = game(3, 7, 0); // 100, the same as session 2
+    expect(await open(tie, [game(1, 4), game(2, 7), tie])).not.toHaveTextContent(
       'New personal best',
     );
   });
 
   it('not for the first game session', async () => {
-    const first = game(1, 90, 0);
+    const first = game(1, 7, 0);
     expect(await open(first, [first])).not.toHaveTextContent('New personal best');
   });
 });
 
 describe('Progress: your skies (Spec 007 §3)', () => {
   it('shows one sky per game session, newest first, each linking to its Results', async () => {
-    renderAt('/progress', [game(1, 40), game(2, 90), game(3, 60, 0)], 'game');
+    renderAt('/progress', [game(1, 4), game(2, 7), game(3, 5, 0)], 'game');
     const skies = await screen.findByRole('region', { name: 'Your skies' });
     const links = within(skies).getAllByRole('link');
     expect(links.map((l) => l.getAttribute('href'))).toEqual([
@@ -123,13 +135,13 @@ describe('Progress: your skies (Spec 007 §3)', () => {
       '/results/s2',
       '/results/s1',
     ]);
-    expect(links[0]).toHaveAccessibleName('Session 3: dawn 60%, 60 points');
-    expect(links[0]).toHaveTextContent('60%');
+    expect(links[0]).toHaveAccessibleName('Session 3: dawn 37%, 60 points');
+    expect(links[0]).toHaveTextContent('37%');
     expect(links[0]).toHaveTextContent('60 pts');
   });
 
   it('shows the latest 12, with Show all', async () => {
-    const many = Array.from({ length: 14 }, (_, i) => game(i + 1, 10 * i, 14 - i));
+    const many = Array.from({ length: 14 }, (_, i) => game(i + 1, i % 10, 14 - i));
     renderAt('/progress', many, 'game');
     const skies = await screen.findByRole('region', { name: 'Your skies' });
     expect(within(skies).getAllByRole('link')).toHaveLength(12);

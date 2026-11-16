@@ -9,14 +9,14 @@ Changes: Spec 004 (Home, Results, Progress)
 
 Spec 006 made the game itself a night scene, but the screens around it stayed a form: thin rules, one weight of text and nothing to come back for. These screens now carry the same scene and give the game variant something to collect across sessions [P]: a personal best and a gallery of the skies each session reached.
 
-Nothing here changes a measurement, a comparison or a session's score. Personal bests and skies are read from the server's `score.points`; the browser only finds the largest and draws them.
+Nothing here changes a measurement, a comparison or a session's score. Personal bests and skies use each session's points, derived from the server's `trialOutcomes` with core's `scorePoints` (points are never stored, Spec 006); the browser only finds the largest and draws them.
 
 ## 1. Home (both variants)
 
 - **Hero:** a rounded card at the top with the lantern scene (the same `Scene` as focus mode, static) and an unlit lantern; on it, in light text, "Hi, {name}", the lead "Two minutes. Catch every digit, hold back on 3." and the **Start today's check** button (warm, on the dark card). It is a region named "Today's check".
 - **Game variant, after a game session:** the hero's sky is the dawn the last game session reached, with "Last sky: dawn {p}%" under the lead.
 - **Last 7 days as lanterns:** each day is a small lantern instead of a dot: lit (warm) when played, an outline when not, today with a dashed outline until it is played. The count above ("2 of 4 days", "goal reached") and the day letters are unchanged.
-- **Last check (game variant):** a fourth number, **Personal best**, the largest `score.points` of the player's game sessions, with "points" as its unit.
+- **Last check (game variant):** a fourth number, **Personal best**, the largest points of the player's game sessions, with "points" as its unit.
 - Everything else (the welcome card for a new player, the starting-point line) is as in Spec 005.
 
 ## 2. Results (game variant)
@@ -30,7 +30,8 @@ Nothing here changes a measurement, a comparison or a session's score. Personal 
 
 ## 4. Shared rules (web)
 
-- `dawnPercent(score)`: `floor(points ÷ maxPoints × 100)`, where `maxPoints` is core's, from which trials were 3s (`trialOutcomes`); 0 for a session with no possible points. Used by Results, Home and Progress, so the three always agree.
+- `sessionPoints(score)`: `scorePoints(trialOutcomes)`.
+- `dawnPercent(score)`: `floor(sessionPoints ÷ maxPoints × 100)`, where `maxPoints` is core's, from which trials were 3s (`trialOutcomes`); 0 for a session with no possible points. Used by Results, Home and Progress, so the three always agree.
 - `personalBest(sessions)`: the largest points among game sessions, or null without one.
 
 ## Test cases
@@ -38,4 +39,4 @@ Nothing here changes a measurement, a comparison or a session's score. Personal 
 - Home: the hero region with the greeting, lead and start link for a new and a returning player; the week drawn as seven lanterns (played lit, today marked); for a game player, the personal best is the largest points and the hero's `--dawn` is the last game session's dawn with "Last sky: dawn p%"; a calm player has neither.
 - Results: "New personal best" when the points beat every earlier game session; not for a tie, not for the first game session, not for a calm session.
 - Progress: "Your skies" with one link per game session, newest first, to its Results, each labelled with its dawn and points; at most 12 with "Show all"; none for a calm player.
-- `dawnPercent`: a perfect session is 100, half the possible points is 50 (rounded down), no points is 0.
+- `sessionPoints` from hand-worked outcomes; `dawnPercent`: a perfect session is 100, 80 of 160 is 50, 60 of 160 is 37 (rounded down), no points is 0.

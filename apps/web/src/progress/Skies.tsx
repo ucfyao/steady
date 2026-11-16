@@ -1,7 +1,7 @@
 import type { CompletedSession } from '@steady/core';
 import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router';
-import { dawnPercent } from '../game/dawn.js';
+import { dawnPercent, sessionPoints } from '../game/dawn.js';
 import styles from './Skies.module.css';
 
 const LATEST = 12;
@@ -25,17 +25,18 @@ export function Skies({ sessions }: { sessions: CompletedSession[] }) {
       <ol className={styles.grid}>
         {shown.map(({ s, n }) => {
           const dawn = dawnPercent(s.score);
+          const points = sessionPoints(s.score);
           return (
             <li key={s.id}>
               <Link
                 to={`/results/${s.id}`}
                 className={styles.sky}
-                aria-label={`Session ${n}: dawn ${dawn}%, ${s.score.points} points`}
+                aria-label={`Session ${n}: dawn ${dawn}%, ${points} points`}
                 style={{ '--dawn': dawn / 100 } as CSSProperties}
               >
                 <span className={styles.tile} aria-hidden="true" />
                 <span className={styles.dawn}>{dawn}%</span>
-                <span className={styles.points}>{s.score.points} pts</span>
+                <span className={styles.points}>{points} pts</span>
               </Link>
             </li>
           );
