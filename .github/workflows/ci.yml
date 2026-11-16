@@ -36,7 +36,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm bootstrap
-      - run: pnpm --filter @steady/web exec playwright install --with-deps chromium
+      # The browser download is cached per Playwright version; the system libraries it needs
+      # are not (they live outside the cache), so they are installed on every run.
+      - id: playwright
+        run: echo "version=$(pnpm --filter @steady/web exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm --filter @steady/web exec playwright install --with-deps chromium
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm --filter @steady/web exec playwright install-deps chromium
       - run: pnpm e2e
       - if: failure()
         uses: actions/upload-artifact@v7
