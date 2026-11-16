@@ -118,13 +118,38 @@ describe('layout and player menu', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('cancelling a new player returns focus to the menu button', async () => {
+  it('adds a player in a modal dialog; Cancel returns focus to the menu button', async () => {
     renderApp();
     await userEvent.click(within(await openMenu()).getByRole('menuitem', { name: 'Add player' }));
-    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(screen.queryByRole('textbox', { name: 'Name' })).toBeNull();
+    const dialog = screen.getByRole('dialog', { name: 'Add a player' });
+    expect(dialog.tagName).toBe('DIALOG');
+    expect(dialog).toHaveAttribute('open');
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveFocus();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
     expect(await avatar('Player 1')).toHaveFocus();
+  });
+
+  it('closes the new-player dialog with Escape and returns focus to the menu button', async () => {
+    renderApp();
+    await userEvent.click(within(await openMenu()).getByRole('menuitem', { name: 'Add player' }));
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(await avatar('Player 1')).toHaveFocus();
+  });
+
+  it('shows a notice as a dismissible bar, styled by its own module', async () => {
+    const backend = renderApp();
+    await addPlayer('Sam');
+    await screen.findByRole('button', { name: 'Player: Sam' });
+    await switchTo('Player 1');
+    backend.unauthorized.add(tokenN(2));
+    await switchTo('Sam');
+    const bar = await screen.findByRole('status');
+    expect(bar).toHaveTextContent('That player no longer exists on the server');
+    expect(bar).not.toHaveClass('notice'); // not the old global class
+    await userEvent.click(within(bar).getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('shows an error with a retry when the server cannot be reached', async () => {
@@ -220,6 +245,6 @@ describe('switching player', () => {
     await addPlayer('Sam');
     expect(await screen.findByText('Hi, Sam')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: /^Last check/ })).toBeNull();
-    expect(screen.queryByRole('region', { name: 'This week' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Last 7 days' })).toBeNull();
   });
 });

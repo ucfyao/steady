@@ -11,14 +11,28 @@ import { moreSessions } from './Progress.js';
 
 const catchRate = metricView('commissionRate');
 
-/** One number with a small label under it, read as "Catch rate, 75%". */
-function Stat({ label, value, unit }: { label: string; value: string; unit?: string }) {
+/**
+ * One number with a small label under it, read as "Catch rate, 75%". With no value, a dash
+ * and a short note on its own line instead.
+ */
+function Stat({
+  label,
+  value,
+  unit,
+  note,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  note?: string;
+}) {
   return (
     <div role="group" aria-label={label} className={styles.stat}>
       <span className={styles.value}>
         {value}
         {unit && <span className={styles.unit}> {unit}</span>}
       </span>
+      {note && <span className={styles.note}>{note}</span>}
       <span className={styles.label}>{label}</span>
     </div>
   );
@@ -40,7 +54,7 @@ function LastCheck({ session }: { session: CompletedSession | undefined }) {
         <Stat label="Catch rate" value={catchRate.format(catchRate.show(score.commissionRate))} />
         <Stat label="Longest steady run" value={String(score.longestSteadyRun)} />
         {score.medianGoRtMs === null ? (
-          <Stat label="Median response" value="–" unit="Not enough presses to measure" />
+          <Stat label="Median response" value="—" note="Not enough data" />
         ) : (
           <Stat label="Median response" value={String(Math.round(score.medianGoRtMs))} unit="ms" />
         )}
@@ -76,7 +90,7 @@ export function Home() {
       {data && (
         <>
           <Card as="section" aria-labelledby="week-title">
-            <h2 id="week-title">This week</h2>
+            <h2 id="week-title">Last 7 days</h2>
             <WeekDots completedAt={data.sessions.map((s) => s.completedAt)} />
           </Card>
           <LastCheck session={data.sessions.at(-1)} />

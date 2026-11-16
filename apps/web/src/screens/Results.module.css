@@ -1,4 +1,6 @@
-.results :global(.lead) {
+.lead {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
   margin-bottom: var(--space-7);
 }
 

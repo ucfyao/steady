@@ -40,7 +40,16 @@ export interface PlayersContextValue {
 
 export const PlayersContext = createContext<PlayersContextValue | null>(null);
 
-const GONE = 'That player no longer exists on the server, so it was removed from this device.';
+/** What the notice reports. Removed players are counted, so several make one message. */
+type NoticeState = { kind: 'gone'; ids: string[] } | { kind: 'deleted'; name: string };
+
+function noticeText(n: NoticeState): string {
+  if (n.kind === 'deleted')
+    return `${n.name}'s data was deleted from the server and from this device.`;
+  return n.ids.length === 1
+    ? 'That player no longer exists on the server, so it was removed from this device.'
+    : `${n.ids.length} players no longer exist on the server and were removed from this device.`;
+}
 
 export function PlayersProvider({
   children,
@@ -53,7 +62,7 @@ export function PlayersProvider({
 }) {
   const [state, setState] = useState<ProfilesState>(() => loadProfiles(storage));
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<NoticeState | null>(null);
   // Guards against creating two players when StrictMode runs the effect twice.
   const creating = useRef<Promise<void> | null>(null);
 
@@ -92,7 +101,14 @@ export function PlayersProvider({
     const forget = (e: unknown) => {
       if (e instanceof ApiError && e.kind === 'unauthorized') {
         setState((s) => removeProfile(s, active.id));
-        setNotice(GONE);
+        // Two calls failing for the same player count it once.
+        setNotice((n) =>
+          n?.kind !== 'gone'
+            ? { kind: 'gone', ids: [active.id] }
+            : n.ids.includes(active.id)
+              ? n
+              : { kind: 'gone', ids: [...n.ids, active.id] },
+        );
       }
       throw e;
     };
@@ -115,7 +131,7 @@ export function PlayersProvider({
       if (!(e instanceof ApiError && e.kind === 'unauthorized')) throw e;
     }
     setState((s) => removeProfile(s, active.id));
-    setNotice(`${active.name}'s data was deleted from the server and from this device.`);
+    setNotice({ kind: 'deleted', name: active.name });
   }, [active, apiFactory]);
 
   const value: PlayersContextValue = {
@@ -124,7 +140,7 @@ export function PlayersProvider({
     profiles: state.profiles,
     active,
     api,
-    notice,
+    notice: notice && noticeText(notice),
     dismissNotice: () => setNotice(null),
     addPlayer: createProfile,
     switchTo: (id) => setState((s) => switchProfile(s, id)),

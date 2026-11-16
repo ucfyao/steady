@@ -68,13 +68,13 @@ describe('Progress screen', () => {
     );
   });
 
-  it('counts down to the starting point and shows this week', async () => {
+  it('counts down to the starting point and shows the last 7 days', async () => {
     renderAt('/progress', seven.slice(0, 3));
     expect(
       await screen.findByText('Your starting point is set after 3 more sessions.'),
     ).toBeInTheDocument();
-    expect(region('This week')).toHaveTextContent('1 of 4 days');
-    expect(within(region('This week')).getAllByTestId('week-day')).toHaveLength(7);
+    expect(region('Last 7 days')).toHaveTextContent('1 of 4 days');
+    expect(within(region('Last 7 days')).getAllByTestId('week-day')).toHaveLength(7);
   });
 
   it('says when the weekly goal is reached', async () => {
@@ -86,7 +86,7 @@ describe('Progress screen', () => {
       '/progress',
       [0, 1, 2, 4, 6].map((d, i) => storedSession(i + 1, {}, { completedAt: day(d) })),
     );
-    expect(await screen.findByRole('region', { name: 'This week' })).toHaveTextContent(
+    expect(await screen.findByRole('region', { name: 'Last 7 days' })).toHaveTextContent(
       '5 days, goal reached',
     );
   });

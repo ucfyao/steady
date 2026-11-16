@@ -19,6 +19,15 @@ function Probe() {
       <button onClick={() => ctx.addPlayer('Sam')}>add</button>
       <button onClick={() => ctx.switchTo(ctx.profiles[0]!.id)}>first</button>
       <button onClick={() => ctx.api!.listSessions().catch(() => {})}>list</button>
+      <button
+        onClick={() => {
+          const api = ctx.api!;
+          void api.listSessions().catch(() => {});
+          void api.getProgress().catch(() => {});
+        }}
+      >
+        list2
+      </button>
       <button onClick={() => ctx.deleteActive()}>delete</button>
     </div>
   );
@@ -90,6 +99,52 @@ describe('PlayersProvider', () => {
     await screen.findByText('active: Player 1');
     expect(screen.getByText('players: Player 1')).toBeInTheDocument();
     expect(screen.getByText(/notice: .*no longer exists/)).toBeInTheDocument();
+  });
+
+  it('counts a player once when two calls fail for it', async () => {
+    const backend = fakeBackend();
+    renderWith(backend);
+    await screen.findByText('active: Player 1');
+    await userEvent.click(screen.getByText('add')); // Sam, token 2
+    await screen.findByText('active: Sam');
+    backend.unauthorized.add(tokenN(2));
+
+    // Home and Progress make two calls at once; both fail for the same player.
+    await userEvent.click(screen.getByText('list2'));
+    await screen.findByText('active: Player 1');
+    expect(
+      screen.getByText(
+        'notice: That player no longer exists on the server, so it was removed from this device.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('merges several removed players into one notice', async () => {
+    const backend = fakeBackend();
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        profiles: [
+          { id: 'a', name: 'Alex', token: tokenN(7) },
+          { id: 'b', name: 'Bo', token: tokenN(8) },
+          { id: 'c', name: 'Cy', token: tokenN(9) },
+        ],
+        activeId: 'a',
+      }),
+    );
+    backend.unauthorized.add(tokenN(7));
+    backend.unauthorized.add(tokenN(8));
+    renderWith(backend);
+    await screen.findByText('active: Alex');
+    await userEvent.click(screen.getByText('list'));
+    await screen.findByText('active: Bo');
+    await userEvent.click(screen.getByText('list'));
+    await screen.findByText('active: Cy');
+    expect(
+      screen.getByText(
+        'notice: 2 players no longer exist on the server and were removed from this device.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('deletes the active player on the server and on this device', async () => {

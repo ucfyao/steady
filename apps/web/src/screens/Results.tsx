@@ -81,7 +81,7 @@ export function Results() {
   return (
     <section className={styles.results}>
       <h1>Session complete</h1>
-      <p className="lead">
+      <p className={styles.lead}>
         You caught {caught} of {threes} 3s.
       </p>
 

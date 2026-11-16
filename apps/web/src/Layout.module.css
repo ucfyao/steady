@@ -137,16 +137,24 @@
   background: var(--color-border);
 }
 
-/* Add a player */
-.addPlayer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
-  padding: var(--space-5) 0;
-  margin-bottom: var(--space-6);
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+/* Add a player: a native modal dialog */
+.dialog {
+  width: min(400px, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-6);
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popover);
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.3);
+}
+
+.dialog h2 {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-xl);
 }
 
 .field {
@@ -163,5 +171,13 @@
 
 .actions {
   display: flex;
+  justify-content: flex-end;
   gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.dialogError {
+  margin: var(--space-3) 0 0;
+  color: var(--color-danger);
+  font-size: var(--text-sm);
 }
