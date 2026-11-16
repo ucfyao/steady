@@ -16,6 +16,7 @@ import type { RunnerOptions } from '../game/runner.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { Button } from '../ui/Button.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
+import styles from './Play.module.css';
 
 const PRACTICE_OPTIONS: RunnerOptions = { feedbackMs: 800 }; // [P] Spec 004
 const MAIN_OPTIONS: RunnerOptions = {};
@@ -42,8 +43,8 @@ const LABELS: Record<string, string> = {
   high: 'High',
 };
 
-/** The chip value for "no answer" (the field is left out of the check-in). */
-const SKIP = '';
+/** The chip group's value while nothing is chosen. */
+const NONE = '';
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -73,13 +74,13 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
 
   const practice = () => setStep({ k: 'practice', plan: createPracticePlan(Date.now()) });
 
-  async function start() {
+  async function start(answers: CheckIn = checkIn) {
     if (!api) return;
     setStep({ k: 'starting' });
     try {
-      const hasCheckIn = checkIn.sleep !== undefined || checkIn.stress !== undefined;
+      const hasCheckIn = answers.sleep !== undefined || answers.stress !== undefined;
       const session = await api.startSession({
-        checkIn: hasCheckIn ? checkIn : null,
+        checkIn: hasCheckIn ? answers : null,
         device: env.device,
       });
       setStep({ k: 'running', session });
@@ -100,9 +101,12 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     }
   }
 
+  // The one line shown under the digit in focus mode; practice spells the rule out.
+  const hint =
+    env.device === 'touch' ? 'Tap for every digit except 3' : 'Space for every digit except 3';
   const reminder =
     env.device === 'touch'
-      ? 'Tap the box for every digit except 3'
+      ? 'Tap for every digit except 3'
       : 'Press Space for every digit except 3';
 
   switch (step.k) {
@@ -114,11 +118,17 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     case 'checkin':
       return (
         <CheckInForm
+          firstTime={firstTime}
           value={checkIn}
           onChange={setCheckIn}
-          onContinue={() =>
-            setStep(firstTime ? { k: 'practice-intro' } : { k: 'ready', practiced: false })
-          }
+          // First time: on to the rules and practice. Returning: straight to the countdown.
+          onStart={() => (firstTime ? setStep({ k: 'practice-intro' }) : start())}
+          onSkip={() => {
+            setCheckIn({});
+            if (firstTime) setStep({ k: 'practice-intro' });
+            else start({});
+          }}
+          onHowToPlay={() => setStep({ k: 'ready', practiced: false })}
         />
       );
 
@@ -142,7 +152,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         <Block
           plan={step.plan}
           options={PRACTICE_OPTIONS}
-          reminder={reminder}
+          hint={reminder}
           env={env}
           onDone={() => setStep({ k: 'ready', practiced: true })}
           onVoid={() => setStep({ k: 'voided' })}
@@ -164,7 +174,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             page until the end: leaving it voids the session.
           </p>
           <div className="actions">
-            <Button size="lg" onClick={start}>
+            <Button size="lg" onClick={() => start()}>
               Start
             </Button>
             <Button variant="secondary" onClick={practice}>
@@ -179,6 +189,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         <Block
           plan={step.session.plan}
           options={MAIN_OPTIONS}
+          hint={hint}
           env={env}
           onDone={(submission) => submit(step.session, submission)}
           onVoid={() => setStep({ k: 'voided' })}
@@ -219,51 +230,59 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
 }
 
 function CheckInForm({
+  firstTime,
   value,
   onChange,
-  onContinue,
+  onStart,
+  onSkip,
+  onHowToPlay,
 }: {
+  firstTime: boolean;
   value: CheckIn;
   onChange(v: CheckIn): void;
-  onContinue(): void;
+  onStart(): void;
+  onSkip(): void;
+  onHowToPlay(): void;
 }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    onContinue();
+    onStart();
   };
   const group = <K extends keyof CheckIn>(
     field: K,
     legend: string,
     levels: readonly NonNullable<CheckIn[K]>[],
   ) => (
-    <ChipGroup
+    <ChipGroup<string>
       legend={legend}
       name={field}
-      options={[
-        ...levels.map((level) => ({ value: level as string, label: LABELS[level] })),
-        { value: SKIP, label: 'Skip' },
-      ]}
-      value={value[field] ?? SKIP}
-      onChange={(level) => {
-        const next = { ...value };
-        if (level === SKIP) delete next[field];
-        else next[field] = level as NonNullable<CheckIn[K]>;
-        onChange(next);
-      }}
+      options={levels.map((level) => ({ value: level, label: LABELS[level] }))}
+      value={value[field] ?? NONE}
+      onChange={(level) => onChange({ ...value, [field]: level })}
     />
   );
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} className={styles.checkIn}>
       <h1>How are you today?</h1>
-      <p className="lead">
-        Optional. It lets you compare your sessions later; it never changes your score.
-      </p>
-      {group('sleep', 'How did you sleep?', SLEEP_LEVELS)}
-      {group('stress', 'How stressed do you feel?', STRESS_LEVELS)}
+      <p className="lead">Optional. It never changes your score.</p>
+      <div className={styles.questions}>
+        {group('sleep', 'Sleep', SLEEP_LEVELS)}
+        {group('stress', 'Stress', STRESS_LEVELS)}
+      </div>
       <Button type="submit" size="lg">
-        Continue
+        {firstTime ? 'Continue' : 'Start'}
       </Button>
+      <div className={styles.links}>
+        <Button variant="link" onClick={onSkip}>
+          Skip
+        </Button>
+        {!firstTime && (
+          <Button variant="link" onClick={onHowToPlay}>
+            How to play
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

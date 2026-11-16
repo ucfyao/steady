@@ -1,0 +1,125 @@
+/*
+ * The session journey: three rows of 42 trials. Colours come from the tokens; the two
+ * outcomes on a 3 differ in shape as well as colour (held back = hollow, pressed = filled),
+ * so they stay apart without colour vision.
+ */
+.journey {
+  margin: 0;
+}
+
+.ribbon {
+  display: grid;
+  grid-template-columns: repeat(42, 1fr);
+  gap: var(--space-4) 2px;
+  padding-top: var(--space-3);
+}
+
+.cell {
+  position: relative;
+  height: 1.5rem;
+  border-radius: 2px;
+}
+
+.steady {
+  background: var(--color-accent-soft);
+}
+
+.caught {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+
+.commission {
+  background: var(--color-danger);
+}
+
+.omission {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.anticipation {
+  background: var(--color-viz-early);
+}
+
+/* The longest steady run: a line under its cells. */
+.cell[data-longest='true']::after,
+.run {
+  content: '';
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  bottom: -6px;
+  height: 3px;
+  background: var(--color-text);
+}
+
+.probe {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-text);
+}
+
+.on_task {
+  background: transparent;
+}
+
+.drifting {
+  background: linear-gradient(90deg, var(--color-text) 50%, transparent 50%);
+}
+
+.elsewhere {
+  background: var(--color-text);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.legend ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.legend .probe {
+  position: static;
+  margin: 0;
+}
+
+.legendTitle {
+  color: var(--color-text);
+}
+
+.swatch {
+  position: relative;
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+}
+
+.run {
+  position: static;
+  display: inline-block;
+  width: 0.875rem;
+}

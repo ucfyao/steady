@@ -1,9 +1,25 @@
-import { useRef, useState, type FormEvent } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { NavLink, Outlet, useOutletContext } from 'react-router';
 import { PlayerMenu } from './PlayerMenu.js';
 import { usePlayers } from './players/usePlayers.js';
 import { Button } from './ui/Button.js';
 import styles from './Layout.module.css';
+
+type LayoutContext = { setFocusMode(on: boolean): void };
+
+/**
+ * Focus mode (Spec 004): while a screen calls this, the layout drops the header and
+ * notices, so only that screen is on the page. Turns off when the caller unmounts.
+ * A layout effect, so the header is gone before the first frame is painted.
+ */
+export function useFocusMode() {
+  const setFocusMode = useOutletContext<LayoutContext | undefined>()?.setFocusMode;
+  useLayoutEffect(() => {
+    if (!setFocusMode) return;
+    setFocusMode(true);
+    return () => setFocusMode(false);
+  }, [setFocusMode]);
+}
 
 function AddPlayerForm({ onDone }: { onDone(): void }) {
   const { addPlayer } = usePlayers();
@@ -41,6 +57,8 @@ function AddPlayerForm({ onDone }: { onDone(): void }) {
 export function Layout() {
   const { status, error, retry, notice, dismissNotice, active } = usePlayers();
   const [adding, setAdding] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const outletContext = useMemo<LayoutContext>(() => ({ setFocusMode }), []);
   const avatar = useRef<HTMLButtonElement>(null);
 
   const doneAdding = () => {
@@ -50,25 +68,27 @@ export function Layout() {
 
   return (
     <div className={styles.app}>
-      <header className={styles.header}>
-        <NavLink to="/" className={styles.brand}>
-          Steady
-        </NavLink>
-        <div className={styles.headerEnd}>
-          <nav aria-label="Main">
-            <NavLink to="/progress" className={styles.navLink}>
-              Progress
-            </NavLink>
-          </nav>
-          {status === 'ready' && (
-            <PlayerMenu buttonRef={avatar} onAddPlayer={() => setAdding(true)} />
-          )}
-        </div>
-      </header>
+      {!focusMode && (
+        <header className={styles.header}>
+          <NavLink to="/" className={styles.brand}>
+            Steady
+          </NavLink>
+          <div className={styles.headerEnd}>
+            <nav aria-label="Main">
+              <NavLink to="/progress" className={styles.navLink}>
+                Progress
+              </NavLink>
+            </nav>
+            {status === 'ready' && (
+              <PlayerMenu buttonRef={avatar} onAddPlayer={() => setAdding(true)} />
+            )}
+          </div>
+        </header>
+      )}
 
-      {status === 'ready' && adding && <AddPlayerForm onDone={doneAdding} />}
+      {status === 'ready' && adding && !focusMode && <AddPlayerForm onDone={doneAdding} />}
 
-      {notice && (
+      {notice && !focusMode && (
         <div role="status" className="notice">
           {notice}{' '}
           <Button variant="link" onClick={dismissNotice}>
@@ -87,7 +107,7 @@ export function Layout() {
         )}
         {/* Keyed by player: switching or deleting a player remounts every screen, so no
             screen can carry over another player's data or an open confirmation. */}
-        {status === 'ready' && <Outlet key={active!.id} />}
+        {status === 'ready' && <Outlet key={active!.id} context={outletContext} />}
       </main>
     </div>
   );

@@ -1,4 +1,5 @@
 import type { ProbeResult, TrialOutcome } from '@steady/core';
+import styles from './JourneyRibbon.module.css';
 
 export const OUTCOME_LABELS: Record<TrialOutcome, string> = {
   steady: 'Steady press',
@@ -46,8 +47,8 @@ export function JourneyRibbon({
   const probeAt = new Map(probes.map((p) => [p.afterIndex, p.answer]));
 
   return (
-    <figure className="journey">
-      <div className="ribbon" role="img" aria-label={summary}>
+    <figure className={styles.journey}>
+      <div className={styles.ribbon} role="img" aria-label={summary}>
         {outcomes.map((outcome, i) => {
           const answer = probeAt.get(i);
           return (
@@ -56,14 +57,14 @@ export function JourneyRibbon({
               data-testid="trial"
               data-outcome={outcome}
               data-longest={run.has(i) ? 'true' : undefined}
-              className={`cell cell-${outcome}`}
+              className={`${styles.cell} ${styles[outcome]}`}
               title={`Trial ${i + 1}: ${OUTCOME_LABELS[outcome]}`}
             >
               {answer && (
                 <span
                   data-testid="probe"
                   data-answer={answer}
-                  className={`probe-mark probe-${answer}`}
+                  className={`${styles.probe} ${styles[answer]}`}
                   title={`Asked after trial ${i + 1}: ${ANSWER_LABELS[answer]}`}
                 />
               )}
@@ -71,24 +72,24 @@ export function JourneyRibbon({
           );
         })}
       </div>
-      <figcaption className="legend">
+      <figcaption className={styles.legend}>
         <ul>
           {(Object.keys(OUTCOME_LABELS) as TrialOutcome[]).map((o) => (
             <li key={o}>
-              <span className={`swatch cell-${o}`} aria-hidden="true" />
+              <span className={`${styles.swatch} ${styles[o]}`} aria-hidden="true" />
               {OUTCOME_LABELS[o]}
             </li>
           ))}
           <li>
-            <span className="swatch swatch-run" aria-hidden="true" />
+            <span className={styles.run} aria-hidden="true" />
             Longest steady run
           </li>
         </ul>
         <ul>
-          <li className="legend-title">Where your mind was:</li>
+          <li className={styles.legendTitle}>Where your mind was:</li>
           {(Object.keys(ANSWER_LABELS) as (keyof typeof ANSWER_LABELS)[]).map((a) => (
             <li key={a}>
-              <span className={`probe-mark probe-${a}`} aria-hidden="true" />
+              <span className={`${styles.probe} ${styles[a]}`} aria-hidden="true" />
               {ANSWER_LABELS[a]}
             </li>
           ))}
