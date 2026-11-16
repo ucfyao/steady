@@ -1,10 +1,15 @@
-import type { CheckIn, CompletedSession, ProbeResult, SessionScore } from '@steady/core';
+import type { CheckIn, CompletedSession, ProbeResult, SessionScore, Variant } from '@steady/core';
 
 /** A stored session with a hand-picked score, for progress tests (the server's output). */
 export function storedSession(
   n: number,
   score: Partial<SessionScore> = {},
-  opts: { checkIn?: CheckIn | null; completedAt?: Date; probes?: ProbeResult[] } = {},
+  opts: {
+    checkIn?: CheckIn | null;
+    completedAt?: Date;
+    probes?: ProbeResult[];
+    variant?: Variant;
+  } = {},
 ): CompletedSession {
   const completedAt = opts.completedAt ?? new Date();
   return {
@@ -13,7 +18,7 @@ export function storedSession(
     completedAt: completedAt.toISOString(),
     checkIn: opts.checkIn ?? null,
     device: 'keyboard',
-    variant: 'calm',
+    variant: opts.variant ?? 'calm',
     score: {
       scoringVersion: 3,
       commissions: 0,

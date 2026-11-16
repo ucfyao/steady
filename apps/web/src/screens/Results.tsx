@@ -1,6 +1,4 @@
 import {
-  maxPoints,
-  scorePoints,
   type BehaviourFlag,
   type CompletedSession,
   type ProgressMetric,
@@ -18,6 +16,7 @@ import {
   type Reference,
 } from '../metrics/metrics.js';
 import { Link, useLocation, useParams } from 'react-router';
+import { dawnPercent, personalBest, sessionPoints } from '../game/dawn.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
@@ -121,7 +120,16 @@ export function Results() {
         {reference ? headline(reference, comparisons) : '\u00a0'}
       </p>
 
-      {session.variant === 'game' && <GameSummary session={session} />}
+      {session.variant === 'game' && (
+        <GameSummary
+          session={session}
+          earlier={
+            history.k === 'ready'
+              ? history.sessions.filter((s) => s.completedAt < session.completedAt)
+              : null
+          }
+        />
+      )}
 
       <Card as="section" aria-labelledby="stats-title">
         <h2 id="stats-title">This session</h2>
@@ -203,18 +211,25 @@ export function Results() {
  * The game first (Spec 006 §4): the points of the server's outcomes, the longest streak and how far the
  * sky got towards dawn (points ÷ an all-correct session's points, rounded down).
  */
-function GameSummary({ session }: { session: CompletedSession }) {
+function GameSummary({
+  session,
+  earlier,
+}: {
+  session: CompletedSession;
+  /** Sessions completed before this one, once the history has loaded. */
+  earlier: CompletedSession[] | null;
+}) {
   const { score } = session;
-  const trials = score.trialOutcomes.map((o) => ({
-    isTarget: o === 'caught' || o === 'commission',
-  }));
-  const best = maxPoints(trials);
   // Points are never stored: they are always the points of the server's trial outcomes.
-  const points = scorePoints(score.trialOutcomes);
-  const dawn = best > 0 ? Math.floor((points / best) * 100) : 0;
+  const points = sessionPoints(score);
+  const dawn = dawnPercent(score);
+  // Spec 007 §2: higher than every earlier game session, and there was one.
+  const before = earlier ? personalBest(earlier) : null;
+  const newBest = before !== null && points > before;
   return (
     <Card as="section" aria-labelledby="game-title" className={styles.game}>
       <h2 id="game-title">Your game</h2>
+      {newBest && <p className={styles.newBest}>New personal best</p>}
       <p className={styles.gamePoints}>
         <b>{points}</b> points
       </p>

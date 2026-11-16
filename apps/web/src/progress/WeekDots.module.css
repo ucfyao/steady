@@ -20,24 +20,39 @@
 }
 
 .day {
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
   width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
 }
 
+/* A lantern: an outline when not played, lit (warm, glowing) when played. */
+.lantern {
+  width: 1.375rem;
+  height: 1.75rem;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 44% 44% 40% 40% / 30% 30% 26% 26%;
+}
+
 .day[data-today='true'] {
-  border: 1.5px dashed var(--color-accent-soft);
   color: var(--color-link);
 }
 
+.day[data-today='true'] .lantern {
+  border-style: dashed;
+  border-color: var(--color-accent-soft);
+}
+
 .day[data-played='true'] {
-  background: var(--color-accent-soft);
-  border: 1px solid var(--color-accent-soft);
-  color: var(--color-on-accent);
+  color: var(--color-text);
   font-weight: var(--font-weight-medium);
+}
+
+.day[data-played='true'] .lantern {
+  border: 1.5px solid #e0a64a;
+  background: radial-gradient(circle at 50% 45%, #fff3d6, #ffd696 70%);
+  box-shadow: 0 0 10px 2px rgb(255 200 110 / 0.55);
 }

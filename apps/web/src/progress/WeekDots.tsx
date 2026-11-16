@@ -3,8 +3,8 @@ import { weeklyTarget } from './weekly.js';
 import styles from './WeekDots.module.css';
 
 /**
- * "3 of 4 days" with one dot per local day, today last (Spec 004). Played days are
- * filled; today has a dashed ring until it is played.
+ * "3 of 4 days" with one small lantern per local day, today last (Spec 007). Played days
+ * are lit; today has a dashed outline until it is played.
  */
 export function WeekDots({ completedAt, now = new Date() }: { completedAt: string[]; now?: Date }) {
   const { days, count, target } = weeklyTarget(completedAt, now);
@@ -26,6 +26,7 @@ export function WeekDots({ completedAt, now = new Date() }: { completedAt: strin
             data-today={k === days.length - 1}
             className={styles.day}
           >
+            <span className={styles.lantern} data-testid="lantern-icon" />
             {dayLetter(dayOf(k))}
           </li>
         ))}

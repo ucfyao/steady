@@ -200,3 +200,14 @@
   font-size: var(--text-sm);
   color: rgb(236 230 218 / 0.75);
 }
+
+.newBest {
+  display: inline-block;
+  margin: 0 0 var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: #ffd696;
+  color: #2b2925;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
