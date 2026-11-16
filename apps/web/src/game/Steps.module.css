@@ -1,0 +1,31 @@
+.steps {
+  margin-bottom: var(--space-7);
+}
+
+.label {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.label b {
+  color: var(--color-link);
+  font-weight: var(--font-weight-semibold);
+}
+
+.bar {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.bar i {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+
+.bar i.on {
+  background: var(--color-accent-soft);
+}

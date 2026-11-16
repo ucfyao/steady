@@ -187,6 +187,25 @@ describe('TrialRunner practice feedback', () => {
     expect(r.frame(t3 + 1150)).toEqual({ phase: 'feedback', index: 3, outcome: 'omission' });
     expect(r.frame(t3 + 1150 + 800)).toEqual({ phase: 'done' });
   });
+
+  it('calls a press under 100 ms on a digit "too soon" (core anticipation threshold)', () => {
+    const r = new TrialRunner(plan([go(0), three(1)]), { feedbackMs: 800 });
+    r.start(0);
+    r.frame(0);
+    r.press(99);
+    expect(r.frame(1150)).toEqual({ phase: 'feedback', index: 0, outcome: 'early' });
+    r.frame(1950);
+    r.press(1950 + 50); // a very early press on a 3 is still a press on a 3
+    expect(r.frame(1950 + 1150)).toEqual({ phase: 'feedback', index: 1, outcome: 'commission' });
+  });
+
+  it('a press at exactly 100 ms is not too soon', () => {
+    const r = new TrialRunner(plan([go(0)]), { feedbackMs: 800 });
+    r.start(0);
+    r.frame(0);
+    r.press(100);
+    expect(r.frame(1150)).toEqual({ phase: 'feedback', index: 0, outcome: 'hit' });
+  });
 });
 
 describe('TrialRunner full session', () => {

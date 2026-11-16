@@ -5,6 +5,7 @@ import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
+import { StatusPage } from '../ui/StatusPage.js';
 import styles from './Results.module.css';
 
 /** Descriptive flags in plain words (Spec 004): about the session, never a failure. */
@@ -61,11 +62,13 @@ export function Results() {
     );
   if (state.k === 'missing')
     return (
-      <section>
-        <h1>Session not found</h1>
-        <p>This session does not belong to the current player, or it no longer exists.</p>
-        <Link to="/">Back to home</Link>
-      </section>
+      <StatusPage
+        title="Session not found"
+        primary={{ label: 'Back to home', to: '/' }}
+        secondary={{ label: 'See your progress', to: '/progress' }}
+      >
+        This session does not belong to the current player, or it no longer exists.
+      </StatusPage>
     );
 
   const { score } = state.session;

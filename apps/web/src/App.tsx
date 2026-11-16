@@ -3,6 +3,7 @@ import type { PlayEnv } from './game/env.js';
 import { Layout } from './Layout.js';
 import { PlayersProvider } from './players/PlayersProvider.js';
 import { Home } from './screens/Home.js';
+import { NotFound } from './screens/NotFound.js';
 import { Play } from './screens/Play.js';
 import { Progress } from './screens/Progress.js';
 import { Results } from './screens/Results.js';
@@ -18,6 +19,7 @@ export function AppRoutes({ playEnv }: { playEnv?: PlayEnv } = {}) {
         <Route path="results/:id" element={<Results />} />
         <Route path="progress" element={<Progress />} />
         <Route path="data" element={<YourData />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
