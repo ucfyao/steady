@@ -138,16 +138,6 @@ describe('layout and player menu', () => {
   });
 });
 
-describe('Home', () => {
-  it("shows the goal and the active player's completed sessions", async () => {
-    const backend = fakeBackend();
-    backend.sessions.set(tokenN(1), [storedSession(1), storedSession(2)]);
-    renderApp('/', backend);
-    expect(await screen.findByText(/Catch every 3, keep a steady rhythm/)).toBeInTheDocument();
-    expect(await screen.findByText('Sessions completed: 2')).toBeInTheDocument();
-  });
-});
-
 describe('Your data', () => {
   it('explains that history lives only on this device', async () => {
     renderApp('/data');
@@ -208,7 +198,7 @@ describe('Your data', () => {
 });
 
 describe('switching player', () => {
-  it("never shows the previous player's session count while the next one loads", async () => {
+  it("never shows the previous player's last check while the next one loads", async () => {
     const backend = fakeBackend();
     backend.sessions.set(tokenN(1), [storedSession(1), storedSession(2)]);
     // Sam's history never arrives, so a stale count from Player 1 would stay on screen.
@@ -225,10 +215,11 @@ describe('switching player', () => {
         </MemoryRouter>
       </PlayersProvider>,
     );
-    expect(await screen.findByText('Sessions completed: 2')).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: /^Last check · / })).toBeInTheDocument();
 
     await addPlayer('Sam');
     expect(await screen.findByText('Hi, Sam')).toBeInTheDocument();
-    expect(screen.queryByText(/Sessions completed/)).toBeNull();
+    expect(screen.queryByRole('region', { name: /^Last check/ })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'This week' })).toBeNull();
   });
 });

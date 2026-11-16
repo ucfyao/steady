@@ -31,7 +31,7 @@ test('a new player practises, plays a full session and sees results and progress
   const resultsUrl = page.url();
 
   await page.getByRole('link', { name: 'See your progress' }).click();
-  await expect(page.getByText('1 of 4 days this week')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'This week' })).toContainText('1 of 4 days');
   await expect(page.getByText('Your starting point is set after 5 more sessions.')).toBeVisible();
 
   // A second player on the same device sees none of it.

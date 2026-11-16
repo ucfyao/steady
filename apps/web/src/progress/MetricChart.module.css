@@ -1,0 +1,95 @@
+/* Recharts draws its own SVG classes, so they are reached with :global inside .chart. */
+.chart {
+  margin: 0;
+  min-width: 0;
+}
+
+.caption {
+  margin-bottom: var(--space-3);
+}
+
+.caption h3 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.hint {
+  margin: 0;
+  /* Kept when empty, so charts side by side line up. */
+  min-height: 1.5em;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.latest {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.value {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.plot {
+  margin: 0 calc(-1 * var(--space-2));
+}
+
+.chart :global(.recharts-cartesian-axis-tick-value) {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.chart :global(.recharts-cartesian-axis-line) {
+  stroke: var(--color-border);
+}
+
+.chart :global(.recharts-cartesian-grid line) {
+  stroke: var(--color-border);
+}
+
+.line :global(.recharts-line-curve) {
+  stroke: var(--color-accent-soft);
+  stroke-width: 2;
+}
+
+.chart :global(.recharts-reference-line line) {
+  stroke: var(--color-text-muted);
+}
+
+/* The only label in a chart is the baseline's; Recharts draws it in a separate layer. */
+.chart :global(.recharts-label) {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.normal {
+  fill: var(--color-accent-soft);
+}
+
+.practice {
+  fill: var(--color-surface);
+  stroke: var(--color-accent-soft);
+  stroke-width: 2;
+}
+
+.flagged {
+  fill: var(--color-surface);
+  stroke: var(--color-viz-early);
+  stroke-width: 2;
+}
+
+.tooltip :global(.recharts-default-tooltip) {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.tooltip :global(.recharts-tooltip-item) {
+  color: var(--color-text) !important;
+}
