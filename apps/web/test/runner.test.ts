@@ -232,7 +232,7 @@ describe('TrialRunner full session', () => {
     const s = r.submission();
     expect(validateSubmission(p, s)).toEqual({ ok: true });
     expect(s.rts.filter((rt, i) => p.trials[i]!.isTarget && rt !== null)).toEqual([]);
-    expect(s.rts.filter((rt) => rt !== null)).toHaveLength(112);
+    expect(s.rts.filter((rt) => rt !== null)).toHaveLength(72); // 81 trials, 9 of them 3s
     for (const rt of s.rts) if (rt !== null) expect(rt).toBeCloseTo(400, 6);
     expect(t).toBeGreaterThanOrEqual(SUBMIT_CONFIG.minElapsedMs);
   });

@@ -46,8 +46,8 @@ describe('GET /api/progress', () => {
     expect(a.summary.baseline?.commissionRate).toEqual({ median: 0, n: 5 });
     // Practice (session 1) is excluded from comparisons: 5 "good" sessions, not 6.
     expect(a.checkIn.sleep.commissionRate.groups[2]).toMatchObject({ key: 'good', n: 5 });
-    // 4 probes × 5 non-practice sessions, all answered on task.
-    expect(a.preProbe.groups[0]?.n).toBe(20);
+    // 3 probes × 5 non-practice sessions, all answered on task (Spec 005).
+    expect(a.preProbe.groups[0]?.n).toBe(15);
 
     expect((await progress(bob)).summary.totalSessions).toBe(1);
   });

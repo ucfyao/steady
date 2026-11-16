@@ -44,7 +44,7 @@ In order:
    - an identical submission returns the stored result `200` (safe client retry), even after the session would have expired;
    - a different one → `409`.
 4. **Timing plausibility [P]** (`SUBMIT_CONFIG` in core), using the server clock:
-   - elapsed time since start must be at least **95% of the trial time** (126 × 1150 ms × 0.95 ≈ 137.7 s), else `422`. Probes only add time, so a real session is always longer.
+   - elapsed time since start must be at least **95% of the trial time** (81 × 1150 ms × 0.95 ≈ 88.5 s, Spec 005), else `422`. Probes only add time, so a real session is always longer.
    - a session older than **30 minutes** is expired → `422`. The client starts a new one.
 5. Score with `scoreSession`, using the **stored trials** (never regenerating them from the seed), and store the raw submission, the score and `scoringVersion` in one conditional update (`WHERE completed_at IS NULL`). If a concurrent submit won the race, fall back to step 3.
 
@@ -72,7 +72,7 @@ Rejected submissions (steps 2 and 4) store nothing; the session stays open. A se
 Integration tests (Vitest + supertest) run the real app against PostgreSQL 17 in Testcontainers, with migrations applied and a controllable clock.
 
 - **Auth:** no token, malformed header and unknown token → `401`; creating a player returns a 43-character base64url token, and only its hash is in the DB.
-- **Start:** returns 126 trials and 4 probes; stores the check-in and the device; rejects an unknown check-in level, and a missing or unknown device → `400`.
+- **Start:** returns 81 trials and 3 probes; stores the check-in and the device; rejects an unknown check-in level, and a missing or unknown device → `400`.
 - **Submit, happy path:** a perfect submission after 150 s returns the score from `scoreSession` and appears in `GET /api/sessions`.
 - **Client score ignored:** a body with `score: {...}` is scored by the server, not taken as is.
 - **Invalid submission** (wrong length) → `400` with errors; nothing stored.

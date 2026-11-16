@@ -31,33 +31,50 @@ const stat = (label: string) => screen.getByRole('group', { name: label });
 describe('Home', () => {
   it('keeps "on 3." together, so the 3 never wraps onto a line of its own', async () => {
     renderHome([]);
-    const lead = await screen.findByText(/^Three minutes\./);
+    const lead = await screen.findByText(/^Two minutes\./);
     expect(lead.textContent).toContain('on\u00a03.');
   });
 
   it('greets the player, says what the check is, and starts it', async () => {
     renderHome([]);
     expect(await screen.findByRole('heading', { name: 'Hi, Player 1' })).toBeInTheDocument();
-    expect(
-      screen.getByText('Three minutes. Catch every digit, hold back on 3.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Two minutes. Catch every digit, hold back on 3.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: "Start today's check" })).toHaveAttribute(
       'href',
       '/play',
     );
   });
 
-  it('with no sessions: an empty week, a first-check invitation and the countdown', async () => {
+  it('with no sessions: says what Steady does, and none of the history blocks (Spec 005)', async () => {
     renderHome([]);
+    const welcome = await screen.findByRole('region', { name: 'What Steady does' });
+    expect(welcome).toHaveTextContent(
+      'A short game that shows how steady your attention is today. Play a few times a week to see your own pattern.',
+    );
+    expect(
+      within(welcome)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual([
+      'About two minutes',
+      'Starts with a 30-second practice',
+      'Compared only with your own results',
+    ]);
+    expect(screen.queryByRole('region', { name: 'Last 7 days' })).toBeNull();
+    expect(screen.queryByRole('region', { name: /^Last check/ })).toBeNull();
+    expect(screen.queryByText(/until your starting point/)).toBeNull();
+  });
+
+  it('with a session: the history blocks and no welcome', async () => {
+    renderHome([storedSession(1, {}, { completedAt: daysAgo(0) })]);
     const week = await screen.findByRole('region', { name: 'Last 7 days' });
     // The target comes from core's config (Spec 004: 4 of the last 7 days).
-    expect(week).toHaveTextContent(`0 of ${PROGRESS_CONFIG.weeklyTargetDays} days`);
+    expect(week).toHaveTextContent(`1 of ${PROGRESS_CONFIG.weeklyTargetDays} days`);
     expect(within(week).getAllByTestId('week-day')).toHaveLength(7);
-    const last = screen.getByRole('region', { name: 'Last check' });
-    expect(last).toHaveTextContent(/no checks yet/i);
-    expect(within(last).queryAllByRole('group')).toHaveLength(0);
-    // Session 1 is practice, sessions 2–6 set the starting point.
-    expect(screen.getByText('6 more sessions until your starting point')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Last check · Today' })).toBeInTheDocument();
+    // Session 1 is not counted, sessions 2–6 set the starting point.
+    expect(screen.getByText('5 more sessions until your starting point')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'What Steady does' })).toBeNull();
   });
 
   it('before the baseline: the last check with its numbers, and the countdown', async () => {

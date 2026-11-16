@@ -2,8 +2,7 @@ import type { InputDevice } from '@steady/core';
 import { useId } from 'react';
 import { Button } from '../ui/Button.js';
 import { practiceTip, type PracticeSummary } from './practice.js';
-import styles from './PracticeResult.module.css';
-import { Steps } from './Steps.js';
+import styles from './PracticeLine.module.css';
 
 function tipText(s: PracticeSummary, device: InputDevice): string {
   const press = device === 'touch' ? 'Tap' : 'Press';
@@ -24,42 +23,39 @@ function tipText(s: PracticeSummary, device: InputDevice): string {
   }
 }
 
-/** Step 2 (Spec 004): how the practice went, counted in the browser, plus one tip. */
-export function PracticeResult({
+/** "Practice: 2 of 2 3s held back · 9 of 10 digits caught", plus "· N too early" if any. */
+export function practiceLine(s: PracticeSummary): string {
+  const parts = [
+    `${s.heldBack} of ${s.targets} 3s held back`,
+    `${s.caught} of ${s.digits} digits caught`,
+  ];
+  if (s.tooEarly > 0) parts.push(`${s.tooEarly} too early`);
+  return `Practice: ${parts.join(' · ')}`;
+}
+
+/**
+ * How the practice went, at the top of "Before you start" (Spec 005): one line, one tip and
+ * Practice again. Counted in the browser for this screen only; never sent or stored.
+ */
+export function PracticeLine({
   summary,
   device,
-  onReady,
   onAgain,
 }: {
   summary: PracticeSummary;
   device: InputDevice;
-  onReady(): void;
   onAgain(): void;
 }) {
   const tipId = useId();
-  const stat = (label: string, value: string) => (
-    <div role="group" aria-label={label} className={styles.stat}>
-      <b>{value}</b>
-      <small aria-hidden="true">{label}</small>
-    </div>
-  );
   return (
-    <section className={styles.result}>
-      <Steps step={2} label="Practice done" />
-      <h1>Nice warm-up</h1>
-      <p className={styles.lead}>Here is how the practice went. Nothing was saved.</p>
-      <div className={styles.stats}>
-        {stat('3s held back', `${summary.heldBack} / ${summary.targets}`)}
-        {stat('digits caught', `${summary.caught} / ${summary.digits}`)}
-        {stat('too early', String(summary.tooEarly))}
-      </div>
+    <section className={styles.practice} aria-label="How the practice went">
+      <p data-testid="practice-line" className={styles.line}>
+        {practiceLine(summary)}
+      </p>
       <aside role="note" aria-labelledby={tipId} className={styles.tip}>
         <b id={tipId}>One tip</b>
         <p>{tipText(summary, device)}</p>
       </aside>
-      <Button size="lg" onClick={onReady}>
-        I&apos;m ready
-      </Button>
       <Button variant="link" onClick={onAgain} className={styles.again}>
         Practice again
       </Button>

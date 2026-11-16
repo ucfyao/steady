@@ -28,8 +28,9 @@ const alternate = (a: number, b: number) => {
 };
 
 // Reference values computed independently with Python's statistics.NormalDist
-const D_PRIME_PERFECT = 4.451726523450288;
-const D_PRIME_PRESS_ALL = 0.7838972518184599;
+// Spec 005: 9 targets and 72 go trials.
+const D_PRIME_PERFECT = 4.109924111630582; // Φ⁻¹(9.5/10) − Φ⁻¹(0.5/73)
+const D_PRIME_PRESS_ALL = 0.8202168577276379; // Φ⁻¹(0.5/10) − Φ⁻¹(0.5/73)
 
 describe('scoreSession', () => {
   it('scores a perfect player', () => {
@@ -41,10 +42,10 @@ describe('scoreSession', () => {
     expect(s.medianGoRtMs).toBe(400);
     expect(s.rtCv).toBe(0);
     expect(s.dPrime).toBeCloseTo(D_PRIME_PERFECT, 6);
-    expect(s.longestSteadyRun).toBe(126);
+    expect(s.longestSteadyRun).toBe(81);
     // A perfectly constant 400 ms is not human-like, so it is described as such
     expect(s.flags).toEqual(['regular_timing']);
-    expect(s.scoringVersion).toBe(SART_CONFIG.scoringVersion);
+    expect(s.scoringVersion).toBe(3);
   });
 
   describe('regular_timing flag (descriptive only)', () => {
@@ -91,9 +92,9 @@ describe('scoreSession', () => {
       plan,
       submit(plan, () => 400),
     );
-    expect(s.commissions).toBe(14);
+    expect(s.commissions).toBe(9);
     expect(s.commissionRate).toBe(1);
-    // Not ≤ 0: with the log-linear correction and unequal trial counts (14 vs 112),
+    // Not ≤ 0: with the log-linear correction and unequal trial counts (9 vs 72),
     // "no discrimination" lands slightly above zero. Still far below a perfect player.
     expect(s.dPrime).toBeCloseTo(D_PRIME_PRESS_ALL, 6);
   });
@@ -103,7 +104,7 @@ describe('scoreSession', () => {
       plan,
       submit(plan, () => null),
     );
-    expect(s.omissions).toBe(112);
+    expect(s.omissions).toBe(72);
     expect(s.omissionRate).toBe(1);
     expect(s.medianGoRtMs).toBeNull();
     expect(s.rtCv).toBeNull();
@@ -151,7 +152,7 @@ describe('scoreSession', () => {
       submit(plan, (t) => (t.index === target.index ? 400 : perfect(400)(t))),
     );
     expect(s.commissions).toBe(1);
-    expect(s.longestSteadyRun).toBe(Math.max(target.index, 125 - target.index));
+    expect(s.longestSteadyRun).toBe(Math.max(target.index, 80 - target.index));
   });
 
   it('breaks the steady run at an anticipation', () => {
@@ -162,7 +163,7 @@ describe('scoreSession', () => {
     );
     expect(s.anticipations).toBe(1);
     expect(s.omissions).toBe(0);
-    expect(s.longestSteadyRun).toBe(Math.max(go.index, 125 - go.index));
+    expect(s.longestSteadyRun).toBe(Math.max(go.index, 80 - go.index));
   });
 
   describe('trialOutcomes (Spec 001, scoring version 2)', () => {
@@ -189,7 +190,7 @@ describe('scoreSession', () => {
         [anticipation, 'anticipation'],
         [omission, 'omission'],
       ]);
-      expect(s.trialOutcomes).toHaveLength(126);
+      expect(s.trialOutcomes).toHaveLength(81);
       s.trialOutcomes.forEach((outcome, i) => {
         const want = expected.get(i) ?? (plan.trials[i]!.isTarget ? 'caught' : 'steady');
         expect(outcome, `trial ${i}`).toBe(want);
@@ -251,7 +252,7 @@ describe('scoreSession', () => {
   describe('pre-probe variability', () => {
     it('is 0 for constant RTs and carries the probe answer', () => {
       const s = scoreSession(plan, submit(plan, perfect(400), 'drifting'));
-      expect(s.probes).toHaveLength(4);
+      expect(s.probes).toHaveLength(3);
       s.probes.forEach((p, i) => {
         expect(p.afterIndex).toBe(plan.probeAfter[i]);
         expect(p.answer).toBe('drifting');

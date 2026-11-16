@@ -32,9 +32,9 @@ Steady is a calm attention game built on the **Sustained Attention to Response T
 ## 3. How it plays, and what brings people back
 
 - **Task [R]:** digits 1–9; press for every digit except **3**. Each trial is a 250 ms digit and a 900 ms mask, in 5 font sizes (Robertson et al. 1997; PsyToolkit).
-- **Length [P]:** 126 trials (11% no-go, as in the original) with 4 probes take **about 3 minutes**. That is shorter than the standard 225 trials, so error rates are noisier, and this version has not been validated.
+- **Length [P]:** 81 trials (9 of each digit, so 11% no-go as in the original) with 3 probes take **about 2 minutes**. A walkthrough as a new player found the earlier 126 trials (about 5 minutes on a first visit) too long (Spec 005). That is much shorter than the standard 225 trials, so error rates are noisier (one 3 moves the catch rate by 11 points), and this version has not been validated.
 - **Fair sequences [P]:** the server picks a seed for each session; it fixes a balanced digit order and the probe positions, and is never sent to the browser.
-- **Practice [P]:** the rules are shown as steps before every session and say that everyone presses on some 3s. A first play-test at full speed was impossible to follow, so the first session's practice **starts slow and ends at the real speed**. The real session always uses the standard timing, so results stay comparable.
+- **Practice [P]:** the rules are shown as steps before every session and say that everyone presses on some 3s. A first play-test at full speed was impossible to follow, so the first session's practice (12 digits, about 30 seconds) **starts slow and ends at the real speed**. The real session always uses the standard timing, so results stay comparable.
 - **No live score** during the block, since it would change how people respond. The reward comes afterwards: a _session journey_ ribbon of every trial and your longest steady run.
 - **Weekly target (4 of 7 days), not a daily streak.** A streak drops to zero after one missed day, but missing one opportunity did not materially affect habit formation in a 12-week study [R] (Lally et al. 2010). A focus check is also most useful on a bad day, and a flexible target removes the pressure to play only to keep a count [P].
 - **No leaderboards or percentiles:** comparing attention with colleagues would discourage honest use, and a shortened task has no norms to rank against.
@@ -44,13 +44,13 @@ Steady is a calm attention game built on the **Sustained Attention to Response T
 
 All scoring runs **on the server, from the raw trial data**, which is stored unchanged with a `scoring_version`, so history can be re-scored when the rules change. The client never sends a score. There is no composite score:
 
-| Metric                | Definition                                                                                |
-| --------------------- | ----------------------------------------------------------------------------------------- |
-| Commission error rate | Presses on a 3 ÷ 14, shown as catch rate ("Caught 12 of 14 threes")                       |
-| Omission rate         | Missed presses on go digits ÷ 112                                                         |
-| Median go RT          | Median RT of correct go trials                                                            |
-| RT variability (CV)   | SD ÷ mean of the same trials; lower = steadier                                            |
-| d′ (secondary)        | Log-linear corrected [R] (Hautus 1995; Stanislaw & Todorov 1999); labelled noisy (n = 14) |
+| Metric                | Definition                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| Commission error rate | Presses on a 3 ÷ 9, shown as catch rate ("8 of 9")                                       |
+| Omission rate         | Missed presses on go digits ÷ 72                                                         |
+| Median go RT          | Median RT of correct go trials                                                           |
+| RT variability (CV)   | SD ÷ mean of the same trials; lower = steadier                                           |
+| d′ (secondary)        | Log-linear corrected [R] (Hautus 1995; Stanislaw & Todorov 1999); labelled noisy (n = 9) |
 
 - **What counts as a good result:** there is no pass mark. In standard SART studies people typically press on 30–50% of no-go digits and miss 5–10% of go digits [R] (Wilson et al. 2016), so pressing on some 3s is normal. Those figures come from longer versions and other samples, so they are not shown as norms; a result is judged against the player's own history (§6).
 - **Speed–accuracy trade-off [R]:** slower responding reduces errors (Seli et al. 2013a), so errors are always shown next to median RT and never ranked alone.

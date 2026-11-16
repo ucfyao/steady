@@ -19,7 +19,7 @@ const gos = plan.trials.filter((t) => !t.isTarget && t.index > 10);
 const COMMISSION = targets[2]!.index;
 const OMISSION = gos[0]!.index;
 const ANTICIPATION = gos[1]!.index;
-const ANSWERS: ProbeAnswer[] = ['on_task', 'drifting', 'elsewhere', 'on_task'];
+const ANSWERS: ProbeAnswer[] = ['on_task', 'drifting', 'elsewhere'];
 
 /** A stored session as the server returns it. Test code may score (it plays the server). */
 function completed(id: string, rtFor: (t: PlanTrial) => number | null): CompletedSession {
@@ -63,10 +63,10 @@ const tile = (label: string) => screen.getByRole('group', { name: label });
 describe('Results', () => {
   it('shows the summary, tiles and plain-words flags from the server score', async () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
-    // From the spec: 14 targets per session, one of them pressed.
-    expect(await screen.findByRole('group', { name: '3s held back' })).toHaveTextContent('93%');
+    // From the spec: 9 targets per session (Spec 005), one of them pressed.
+    expect(await screen.findByRole('group', { name: '3s held back' })).toHaveTextContent('89%');
     // The count lives in the catch-rate tile; no second sentence repeats it.
-    expect(tile('3s held back')).toHaveTextContent('13 of 14');
+    expect(tile('3s held back')).toHaveTextContent('8 of 9');
     expect(screen.queryByText(/you caught/i)).toBeNull();
     expect(tile('Typical response time')).toHaveTextContent('400 ms');
     expect(tile('How much your timing varied')).toHaveTextContent('0%');
@@ -80,7 +80,7 @@ describe('Results', () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
     const ribbon = await screen.findByRole('img', { name: /session journey/i });
     const cells = within(ribbon).getAllByTestId('trial');
-    expect(cells).toHaveLength(126);
+    expect(cells).toHaveLength(81);
     expect(cells[COMMISSION]).toHaveAttribute('data-outcome', 'commission');
     expect(cells[OMISSION]).toHaveAttribute('data-outcome', 'omission');
     expect(cells[ANTICIPATION]).toHaveAttribute('data-outcome', 'anticipation');
@@ -103,16 +103,14 @@ describe('Results', () => {
       const marker = within(cells[p]!).getByTestId('probe');
       expect(marker).toHaveAttribute('data-answer', ANSWERS[k]);
     });
-    expect(within(ribbon).getAllByTestId('probe')).toHaveLength(4);
+    expect(within(ribbon).getAllByTestId('probe')).toHaveLength(3);
     expect(screen.getByText('Drifting')).toBeInTheDocument(); // legend
     expect(screen.queryByText('Elsewhere')).toBeInTheDocument();
   });
 
   it('says when there were too few presses, and explains many omissions', async () => {
     renderResults({ pathname: '/results/s2', state: { session: neverPressed } });
-    expect(await screen.findByRole('group', { name: '3s held back' })).toHaveTextContent(
-      '14 of 14',
-    );
+    expect(await screen.findByRole('group', { name: '3s held back' })).toHaveTextContent('9 of 9');
     expect(tile('Typical response time')).toHaveTextContent('Not enough presses to measure');
     expect(tile('How much your timing varied')).toHaveTextContent('Not enough presses to measure');
     expect(screen.getByText(/many digits pass without pressing/i)).toBeInTheDocument();
@@ -153,7 +151,7 @@ describe('Results', () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
     await screen.findByRole('group', { name: '3s held back' });
     // The count sits on the number's line, not on a line of its own.
-    expect(within(tile('3s held back')).getByTestId('value')).toHaveTextContent(/^93%\s*13 of 14$/);
+    expect(within(tile('3s held back')).getByTestId('value')).toHaveTextContent(/^89%\s*8 of 9$/);
     for (const name of ['3s held back', 'How much your timing varied', 'Typical response time'])
       expect(tile(name)).not.toHaveTextContent(/catch rate|rhythm variability|median response/i);
 
@@ -190,10 +188,10 @@ describe('Results: the conclusion and comparisons', () => {
   });
 
   it('counts digits missed, and compares with a count too', async () => {
-    // Baseline: 4 of the 112 digits missed in each of sessions 2–6; this session: 7.
-    const target = storedSession(7, { ...usual, omissions: 7, omissionRate: 7 / 112 });
+    // Baseline: 4 of the 72 digits missed in each of sessions 2–6; this session: 7.
+    const target = storedSession(7, { ...usual, omissions: 7, omissionRate: 7 / 72 });
     renderResults({ pathname: '/results/s7', state: { session: target } }, [
-      ...before(6, { ...usual, omissions: 4, omissionRate: 4 / 112 }),
+      ...before(6, { ...usual, omissions: 4, omissionRate: 4 / 72 }),
       target,
     ]);
     await expectConclusion(/below at catching every digit|Below where you started/);
@@ -265,10 +263,10 @@ describe('Results: the session journey in three parts', () => {
     const ribbon = await screen.findByRole('img', { name: /session journey/i });
     const parts = within(ribbon).getAllByTestId('segment');
     expect(parts.map((p) => p.dataset.label)).toEqual(['Start', 'Middle', 'End']);
-    for (const p of parts) expect(within(p).getAllByTestId('trial')).toHaveLength(42);
+    for (const p of parts) expect(within(p).getAllByTestId('trial')).toHaveLength(27);
     expect(parts[0]).toHaveTextContent('Start');
     // The text alternative keeps the overall summary and adds each part.
-    expect(ribbon.getAttribute('aria-label')).toMatch(/126 trials.*Start: .*Middle: .*End: /);
+    expect(ribbon.getAttribute('aria-label')).toMatch(/81 trials.*Start: .*Middle: .*End: /);
   });
 
   it('lists only what happened in this session in the legend', async () => {

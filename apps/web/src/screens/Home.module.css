@@ -60,3 +60,13 @@
 .start {
   margin-top: var(--space-8);
 }
+
+.points {
+  margin: var(--space-4) 0 0;
+  padding-left: var(--space-5);
+  font-size: var(--text-md);
+}
+
+.points li + li {
+  margin-top: var(--space-1);
+}

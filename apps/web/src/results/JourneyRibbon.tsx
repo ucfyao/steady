@@ -15,7 +15,7 @@ export const ANSWER_LABELS = {
   elsewhere: 'Elsewhere',
 } as const;
 
-/** The session in time order, in three equal parts (about 50 seconds each). */
+/** The session in time order, in three equal parts (about 30 seconds each). */
 const PARTS = ['Start', 'Middle', 'End'] as const;
 
 /** Slips counted in a part's caption, in this order. */
@@ -50,7 +50,7 @@ function longestRun(outcomes: TrialOutcome[], length: number): Set<number> {
 /**
  * The session journey (Spec 004): one cell per trial, coloured by the server's outcome, in
  * three labelled parts (start, middle, end). Cells wrap to the width, so a phone gets
- * readable cells instead of 42 slivers. The longest steady run is underlined and a marker
+ * readable cells instead of 27 slivers. The longest steady run is underlined and a marker
  * after each probe trial shows the answer. The legend lists only what happened.
  */
 export function JourneyRibbon({

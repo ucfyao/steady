@@ -1,12 +1,12 @@
 import styles from './Steps.module.css';
 
-const TOTAL = 3;
+const TOTAL = 2;
 
 /**
- * "Step N of 3" and a three-part bar, on the screens before a session (Spec 004).
+ * "Step N of 2" and a two-part bar, on the screens before a session (Spec 005).
  * Never inside the block: focus mode shows no progress of any kind.
  */
-export function Steps({ step, label }: { step: 1 | 2 | 3; label: string }) {
+export function Steps({ step, label }: { step: 1 | 2; label: string }) {
   return (
     <div className={styles.steps}>
       <p className={styles.label}>

@@ -49,10 +49,10 @@ describe('session routes need a token', () => {
 });
 
 describe('POST /api/sessions', () => {
-  it('returns a 126-trial plan with 4 probes, and not the seed', async () => {
+  it('returns an 81-trial plan with 3 probes, and not the seed', async () => {
     const s = await startSession(t, token);
-    expect(s.plan.trials).toHaveLength(126);
-    expect(s.plan.probeAfter).toHaveLength(4);
+    expect(s.plan.trials).toHaveLength(81);
+    expect(s.plan.probeAfter).toHaveLength(3);
     expect(s).not.toHaveProperty('seed');
     expect(s.plan).not.toHaveProperty('seed');
     expect(s.startedAt).toBe(t.clock.now().toISOString());
@@ -120,7 +120,7 @@ describe('POST /api/sessions/:id/submit', () => {
     t.clock.advance(PLAUSIBLE_MS);
     const body = pressEverything(s.plan);
     const res = await submit(s.id, { ...body, score: { commissions: 0, dPrime: 99 } }).expect(200);
-    expect(res.body.score.commissions).toBe(14);
+    expect(res.body.score.commissions).toBe(9);
     expect(res.body.score).toEqual(expectedScore(s, body));
     expect((await row(s.id)).submission).toEqual(body);
   });
@@ -139,7 +139,7 @@ describe('POST /api/sessions/:id/submit', () => {
     t.clock.advance(PLAUSIBLE_MS);
     const body = perfectSubmission(s.plan);
     const res = await submit(s.id, { ...body, rts: body.rts.slice(1) }).expect(400);
-    expect(res.body.errors).toEqual(['expected 126 trial responses, got 125']);
+    expect(res.body.errors).toEqual(['expected 81 trial responses, got 80']);
     expect((await row(s.id)).completedAt).toBeNull();
   });
 

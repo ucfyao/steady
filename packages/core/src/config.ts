@@ -5,15 +5,15 @@
 export const SART_CONFIG = {
   digits: [1, 2, 3, 4, 5, 6, 7, 8, 9] as const, // [R] Robertson et al. 1997
   targetDigit: 3, // [R]
-  copiesPerDigit: 14, // [P] 126 trials, 11% no-go as in the original
+  copiesPerDigit: 9, // [P] 81 trials, 11% no-go as in the original (Spec 005)
   stimulusMs: 250, // [R] PsyToolkit SART
   maskMs: 900, // [R]
   fontSizes: 5, // [R]
 
-  probesPerSession: 4, // [P]
-  probeGapMin: 25, // [P]
-  probeGapMax: 35, // [P]
-  lastProbeMaxIndex: 120, // [P] keep the final probe away from the end
+  probesPerSession: 3, // [P]
+  probeGapMin: 20, // [P]
+  probeGapMax: 26, // [P]
+  lastProbeMaxIndex: 75, // [P] keep the final probe away from the end
 
   warmupTrials: 5, // [P] no targets here; excluded from RT statistics
   postProbeTrials: 3, // [P] excluded from RT statistics
@@ -26,7 +26,7 @@ export const SART_CONFIG = {
   flagAnticipationShare: 0.1, // [P] descriptive flag only
   flagRegularTimingCv: 0.05, // [P] descriptive flag only; typical human CV is far higher
 
-  scoringVersion: 2, // 2: adds trialOutcomes (Spec 001 § Versioning)
+  scoringVersion: 3, // 3: 81-trial sessions (Spec 005); 2: adds trialOutcomes (Spec 001)
 } as const;
 
 export const TRIAL_MS = SART_CONFIG.stimulusMs + SART_CONFIG.maskMs;
@@ -42,11 +42,11 @@ export const PROGRESS_CONFIG = {
   /**
    * [P] How far a value may sit from its reference (in the server's units) and still be
    * shown as "similar" on Results and Progress, so ordinary session-to-session noise is
-   * not described as a change. Catch rate: 0.1 is about one 3 of 14, so a single 3 is noise.
+   * not described as a change. Catch rate: one 3 of 9 is 0.111, so a single 3 is noise.
    */
   similarWithin: {
-    commissionRate: 0.1,
-    omissionRate: 0.02, // about 2 of 112 digits
+    commissionRate: 0.12,
+    omissionRate: 0.03, // about 2 of 72 digits
     medianGoRtMs: 20,
     rtCv: 0.02,
   },

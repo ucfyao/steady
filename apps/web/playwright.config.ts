@@ -8,7 +8,7 @@ const CI = !!process.env.CI;
  */
 export default defineConfig({
   testDir: 'e2e',
-  // A real session takes about 2.5 minutes of trials; practice and probes add more.
+  // A real session takes about 1.5 minutes of trials; practice and probes add more.
   timeout: 6 * 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
