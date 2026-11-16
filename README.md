@@ -64,7 +64,7 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **Every tunable rule is in one file** (`packages/core/src/config.ts`), marked [R] when it comes from research and [P] when it is a product decision.
 - **The real session keeps the standard SART timing (250 ms digit + 900 ms mask); only practice is slower.** A first play-test at full speed was too fast to follow, so practice now starts at an 800 ms digit and ends at the real speed, and the rules are shown as steps before every session. Changing the real timing would make results incomparable with the research and between sessions.
 - **The results page only draws what the server scored.** `scoreSession` returns an outcome per trial, and the session journey ribbon is drawn from it, so the "steady" and "anticipation" rules exist once, in core.
-- **The weekly target is the one number the client computes,** because "4 of the last 7 days" depends on the device's calendar and time zone. Its constants still live in core's config.
+- **The client computes only two things, both from server scores:** the weekly target, because "4 of the last 7 days" depends on the device's calendar and time zone; and, on Results for sessions 3–6 (before the baseline exists), the median of the earlier sessions to compare with. Their constants live in core's config, and the median is core's `median`.
 - **Exploratory comparisons never overstate.** Groups are shown as raw dots with `n`; a median appears only from 10 sessions, and a sentence only when two groups reach 10, ending "a pattern so far, not a cause".
 
 ## Testing

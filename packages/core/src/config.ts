@@ -39,6 +39,17 @@ export const PROGRESS_CONFIG = {
   minGroupSize: 10, // [P] below this, no group median and no text summary
   weeklyTargetDays: 4, // [P] play on 4 of the last 7 local days (computed by the web app)
   weeklyWindowDays: 7, // [P]
+  /**
+   * [P] How far a value may sit from its reference (in the server's units) and still be
+   * shown as "similar" on Results and Progress, so ordinary session-to-session noise is
+   * not described as a change. Catch rate: 0.1 is about one 3 of 14, so a single 3 is noise.
+   */
+  similarWithin: {
+    commissionRate: 0.1,
+    omissionRate: 0.02, // about 2 of 112 digits
+    medianGoRtMs: 20,
+    rtCv: 0.02,
+  },
 } as const;
 
 /** Server-side timing plausibility for a submission (Spec 003). Technical validity: failures are rejected. */

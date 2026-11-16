@@ -5,12 +5,13 @@ import {
   type PlanTrial,
   type ProbeAnswer,
 } from '@steady/core';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
+import { storedSession } from './support/sessions.js';
 
 const plan = createSessionPlan(7);
 const targets = plan.trials.filter((t) => t.isTarget);
@@ -41,9 +42,12 @@ const mixed = completed('s1', (t) => {
 });
 const neverPressed = completed('s2', () => null);
 
-function renderResults(entry: string | { pathname: string; state: unknown }) {
+function renderResults(
+  entry: string | { pathname: string; state: unknown },
+  history: CompletedSession[] = [mixed, neverPressed],
+) {
   const backend = fakeBackend();
-  backend.sessions.set(tokenN(1), [mixed, neverPressed]);
+  backend.sessions.set(tokenN(1), history);
   render(
     <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
       <MemoryRouter initialEntries={[entry]}>
@@ -60,11 +64,13 @@ describe('Results', () => {
   it('shows the summary, tiles and plain-words flags from the server score', async () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
     // From the spec: 14 targets per session, one of them pressed.
-    expect(await screen.findByText('You caught 13 of 14 3s.')).toBeInTheDocument();
-    expect(tile('Catch rate')).toHaveTextContent('93%');
-    expect(tile('Median response')).toHaveTextContent('400 ms');
-    expect(tile('Rhythm variability')).toHaveTextContent('0%');
-    expect(tile('Missed digits')).toHaveTextContent('1');
+    expect(await screen.findByRole('group', { name: '3s held back' })).toHaveTextContent('93%');
+    // The count lives in the catch-rate tile; no second sentence repeats it.
+    expect(tile('3s held back')).toHaveTextContent('13 of 14');
+    expect(screen.queryByText(/you caught/i)).toBeNull();
+    expect(tile('Typical response time')).toHaveTextContent('400 ms');
+    expect(tile('How much your timing varied')).toHaveTextContent('0%');
+    expect(tile('Digits missed')).toHaveTextContent('1');
     expect(tile('Longest steady run')).toHaveTextContent(`${mixed.score.longestSteadyRun} trials`);
     // Constant 400 ms is machine-like: the server raised regular_timing.
     expect(screen.getByText(/unusually even/i)).toBeInTheDocument();
@@ -99,19 +105,22 @@ describe('Results', () => {
     });
     expect(within(ribbon).getAllByTestId('probe')).toHaveLength(4);
     expect(screen.getByText('Drifting')).toBeInTheDocument(); // legend
+    expect(screen.queryByText('Elsewhere')).toBeInTheDocument();
   });
 
   it('says when there were too few presses, and explains many omissions', async () => {
     renderResults({ pathname: '/results/s2', state: { session: neverPressed } });
-    expect(await screen.findByText('You caught 14 of 14 3s.')).toBeInTheDocument();
-    expect(tile('Median response')).toHaveTextContent('Not enough presses to measure');
-    expect(tile('Rhythm variability')).toHaveTextContent('Not enough presses to measure');
+    expect(await screen.findByRole('group', { name: '3s held back' })).toHaveTextContent(
+      '14 of 14',
+    );
+    expect(tile('Typical response time')).toHaveTextContent('Not enough presses to measure');
+    expect(tile('How much your timing varied')).toHaveTextContent('Not enough presses to measure');
     expect(screen.getByText(/many digits pass without pressing/i)).toBeInTheDocument();
   });
 
   it('ends with a primary way home and a secondary way to progress', async () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
-    await screen.findByText('You caught 13 of 14 3s.');
+    await screen.findByRole('group', { name: '3s held back' });
     const main = screen.getByRole('main');
     expect(within(main).getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
     expect(within(main).getByRole('link', { name: 'See your progress' })).toHaveAttribute(
@@ -122,7 +131,7 @@ describe('Results', () => {
 
   it('loads the session by URL when there is no navigation state', async () => {
     const backend = renderResults('/results/s1');
-    expect(await screen.findByText('You caught 13 of 14 3s.')).toBeInTheDocument();
+    expect(await screen.findByRole('group', { name: '3s held back' })).toBeInTheDocument();
     expect(backend.calls.map((c) => c.method)).toContain('listSessions');
   });
 
@@ -138,5 +147,110 @@ describe('Results', () => {
       'href',
       '/progress',
     );
+  });
+
+  it('uses plain names, with the research term as small print', async () => {
+    renderResults({ pathname: '/results/s1', state: { session: mixed } });
+    await screen.findByRole('group', { name: '3s held back' });
+    expect(tile('3s held back')).toHaveTextContent(/catch rate/i);
+    expect(tile('How much your timing varied')).toHaveTextContent(/rhythm variability/i);
+    expect(tile('Typical response time')).toHaveTextContent(/median response time/i);
+  });
+});
+
+describe('Results: the conclusion and comparisons', () => {
+  /** Earlier sessions with one score each, oldest first, as the API lists them. */
+  const before = (n: number, score: Partial<CompletedSession['score']>) =>
+    Array.from({ length: n }, (_, i) => storedSession(100 + i, score));
+  const usual = { commissionRate: 0.3, omissionRate: 0.05, medianGoRtMs: 400, rtCv: 0.2 };
+  /** Waits for the history to load: the conclusion is blank until then. */
+  const expectConclusion = (text: string | RegExp) =>
+    waitFor(() => expect(screen.getByTestId('conclusion')).toHaveTextContent(text));
+
+  it('is neutral after the first session', async () => {
+    renderResults({ pathname: '/results/s1', state: { session: mixed } }, [mixed]);
+    await expectConclusion(
+      'Your first check is done. It counts as practice, so there is nothing to compare yet.',
+    );
+    expect(screen.queryByTestId('change')).toBeNull();
+  });
+
+  it('compares with where you started once the baseline exists, with arrows and words', async () => {
+    // Sessions 1–6 make the baseline (2–6); `mixed` is session 7.
+    renderResults({ pathname: '/results/s1', state: { session: mixed } }, [
+      ...before(6, usual),
+      mixed,
+    ]);
+    await expectConclusion(
+      'Better than where you started at holding back on 3s, catching every digit and keeping an even rhythm.',
+    );
+    // Catch rate 93% against 70%: up, better, in words as well as colour.
+    const held = within(tile('3s held back')).getByTestId('change');
+    expect(held).toHaveAttribute('data-verdict', 'better');
+    expect(held).toHaveTextContent('↑');
+    expect(held).toHaveTextContent('More held back');
+    expect(held).toHaveTextContent('70% before');
+    expect(within(tile('Digits missed')).getByTestId('change')).toHaveTextContent('Fewer missed');
+    expect(within(tile('Typical response time')).getByTestId('change')).toHaveTextContent(
+      'Similar',
+    );
+    expect(screen.getByText(/compared with where you started/i)).toBeInTheDocument();
+  });
+
+  it('says plainly what was below the baseline, and calls speed only faster or slower', async () => {
+    const target = storedSession(7, {
+      commissionRate: 0.4,
+      omissionRate: 0.1,
+      medianGoRtMs: 350,
+      rtCv: 0.3,
+    });
+    renderResults({ pathname: '/results/s7', state: { session: target } }, [
+      ...before(6, { commissionRate: 0.1, omissionRate: 0.02, medianGoRtMs: 400, rtCv: 0.2 }),
+      target,
+    ]);
+    await expectConclusion(
+      'Below where you started at holding back on 3s, catching every digit and keeping an even rhythm.',
+    );
+    const held = within(tile('3s held back')).getByTestId('change');
+    expect(held).toHaveAttribute('data-verdict', 'worse');
+    expect(held).toHaveTextContent('↓');
+    expect(held).toHaveTextContent('Fewer held back');
+    const speed = within(tile('Typical response time')).getByTestId('change');
+    expect(speed).toHaveAttribute('data-verdict', 'changed');
+    expect(speed).toHaveTextContent('Faster');
+  });
+
+  it('compares with the earlier checks before the baseline exists', async () => {
+    // Session 4: compared with sessions 2 and 3 (session 1 is practice).
+    renderResults({ pathname: '/results/s1', state: { session: mixed } }, [
+      ...before(3, usual),
+      mixed,
+    ]);
+    await expectConclusion(/^Better than your last 2 checks at/);
+    expect(screen.getByText(/compared with your last 2 checks/i)).toBeInTheDocument();
+  });
+});
+
+describe('Results: the session journey in three parts', () => {
+  it('splits the trials into a labelled start, middle and end', async () => {
+    renderResults({ pathname: '/results/s1', state: { session: mixed } });
+    const ribbon = await screen.findByRole('img', { name: /session journey/i });
+    const parts = within(ribbon).getAllByTestId('segment');
+    expect(parts.map((p) => p.dataset.label)).toEqual(['Start', 'Middle', 'End']);
+    for (const p of parts) expect(within(p).getAllByTestId('trial')).toHaveLength(42);
+    expect(parts[0]).toHaveTextContent('Start');
+    // The text alternative keeps the overall summary and adds each part.
+    expect(ribbon.getAttribute('aria-label')).toMatch(/126 trials.*Start: .*Middle: .*End: /);
+  });
+
+  it('lists only what happened in this session in the legend', async () => {
+    renderResults({ pathname: '/results/s2', state: { session: neverPressed } });
+    const legend = await screen.findByTestId('legend');
+    // Never pressing: every 3 held back and every other digit missed.
+    expect(legend).toHaveTextContent('Held back on a 3');
+    expect(legend).toHaveTextContent('Missed a digit');
+    expect(legend).not.toHaveTextContent('Pressed on a 3');
+    expect(legend).not.toHaveTextContent('Too early');
+    expect(legend).not.toHaveTextContent('Steady press');
   });
 });
