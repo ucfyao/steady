@@ -39,7 +39,12 @@ export function fakeBackend() {
   const unauthorized = new Set<string>();
   const sessions = new Map<string, CompletedSession[]>();
   /** `variant`: what GET /api/me and a new session report (the player's A/B group). */
-  const control = { failCreate: false, failSubmitOnce: false, variant: 'calm' as Variant };
+  const control = {
+    failCreate: false,
+    failSubmitOnce: false,
+    failListOnce: false,
+    variant: 'calm' as Variant,
+  };
   const started: { token: string | null; body: Parameters<Api['startSession']>[0] }[] = [];
   const submitted: { id: string; body: Submission }[] = [];
   const plans = new Map<string, StartedSession>();
@@ -89,7 +94,14 @@ export function fakeBackend() {
         };
       },
       getMe: async () => (call('getMe'), { variant: control.variant }),
-      listSessions: async () => (call('listSessions'), sessions.get(token ?? '') ?? []),
+      listSessions: async () => {
+        call('listSessions');
+        if (control.failListOnce) {
+          control.failListOnce = false;
+          throw new ApiError('network', 'Could not reach the server.');
+        }
+        return sessions.get(token ?? '') ?? [];
+      },
       getProgress: async () => {
         call('getProgress');
         return progressOf(sessions.get(token ?? '') ?? []);

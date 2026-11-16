@@ -43,8 +43,11 @@ type History =
 
 export function Results() {
   const { id } = useParams();
-  const { api } = usePlayers();
-  const passed = (useLocation().state as { session?: CompletedSession } | null)?.session;
+  const { api, active } = usePlayers();
+  // Play hands the new session over for an instant page. It belongs to the player who played
+  // it: after a switch (same URL, same state) only the current player's history counts.
+  const state = useLocation().state as { session?: CompletedSession; playerId?: string } | null;
+  const passed = state?.playerId === active?.id ? state?.session : undefined;
   const [history, setHistory] = useState<History>({ k: 'loading' });
 
   useEffect(() => {
@@ -223,9 +226,9 @@ function GameSummary({
   // Points are never stored: they are always the points of the server's trial outcomes.
   const points = sessionPoints(score);
   const dawn = dawnPercent(score);
-  // Spec 007 §2: higher than every earlier game session, and there was one.
+  // Spec 007 §2: a higher dawn than every earlier game session, and there was one.
   const before = earlier ? personalBest(earlier) : null;
-  const newBest = before !== null && points > before;
+  const newBest = before !== null && dawn > before;
   return (
     <Card as="section" aria-labelledby="game-title" className={styles.game}>
       <h2 id="game-title">Your game</h2>

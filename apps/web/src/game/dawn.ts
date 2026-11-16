@@ -16,8 +16,12 @@ export function dawnPercent(score: Pick<SessionScore, 'trialOutcomes'>): number 
   return best > 0 ? Math.floor((sessionPoints(score) / best) * 100) : 0;
 }
 
-/** The largest points among game sessions, or null without one. */
+/**
+ * The highest dawn among game sessions, or null without one (Spec 007). Dawn, not points:
+ * an all-correct session's points depend on where the 3s fall, so a points record could come
+ * from the sequence rather than the play. It is game progress, not a measurement.
+ */
 export function personalBest(sessions: readonly CompletedSession[]): number | null {
-  const points = sessions.filter((s) => s.variant === 'game').map((s) => sessionPoints(s.score));
-  return points.length ? Math.max(...points) : null;
+  const dawns = sessions.filter((s) => s.variant === 'game').map((s) => dawnPercent(s.score));
+  return dawns.length ? Math.max(...dawns) : null;
 }

@@ -53,9 +53,10 @@ describe('dawnPercent and personalBest', () => {
     expect(dawnPercent({ trialOutcomes: [] })).toBe(0);
   });
 
-  it('takes the largest points of game sessions only', () => {
+  it('takes the highest dawn of game sessions only', () => {
     const calm = storedSession(9, { trialOutcomes: outcomes(10) });
-    expect(personalBest([game(1, 4), game(2, 7), calm])).toBe(100);
+    // 4 → 40 of 160 = 25%, 7 → 100 of 160 = 62.5% → 62.
+    expect(personalBest([game(1, 4), game(2, 7), calm])).toBe(62);
     expect(personalBest([calm])).toBeNull();
   });
 });
@@ -86,7 +87,7 @@ describe('Home (Spec 007 §1)', () => {
     renderAt('/', [game(1, 4), game(2, 7), game(3, 5, 0)], 'game');
     const last = await screen.findByRole('region', { name: 'Last check · Today' });
     expect(within(last).getByRole('group', { name: 'Personal best' })).toHaveTextContent(
-      '100 points',
+      'dawn 62%',
     );
     const hero = screen.getByRole('region', { name: "Today's check" });
     expect(hero).toHaveTextContent('Last sky: dawn 37%');
@@ -107,16 +108,31 @@ describe('Results: personal best (Spec 007 §2)', () => {
     return screen.findByRole('region', { name: 'Your game' });
   };
 
-  it('says New personal best when the points beat every earlier game session', async () => {
-    const t = game(3, 8, 0); // 120
+  it('says New personal best when the dawn beats every earlier game session', async () => {
+    const t = game(3, 8, 0); // 120 of 160 = 75%, above 62%
     expect(await open(t, [game(1, 4), game(2, 7), t])).toHaveTextContent('New personal best');
   });
 
   it('not for a tie, the first game session, or below the best', async () => {
-    const tie = game(3, 7, 0); // 100, the same as session 2
+    const tie = game(3, 7, 0); // 62%, the same as session 2
     expect(await open(tie, [game(1, 4), game(2, 7), tie])).not.toHaveTextContent(
       'New personal best',
     );
+  });
+
+  it('not for more points from a longer run of trials: the sequence must not decide it', async () => {
+    // Earlier: 10 digits, all pressed: 160 of 160 = 100%.
+    // Now: 20 digits, the last one missed. By hand (Spec 006 §2): 4 × 10 + 10 × 20 + 5 × 30
+    // = 390 of 420 (all 20 pressed: + 30) = 92.8% → 92. More points, a lower dawn.
+    const now = storedSession(
+      3,
+      { trialOutcomes: [...Array<TrialOutcome>(19).fill('steady'), 'omission'] },
+      { variant: 'game', completedAt: daysAgo(0) },
+    );
+    expect(sessionPoints(now.score)).toBe(390);
+    const card = await open(now, [game(1, 10), now]);
+    expect(card).toHaveTextContent('390 points');
+    expect(card).not.toHaveTextContent('New personal best');
   });
 
   it('not for the first game session', async () => {
