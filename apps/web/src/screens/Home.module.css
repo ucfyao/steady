@@ -6,7 +6,9 @@
 .lead {
   margin-bottom: var(--space-7);
   color: var(--color-text-muted);
-  /* Wraps naturally; only "on 3." is kept together (a no-break space in Home.tsx). */
+  /* Wraps naturally ("on 3." is kept together by a no-break space in Home.tsx); "pretty"
+     only avoids a short last line, so "on 3." does not end up alone on a phone. */
+  text-wrap: pretty;
 }
 
 .stats {

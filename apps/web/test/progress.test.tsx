@@ -240,6 +240,8 @@ describe('Progress screen', () => {
     renderAt('/progress', improving);
     await screen.findAllByRole('figure');
     expect(screen.queryByRole('region', { name: 'Sessions with a note' })).toBeNull();
+    // The legend does not point to a list that is not there.
+    expect(screen.queryByText(/Has a note/)).toBeNull();
   });
 
   it('does not mention where the player started before it exists', async () => {

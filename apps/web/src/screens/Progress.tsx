@@ -155,12 +155,14 @@ export function Progress() {
               </svg>
               First check (not counted)
             </li>
-            <li>
-              <svg viewBox="0 0 12 12" aria-hidden="true">
-                <path d="M6 1L11 6L6 11L1 6Z" className={styles.keyFlagged} />
-              </svg>
-              Has a note (listed below the charts)
-            </li>
+            {notedPoints(points).length > 0 && (
+              <li>
+                <svg viewBox="0 0 12 12" aria-hidden="true">
+                  <path d="M6 1L11 6L6 11L1 6Z" className={styles.keyFlagged} />
+                </svg>
+                Has a note (listed below the charts)
+              </li>
+            )}
             {summary.baseline && (
               <li>
                 <svg viewBox="0 0 16 12" aria-hidden="true">
@@ -276,6 +278,10 @@ export function Progress() {
   );
 }
 
+/** The sessions drawn as a diamond: a flag, outside the first (not counted) session. */
+const notedPoints = (points: SessionPoint[]) =>
+  points.filter((p) => p.flags.length > 0 && !p.practice);
+
 /**
  * The sessions drawn as a diamond, with their notes in words and a link to their Results,
  * so the notes are readable without hovering a point (a phone has no hover).
@@ -287,7 +293,7 @@ function SessionNotes({
   points: SessionPoint[];
   sessions: CompletedSession[];
 }) {
-  const noted = points.filter((p) => p.flags.length > 0 && !p.practice);
+  const noted = notedPoints(points);
   if (points.length < MIN_POINTS || noted.length === 0) return null;
   return (
     <section aria-labelledby="notes-title" className={styles.notes}>
