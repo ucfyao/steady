@@ -77,12 +77,13 @@ The server never labels a session as cheating. Integrity checks make faking resu
 ## 6. Progress
 
 - **Initial baseline [P]:** the median of valid sessions 2–6. Once set, it stays fixed. Session 1 is marked as practice and still plotted.
-- **Recent performance [P]:** the median of the last 5 sessions, updated continuously. The card reads "recent vs. where you started", which keeps both reference points unambiguous.
+- **Recent performance [P]:** the median of the last 5 sessions, updated continuously. The card reads "recent vs. where you started", which keeps both reference points unambiguous. Each row shows the change with an arrow and words, and "better" or "below" where a metric has a better direction; response time is only faster or slower. One sentence at the top of Progress sums this up in the same words as Results.
 - **Charts:** catch rate, omissions, median RT and RT variability, shown side by side so speed and accuracy are always visible next to variability.
 - **Check-in comparisons are exploratory:**
-  - The split by sleep or stress is shown as raw per-session dots, always labelled with n.
-  - A text summary appears only when each group has **at least 10 sessions**, and it is worded as "a pattern so far, not a cause".
-  - Pre-probe variability is shown in the same descriptive way.
+  - They sit in a collapsed "Exploring patterns" block, below the summary, the charts and the session list.
+  - The split by sleep or stress is drawn only once **two groups have at least 10 sessions**; until then the block says only how many more sessions it needs. Each group shown is raw per-session dots with n and its median; smaller groups are listed, not drawn, so no median rests on a handful of sessions.
+  - The text summary is worded as "a pattern so far, not a cause".
+  - Pre-probe variability is shown in the same descriptive way, as its own part: it always compares timing variation before each probe, whatever metric the sleep and stress plots show.
 
 ## 7. Privacy and security
 

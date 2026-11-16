@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { yAxis } from '../src/progress/axis.js';
-import { metricView } from '../src/progress/metrics.js';
+import { AXIS_FORMAT } from '../src/progress/metrics.js';
 
-const missed = metricView('omissionRate');
-const response = metricView('medianGoRtMs');
-const fmt = missed.format;
+const fmt = AXIS_FORMAT.omissionRate;
 
 describe('yAxis (Progress charts)', () => {
   it('uses one decimal when whole percents would repeat (missed digits 2–4%)', () => {
@@ -35,7 +33,7 @@ describe('yAxis (Progress charts)', () => {
   });
 
   it('works for milliseconds and a single value', () => {
-    expect(yAxis([395, 412, 431], response.format)!.labels).toEqual([
+    expect(yAxis([395, 412, 431], AXIS_FORMAT.medianGoRtMs)!.labels).toEqual([
       '390 ms',
       '400 ms',
       '410 ms',

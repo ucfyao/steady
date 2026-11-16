@@ -23,4 +23,17 @@ test('the link printed by pnpm seed:demo opens the demo player on Progress', asy
   await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
   await page.getByRole('button', { name: 'Player: Demo' }).click();
   await expect(page.getByRole('menuitemradio', { name: 'Demo' })).toHaveCount(1);
+  await page.keyboard.press('Escape');
+
+  // The demo's 10 sessions are joined by straight lines: an SVG path of only M and L
+  // commands, no curves (C) that would invent values between sessions.
+  const line = page.getByRole('figure', { name: '3s held back' }).locator('.recharts-line-curve');
+  await expect(line).toHaveAttribute('d', /^M[\d.,\sML-]+$/);
+
+  // The session list opens a session's Results.
+  const sessions = page.getByRole('region', { name: 'Your sessions' });
+  await expect(sessions.getByRole('link')).toHaveCount(10);
+  await sessions.getByRole('link', { name: /Session 10/ }).click();
+  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
+  await expect(page).toHaveURL(/\/results\//);
 });

@@ -1,18 +1,18 @@
 import type { CompletedSession, ProgressSummary } from '@steady/core';
 import { useEffect, useState } from 'react';
+import { METRICS } from '../metrics/metrics.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { lastCheckDay } from '../progress/lastCheck.js';
-import { metricView } from '../progress/metrics.js';
 import { WeekDots } from '../progress/WeekDots.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
 import styles from './Home.module.css';
 import { moreSessions } from './Progress.js';
 
-const catchRate = metricView('commissionRate');
+const { commissionRate: catchRate, medianGoRtMs: response } = METRICS;
 
 /**
- * One number with a small label under it, read as "Catch rate, 75%". With no value, a dash
+ * One number with a small label under it, read as "3s held back, 75%". With no value, a dash
  * and a short note on its own line instead.
  */
 function Stat({
@@ -51,12 +51,15 @@ function LastCheck({ session }: { session: CompletedSession | undefined }) {
     <Card as="section" aria-labelledby="last-title">
       <h2 id="last-title">Last check · {lastCheckDay(session.completedAt, new Date())}</h2>
       <div className={styles.stats}>
-        <Stat label="Catch rate" value={catchRate.format(catchRate.show(score.commissionRate))} />
+        <Stat
+          label={catchRate.name}
+          value={catchRate.format(catchRate.show(score.commissionRate))}
+        />
         <Stat label="Longest steady run" value={String(score.longestSteadyRun)} />
         {score.medianGoRtMs === null ? (
-          <Stat label="Median response" value="—" note="Not enough data" />
+          <Stat label={response.name} value="—" note="Not enough data" />
         ) : (
-          <Stat label="Median response" value={String(Math.round(score.medianGoRtMs))} unit="ms" />
+          <Stat label={response.name} value={String(Math.round(score.medianGoRtMs))} unit="ms" />
         )}
       </div>
     </Card>

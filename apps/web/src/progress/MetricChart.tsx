@@ -8,8 +8,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { ProgressMetric } from '@steady/core';
+import { METRICS, directionText } from '../metrics/metrics.js';
 import { yAxis } from './axis.js';
-import { FLAG_SHORT, type MetricView } from './metrics.js';
+import { AXIS_FORMAT, FLAG_SHORT } from './metrics.js';
 import styles from './MetricChart.module.css';
 import type { SessionPoint } from './series.js';
 
@@ -42,38 +44,60 @@ export function SessionDot({ cx, cy, payload }: DotProps) {
   );
 }
 
+const ARROW = { higher: '↑', lower: '↓' } as const;
+
+/**
+ * One metric over time (Spec 004): straight lines between sessions, and no text inside the
+ * plot. The caption carries the better direction, the latest value and where the player
+ * started, so nothing is drawn over the data.
+ */
 export function MetricChart({
-  view,
+  metric,
   points,
   value,
   baseline,
 }: {
-  view: MetricView;
+  metric: ProgressMetric;
   points: SessionPoint[];
   value(p: SessionPoint): number | null;
   /** The baseline median as shown, once it exists. */
   baseline: number | null;
 }) {
+  const def = METRICS[metric];
+  const axisFormat = AXIS_FORMAT[metric];
   const data = points.map((p) => ({ ...p, value: value(p) }));
   const latest = [...data].reverse().find((d) => d.value !== null);
-  const id = `chart-${view.key}`;
+  const id = `chart-${metric}`;
   const shown = data.flatMap((d) => (d.value === null ? [] : [d.value]));
-  const axis = yAxis(baseline === null ? shown : [...shown, baseline], view.format);
-  const label = (v: number) => axis?.labels[axis.ticks.indexOf(v)] ?? view.format(v);
+  const axis = yAxis(baseline === null ? shown : [...shown, baseline], axisFormat);
+  const label = (v: number) => axis?.labels[axis.ticks.indexOf(v)] ?? axisFormat(v);
 
   return (
     <figure className={styles.chart} aria-labelledby={id}>
       <figcaption className={styles.caption}>
-        <h3 id={id}>{view.label}</h3>
-        <p className={styles.hint}>{view.hint}</p>
-        <p className={styles.latest}>
-          {latest ? (
-            <>
-              Latest: <span className={styles.value}>{view.format(latest.value!)}</span> (session{' '}
-              {latest.session})
-            </>
-          ) : (
-            'No value yet'
+        <h3 id={id}>{def.name}</h3>
+        <p className={styles.direction}>
+          {def.better && <span aria-hidden="true">{ARROW[def.better]} </span>}
+          {directionText(metric)}
+        </p>
+        <p className={styles.values}>
+          <span>
+            {latest ? (
+              <>
+                Latest: <span className={styles.value}>{def.format(latest.value!)}</span> (session{' '}
+                {latest.session})
+              </>
+            ) : (
+              'No value yet'
+            )}
+          </span>
+          {baseline !== null && (
+            <span className={styles.started}>
+              <svg viewBox="0 0 16 12" aria-hidden="true">
+                <line x1="0" y1="6" x2="16" y2="6" />
+              </svg>
+              Where you started: {def.format(baseline)}
+            </span>
           )}
         </p>
       </figcaption>
@@ -90,16 +114,10 @@ export function MetricChart({
               tickFormatter={label}
               domain={axis ? [axis.ticks[0]!, axis.ticks.at(-1)!] : ['auto', 'auto']}
             />
-            {baseline !== null && (
-              <ReferenceLine
-                y={baseline}
-                strokeDasharray="4 4"
-                label={{ value: 'where you started', position: 'insideTopRight' }}
-              />
-            )}
+            {baseline !== null && <ReferenceLine y={baseline} strokeDasharray="4 4" />}
             <Tooltip
               wrapperClassName={styles.tooltip}
-              formatter={(v) => (typeof v === 'number' ? view.format(v) : '–')}
+              formatter={(v) => (typeof v === 'number' ? def.format(v) : '–')}
               labelFormatter={(_, payload) => {
                 const p = payload[0]?.payload as SessionPoint | undefined;
                 if (!p) return '';
@@ -112,9 +130,9 @@ export function MetricChart({
               }}
             />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="value"
-              name={view.label}
+              name={def.name}
               className={styles.line}
               connectNulls
               isAnimationActive={false}

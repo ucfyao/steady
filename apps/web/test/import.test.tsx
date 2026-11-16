@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -29,6 +29,8 @@ function openLink(path: string, backend = fakeBackend()) {
 }
 
 const names = () => loadProfiles(localStorage).profiles.map((p) => p.name);
+// Profiles reach localStorage in an effect, which can run after the screen shows the result.
+const expectNames = (expected: string[]) => waitFor(() => expect(names()).toEqual(expected));
 const activeName = () => {
   const s = loadProfiles(localStorage);
   return s.profiles.find((p) => p.id === s.activeId)?.name;
@@ -84,7 +86,7 @@ describe('import link', () => {
     expect(await screen.findByRole('heading', { name: 'Progress' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Player: Demo' })).toBeInTheDocument();
     expect(backend.calls).toContainEqual({ token: DEMO, method: 'listSessions' });
-    expect(names()).toEqual(['Player 1', 'Demo']);
+    await expectNames(['Player 1', 'Demo']);
     expect(activeName()).toBe('Demo');
     expect(window.location.hash).toBe('');
     expect(window.location.href).not.toContain(DEMO);
@@ -93,6 +95,7 @@ describe('import link', () => {
   it('does not add the same player twice', async () => {
     openLink(link(`#token=${DEMO}&name=Demo`));
     await screen.findByRole('button', { name: 'Player: Demo' });
+    await expectNames(['Player 1', 'Demo']);
     window.history.replaceState(null, '', '/');
     // Switch away, then open the same link again.
     const s = loadProfiles(localStorage);
@@ -104,7 +107,7 @@ describe('import link', () => {
 
     openLink(link(`#token=${DEMO}&name=Demo`));
     expect(await screen.findByRole('button', { name: 'Player: Demo' })).toBeInTheDocument();
-    expect(names()).toEqual(['Player 1', 'Demo']);
+    await expectNames(['Player 1', 'Demo']);
   });
 
   it('explains an unknown token, adds nothing and still clears the hash', async () => {
@@ -116,7 +119,7 @@ describe('import link', () => {
     expect(alert).toHaveTextContent(/doesn.t match a player/i);
     expect(screen.getByRole('heading', { name: "Couldn't import this player" })).toBeVisible();
     expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
-    expect(names()).toEqual(['Player 1']);
+    await expectNames(['Player 1']);
     expect(activeName()).toBe('Player 1');
     expect(window.location.hash).toBe('');
   });
@@ -125,7 +128,7 @@ describe('import link', () => {
     const backend = openLink(link('#name=Demo'));
     expect(await screen.findByRole('alert')).toHaveTextContent(/incomplete/i);
     expect(backend.calls.map((c) => c.method)).not.toContain('listSessions');
-    expect(names()).toEqual(['Player 1']);
+    await expectNames(['Player 1']);
   });
 
   it('says so when the server cannot be reached', async () => {
@@ -149,6 +152,6 @@ describe('import link', () => {
       </PlayersProvider>,
     );
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not reach the server/i);
-    expect(names()).toEqual(['Player 1']);
+    await expectNames(['Player 1']);
   });
 });

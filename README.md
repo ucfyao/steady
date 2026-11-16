@@ -65,7 +65,7 @@ See [docs/design-note.md](docs/design-note.md): which task I chose and why, how 
 - **The real session keeps the standard SART timing (250 ms digit + 900 ms mask); only practice is slower.** A first play-test at full speed was too fast to follow, so practice now starts at an 800 ms digit and ends at the real speed, and the rules are shown as steps before every session. Changing the real timing would make results incomparable with the research and between sessions.
 - **The results page only draws what the server scored.** `scoreSession` returns an outcome per trial, and the session journey ribbon is drawn from it, so the "steady" and "anticipation" rules exist once, in core.
 - **The client computes only two things, both from server scores:** the weekly target, because "4 of the last 7 days" depends on the device's calendar and time zone; and, on Results for sessions 3–6 (before the baseline exists), the median of the earlier sessions to compare with. Their constants live in core's config, and the median is core's `median`.
-- **Exploratory comparisons never overstate.** Groups are shown as raw dots with `n`; a median appears only from 10 sessions, and a sentence only when two groups reach 10, ending "a pattern so far, not a cause".
+- **Exploratory comparisons never overstate.** They are collapsed under "Exploring patterns". A comparison is drawn only once two groups have 10 sessions; until then it says only how many more sessions it needs. Then each group with 10 or more is shown as raw dots with `n` and its median, smaller groups are listed but not drawn, and one sentence ends "a pattern so far, not a cause".
 
 ## Testing
 

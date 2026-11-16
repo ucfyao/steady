@@ -221,3 +221,33 @@ export function headline(reference: Reference, comparisons: readonly Comparison[
   const tail = speed ? `, and ${speed.direction === 'down' ? 'faster' : 'slower'}` : '';
   return `Close to ${ref} on every measure${tail}.`;
 }
+
+const DIRECTION: Record<'higher' | 'lower' | 'none', string> = {
+  higher: 'Higher is better',
+  lower: 'Lower is better',
+  none: 'Neither way is better',
+};
+
+/** "Higher is better", "Lower is better", or "Neither way is better" (response time). */
+export function directionText(key: ProgressMetric): string {
+  return DIRECTION[METRICS[key].better ?? 'none'];
+}
+
+/**
+ * The one-sentence summary at the top of Progress (Spec 004): before the baseline, a
+ * countdown; afterwards the recent medians against the baseline medians, compared and
+ * worded exactly as on Results.
+ */
+export function progressHeadline(summary: ProgressSummary): string {
+  const { baseline, recent, sessionsUntilBaseline: n } = summary;
+  if (!baseline || !recent)
+    return `${n} more session${n === 1 ? '' : 's'} until your starting point. Until then, the charts show each check.`;
+  const values = (set: typeof baseline) =>
+    Object.fromEntries(METRIC_ORDER.map((k) => [k, set[k].median])) as ReferenceValues;
+  const reference: Reference = { kind: 'baseline', values: values(baseline) };
+  const comparisons = METRIC_ORDER.map((k) =>
+    compareMetric(k, recent[k].median, baseline[k].median),
+  ).filter((c): c is Comparison => c !== null);
+  const sentence = headline(reference, comparisons);
+  return `Your last ${PROGRESS_CONFIG.recentSessions} checks: ${sentence[0]!.toLowerCase()}${sentence.slice(1)}`;
+}

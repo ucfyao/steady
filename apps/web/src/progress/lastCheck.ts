@@ -20,3 +20,11 @@ export function lastCheckDay(completedAt: string, now: Date): string {
 
 /** A one-letter day name for the week dots ("M", "T", …). */
 export const dayLetter = (d: Date) => d.toLocaleDateString(LOCALE, { weekday: 'narrow' });
+
+/** When a session was played, for the session list: "Mon, 16 Nov · 9:14 am". */
+export function sessionWhen(completedAt: string): string {
+  const d = new Date(completedAt);
+  const day = d.toLocaleDateString(LOCALE, { weekday: 'short', day: 'numeric', month: 'short' });
+  const time = d.toLocaleTimeString(LOCALE, { hour: 'numeric', minute: '2-digit' });
+  return `${day} · ${time}`;
+}
