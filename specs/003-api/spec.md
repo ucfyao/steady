@@ -95,3 +95,9 @@ Integration tests (Vitest + supertest) run the real app against PostgreSQL 17 in
 ## Out of scope
 
 Web app (next spec), accounts and token recovery, re-scoring jobs, deployment.
+
+## Spec 006 additions
+
+- `players.variant` (`calm` | `game`): drawn at random (50/50) by `POST /api/players` and never changed; migration `0003` assigns existing players at random.
+- `GET /api/me` → `{ variant }` for the calling player (the practice round shows the variant before any session exists).
+- `POST /api/sessions` accepts an optional `variant` (a play-test override); the session stores the variant it shows (`sessions.variant`: the override, else the player's) and returns it. `GET /api/sessions` and the submit response include `variant`.

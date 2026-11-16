@@ -1,6 +1,6 @@
 # Spec 004 — Web app (`apps/web`)
 
-Status: implemented (`apps/web`); session length, the start flow and Home for a new player changed in Spec 005
+Status: implemented (`apps/web`); session length, the start flow and Home for a new player changed in Spec 005; focus mode (the lantern scene, frost mask, Ready/Set/Go countdown, the glow after a press, and the game variant's points) in Spec 006
 Design note: `docs/design-note.md` §3, §6, §7
 
 ## Goal

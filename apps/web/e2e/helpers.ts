@@ -1,7 +1,5 @@
 import { expect, type Page } from '@playwright/test';
 
-const MASK = '⊗';
-
 /**
  * Plays the block on screen like a careful player: Space for every digit except 3,
  * "1" (On task) at each probe. Returns when the block ends (the stimulus unmounts).
@@ -15,18 +13,19 @@ export async function playBlock(page: Page): Promise<{ presses: number; probes: 
   let probes = 0;
   for (;;) {
     const next = await page.waitForFunction(
-      ({ last, mask }) => {
+      ({ last }) => {
         if (document.querySelector('[role=dialog]')) return { kind: 'probe' as const };
         const el = document.querySelector<HTMLElement>('[data-testid=stimulus]');
         if (!el) return { kind: 'done' as const };
         const index = Number(el.dataset.index ?? -1);
         const text = el.textContent ?? '';
-        if (index !== last && text !== '' && text !== mask) {
+        // The mask is frost over an empty digit (Spec 006), so a digit is any non-empty text.
+        if (index !== last && text !== '') {
           return { kind: 'digit' as const, index, digit: text };
         }
         return null;
       },
-      { last, mask: MASK },
+      { last },
       { polling: 'raf', timeout: 15_000 },
     );
     const step = await next.jsonValue();

@@ -1,6 +1,14 @@
-/* Focus mode: one calm surface over the whole viewport, nothing but the stage. */
+/*
+ * Focus mode on the lantern scene (Spec 006): always dark, whatever the system theme.
+ * Colours here are the scene's own; the rest of the app keeps the paper tokens.
+ */
 .focus {
-  --digit-max: clamp(7.5rem, min(56vw, 42vh), 15rem); /* about 240 px on a desktop */
+  --digit-max: clamp(4.5rem, min(26vw, 20vh), 7.5rem); /* the largest digit fits the glass */
+  --night-text: #ece6da;
+  --night-muted: rgb(236 230 218 / 0.7);
+  --glow-warm: rgb(255 200 110);
+  --glow-bad: rgb(214 90 70);
+  --streak: 0;
 
   position: fixed;
   inset: 0;
@@ -9,10 +17,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: #1b2340;
+  color: var(--night-text);
   outline: none;
   overscroll-behavior: none;
+  color-scheme: dark;
 }
 
 /* The whole screen is the tap target on a touch device. */
@@ -27,72 +36,212 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.stimulus {
-  font-family: var(--font-sans);
-  font-weight: var(--font-weight-bold);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  color: var(--color-text);
+/* ---- The lantern ---- */
+.lantern {
+  position: relative;
+  width: min(62vw, 15rem);
+  aspect-ratio: 17 / 20;
+  margin-top: -6vh;
 }
 
+.cap,
+.base {
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  height: 8%;
+  border-radius: 6px;
+  background: #3d332b;
+}
+
+.cap {
+  top: 4%;
+}
+
+.base {
+  bottom: 4%;
+}
+
+.glass {
+  position: absolute;
+  inset: 11% 9%;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 44% 44% 40% 40% / 30% 30% 26% 26%;
+  background: rgb(246 242 234 / 0.94);
+  box-shadow:
+    inset 0 0 0 2px rgb(60 50 40 / 0.25),
+    0 0 calc(30px + var(--streak) * 40px) calc(4px + var(--streak) * 14px)
+      rgb(255 214 150 / calc(0.15 + var(--streak) * 0.5));
+  transition: box-shadow 0.15s;
+}
+
+/* A counted press: warm on a digit, red on a 3 or too early (Spec 006 §1). */
+.lantern[data-glow='ok'] .glass {
+  box-shadow:
+    inset 0 0 0 2px rgb(60 50 40 / 0.25),
+    0 0 60px 18px rgb(255 200 110 / 0.85);
+}
+
+.lantern[data-glow='bad'] .glass {
+  box-shadow:
+    inset 0 0 0 2px rgb(60 50 40 / 0.25),
+    0 0 50px 14px rgb(214 90 70 / 0.8);
+}
+
+.stimulus {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-serif);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #2b2925;
+}
+
+/* The mask: frost over the whole glass, a texture rather than a symbol. */
+.frost {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    repeating-linear-gradient(35deg, rgb(255 255 255 / 0.7) 0 3px, transparent 3px 8px),
+    repeating-linear-gradient(-55deg, rgb(176 160 134 / 0.55) 0 3px, transparent 3px 9px),
+    radial-gradient(ellipse at 50% 45%, rgb(226 214 194) 0 40%, rgb(214 200 178) 75%);
+  filter: blur(1.2px);
+  opacity: 0;
+}
+
+.frost[data-on='true'] {
+  opacity: 1;
+}
+
+/* ---- Countdown: Ready, Set, Go ---- */
 .countdown {
   position: absolute;
+  bottom: 22%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-2);
 }
 
-.ring {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 11rem;
-  height: 11rem;
+.dots {
+  display: flex;
+  gap: var(--space-2);
 }
 
-.ring svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
+.dots i {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: rgb(236 230 218 / 0.25);
 }
 
-.track,
-.arc {
-  fill: none;
-  stroke-width: 2.5;
+.dots i.on {
+  background: #ffd696;
 }
 
-.track {
-  stroke: var(--color-border);
-}
-
-/* Fills over the 3 s countdown. With reduced motion it fills a third each second instead. */
-.arc {
-  stroke: var(--color-accent-soft);
-  stroke-linecap: round;
-  stroke-dasharray: 100;
-  stroke-dashoffset: 0;
-  animation: fill 3s linear;
-}
-
-@keyframes fill {
-  from {
-    stroke-dashoffset: 100;
-  }
+.word {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
 }
 
 .ready {
   margin: 0;
-  font-family: var(--font-serif);
-  font-size: var(--text-xl);
+  font-size: var(--text-sm);
+  color: var(--night-muted);
 }
 
-/* Practice feedback: a short word or two in a pill, green when right, red when not. */
+/* ---- Game layer (game variant) ---- */
+.hud {
+  position: absolute;
+  top: max(var(--space-5), env(safe-area-inset-top));
+  left: var(--space-5);
+  right: var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.points,
+.mult,
+.hint {
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.45);
+}
+
+.points {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.mult {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: rgb(29 27 24 / 0.45);
+  color: #ffd696;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.flies {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fly {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffe2a0;
+  box-shadow: 0 0 10px 3px rgb(255 214 150 / 0.7);
+  animation: drift 4s ease-in-out infinite alternate;
+}
+
+.gone {
+  animation: scatter 0.8s ease-in forwards;
+}
+
+@keyframes drift {
+  to {
+    transform: translate(var(--dx), var(--dy));
+  }
+}
+
+@keyframes scatter {
+  to {
+    transform: translate(calc(var(--dx) * 6), -200px);
+    opacity: 0;
+  }
+}
+
+.float {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  font-weight: var(--font-weight-bold);
+  color: #ffd696;
+  animation: up 0.7s ease-out forwards;
+}
+
+@keyframes up {
+  to {
+    transform: translate(-50%, -40px);
+    opacity: 0;
+  }
+}
+
+/* ---- Practice feedback: a short word or two in a pill ---- */
 .feedback {
   position: absolute;
+  bottom: 22%;
   margin: 0;
   padding: var(--space-2) var(--space-5);
   border-radius: var(--radius-pill);
@@ -101,27 +250,30 @@
 }
 
 .good {
-  background: var(--color-accent-tint);
-  color: var(--color-accent);
+  background: #e1eadf;
+  color: #3f5a45;
 }
 
 .bad {
-  background: var(--color-danger-tint);
-  color: var(--color-danger);
+  background: #f3ddd6;
+  color: #a3402f;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .arc {
-    animation: none;
-    stroke-dashoffset: var(--step-offset);
-  }
-}
-
+/* ---- Probe ---- */
+/* Over the whole scene, so the lantern never shows through the answers. */
 .probe {
-  position: relative;
-  z-index: 1;
-  width: min(100% - 2 * var(--space-4), 30rem);
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  padding: var(--space-4);
+  background: rgb(20 22 40 / 0.88);
   text-align: center;
+}
+
+.probe > * {
+  width: min(100vw - 2 * var(--space-4), 30rem);
 }
 
 .probe h2 {
@@ -133,6 +285,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+.probeNote {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-sm);
+  color: var(--night-muted);
 }
 
 .key {
@@ -148,6 +306,35 @@
   margin: 0;
   text-align: center;
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--night-muted);
   pointer-events: none;
+}
+
+/* Nothing moves: glow and colour changes are instant, fireflies stay still. */
+@media (prefers-reduced-motion: reduce) {
+  .glass,
+  .fly,
+  .gone,
+  .float {
+    transition: none;
+    animation: none;
+  }
+
+  .gone {
+    opacity: 0;
+  }
+}
+
+/* The answers are on the dark scene in either colour scheme. */
+.answers button {
+  color: var(--night-text);
+  border-color: rgb(236 230 218 / 0.45);
+}
+
+.answers button:hover {
+  background: rgb(236 230 218 / 0.1);
+}
+
+.answers .key {
+  color: var(--night-muted);
 }

@@ -31,14 +31,15 @@ Steady is a calm attention game built on the **Sustained Attention to Response T
 
 ## 3. How it plays, and what brings people back
 
-- **Task [R]:** digits 1–9; press for every digit except **3**. Each trial is a 250 ms digit and a 900 ms mask, in 5 font sizes (Robertson et al. 1997; PsyToolkit).
+- **Task [R]:** digits 1–9; press for every digit except **3**. Each trial is a 250 ms digit and a 900 ms mask, in 5 font sizes (Robertson et al. 1997; PsyToolkit). The digit sits on the glass of a lantern in a night scene, and the mask is the glass misting over [P]: it covers the digit's place like the original `⊗`, but as a texture, because play-testers read the black `⊗` as "wrong answer" (Spec 006).
 - **Length [P]:** 81 trials (9 of each digit, so 11% no-go as in the original) with 3 probes take **about 2 minutes**. A walkthrough as a new player found the earlier 126 trials (about 5 minutes on a first visit) too long (Spec 005). That is much shorter than the standard 225 trials, so error rates are noisier (one 3 moves the catch rate by 11 points), and this version has not been validated.
 - **Fair sequences [P]:** the server picks a seed for each session; it fixes a balanced digit order and the probe positions, and is never sent to the browser.
 - **Practice [P]:** the rules are shown as steps before every session and say that everyone presses on some 3s. A first play-test at full speed was impossible to follow, so the first session's practice (12 digits, about 30 seconds) **starts slow and ends at the real speed**. The real session always uses the standard timing, so results stay comparable.
-- **No live score** during the block, since it would change how people respond. The reward comes afterwards: a _session journey_ ribbon of every trial and your longest steady run.
+- **A press is acknowledged at once [P]:** the lantern glows after a press on a digit and flickers red after a press on a 3, as PsyToolkit's SART 2 turns its mask green after a correct press. The glow follows the press, so it cannot change that press's time.
+- **Points, as an experiment [P]:** in the gamified go/no-go literature, points left the data intact and made the task more enjoyable, while themed stimuli raised no-go errors by 28% [R] (Lumsden et al. 2016). So the digits stay plain, and the _game_ variant adds points around them: 10 per steady press, 30 per 3 held back, a multiplier that grows with the streak (×2 from 5, ×3 from 15, ×5 from 30), fireflies for the streak and a sky that turns from night to dawn, in the spirit of _Tenacity_, where the landscape responds to the player [R] (Patsenko et al. 2019). A visible streak may make people slow down to keep it, which would change the speed and rhythm Steady measures, so half of the players get the _calm_ variant (the lantern and the glow, no points), and every session records its variant for a comparison between the groups (Spec 006). Points are never stored or sent: they are always derived from a session's trial outcomes with one rule, so the count during the block and the count afterwards cannot differ. The reward after the block stays: the _session journey_ ribbon and the longest steady run.
 - **Weekly target (4 of 7 days), not a daily streak.** A streak drops to zero after one missed day, but missing one opportunity did not materially affect habit formation in a 12-week study [R] (Lally et al. 2010). A focus check is also most useful on a bad day, and a flexible target removes the pressure to play only to keep a count [P].
 - **No leaderboards or percentiles:** comparing attention with colleagues would discourage honest use, and a shortened task has no norms to rank against.
-- **Coming back pays off in comparison, not points:** from session 3, Results compares today with your earlier sessions, and from session 7 with where you started.
+- **Coming back pays off in comparison:** from session 3, Results compares today with your earlier sessions, and from session 7 with where you started.
 
 ## 4. Scoring
 
@@ -84,6 +85,9 @@ All scoring runs **on the server, from the raw trial data**, which is stored unc
 
 - Robertson, I. H. et al. (1997). 'Oops!': Performance correlates of everyday attentional failures in traumatic brain injured and normal subjects. _Neuropsychologia_, 35(6), 747–758. https://pubmed.ncbi.nlm.nih.gov/9204482/
 - PsyToolkit SART implementation (parameters). https://www.psytoolkit.org/experiment-library/sart.html
+- PsyToolkit SART 2 (green mask after a correct press). https://www.psytoolkit.org/library/sart2.html
+- Lumsden, J., Skinner, A., Woods, A. T., Lawrence, N. S., & Munafò, M. (2016). The effects of gamelike features and test location on cognitive test performance and participant enjoyment. _PeerJ_, 4, e2184. https://doi.org/10.7717/peerj.2184
+- Patsenko, E. G. et al. (2019). Mindfulness video game improves connectivity of the fronto-parietal attentional network in adolescents. _Scientific Reports_, 9, 18667. https://doi.org/10.1038/s41598-019-53393-x
 - Killingsworth, M. A., & Gilbert, D. T. (2010). A wandering mind is an unhappy mind. _Science_, 330(6006), 932. https://doi.org/10.1126/science.1192439
 - Mrazek, M. D., Smallwood, J., & Schooler, J. W. (2012). Mindfulness and mind-wandering: Finding convergence through opposing constructs. _Emotion_. https://doi.org/10.1037/a0026678
 - Cheyne, J. A., Solman, G. J. F., Carriere, J. S. A., & Smilek, D. (2009). Anatomy of an error. _Cognition_, 111(1), 98–113. https://doi.org/10.1016/j.cognition.2008.12.009

@@ -98,7 +98,8 @@ export async function seedDemoPlayer(db: Db, now: Date): Promise<{ token: string
   await db.transaction(async (tx) => {
     const [player] = await tx
       .insert(players)
-      .values({ tokenHash: hashToken(token), createdAt: history[0]!.startedAt })
+      // The game variant, so reviewers see the points on Results (Spec 006).
+      .values({ tokenHash: hashToken(token), createdAt: history[0]!.startedAt, variant: 'game' })
       .returning({ id: players.id });
     await tx.insert(sessions).values(
       history.map((s) => {
@@ -111,6 +112,7 @@ export async function seedDemoPlayer(db: Db, now: Date): Promise<{ token: string
           probeAfter: s.plan.probeAfter,
           checkIn: s.checkIn,
           device: 'keyboard' as const,
+          variant: 'game' as const,
           startedAt: s.startedAt,
           completedAt: s.completedAt,
           submission: s.submission,

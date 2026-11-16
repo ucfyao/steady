@@ -8,8 +8,6 @@ import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { fakeEnv } from './support/fake-env.js';
 
-const MASK = '⊗';
-
 function renderPlay(opts: { returning: boolean; device?: 'keyboard' | 'touch' }) {
   const backend = fakeBackend();
   if (opts.returning) backend.sessions.set(tokenN(1), [{ id: 'old' }] as CompletedSession[]);
@@ -43,7 +41,7 @@ function simulatedPlayer(
     const el = screen.queryByTestId('stimulus');
     const index = Number(el?.dataset.index ?? -1);
     const text = el?.textContent ?? '';
-    if (el && index !== seen && text && text !== MASK) {
+    if (el && index !== seen && text) {
       seen = index;
       if (text === '3') {
         pressAt = null;
@@ -161,7 +159,7 @@ describe('First time: how it works, practice, before you start', () => {
       const el = screen.queryByTestId('stimulus');
       const index = Number(el?.dataset.index ?? -1);
       const text = el?.textContent ?? '';
-      if (el && index !== seen && text && text !== MASK) {
+      if (el && index !== seen && text) {
         seen = index;
         pressAt = null;
         if (text === '3') {

@@ -5,6 +5,7 @@ import type {
   ProgressResponse,
   StartedSession,
   Submission,
+  Variant,
 } from '@steady/core';
 
 export type ApiErrorKind =
@@ -31,7 +32,13 @@ export class ApiError extends Error {
 
 export interface Api {
   createPlayer(): Promise<{ token: string }>;
-  startSession(body: { checkIn?: CheckIn | null; device: InputDevice }): Promise<StartedSession>;
+  startSession(body: {
+    checkIn?: CheckIn | null;
+    device: InputDevice;
+    variant?: Variant;
+  }): Promise<StartedSession>;
+  /** The player's A/B variant (Spec 006). */
+  getMe(): Promise<{ variant: Variant }>;
   submitSession(id: string, submission: Submission): Promise<CompletedSession>;
   listSessions(): Promise<CompletedSession[]>;
   getProgress(): Promise<ProgressResponse>;
@@ -83,6 +90,7 @@ export function createApi(token: string | null, fetchFn: typeof fetch = fetch): 
     startSession: (body) => request('POST', '/sessions', body),
     submitSession: (id, submission) =>
       request('POST', `/sessions/${encodeURIComponent(id)}/submit`, submission),
+    getMe: () => request('GET', '/me'),
     listSessions: () => request('GET', '/sessions'),
     getProgress: () => request('GET', '/progress'),
     deleteMe: () => request('DELETE', '/me'),

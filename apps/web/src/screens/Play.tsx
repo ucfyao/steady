@@ -4,6 +4,7 @@ import {
   type CheckIn,
   type StartedSession,
   type Submission,
+  type Variant,
 } from '@steady/core';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
@@ -67,14 +68,16 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   const [checkIn, setCheckIn] = useState<CheckIn>({});
   /** The last practice's counts, shown on "Before you start" while on the guided path. */
   const [practiced, setPracticed] = useState<PracticeSummary | null>(null);
+  /** The A/B variant for practice (Spec 006); the real session uses what the server says. */
+  const [variant, setVariant] = useState<Variant>('calm');
 
   useEffect(() => {
     if (!api) return;
     let cancelled = false;
-    api
-      .listSessions()
-      .then((sessions) => {
+    Promise.all([api.listSessions(), api.getMe()])
+      .then(([sessions, me]) => {
         if (cancelled) return;
+        setVariant(env.variantOverride ?? me.variant);
         const first = sessions.length === 0;
         setFirstTime(first);
         setGuided(first);
@@ -84,7 +87,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, env]);
 
   const intro = () => {
     setGuided(true);
@@ -101,6 +104,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       const session = await api.startSession({
         checkIn: hasCheckIn ? answers : null,
         device: env.device,
+        ...(env.variantOverride && { variant: env.variantOverride }),
       });
       setStep({ k: 'running', session });
     } catch (e) {
@@ -169,6 +173,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           options={PRACTICE_OPTIONS}
           hint={`Practice · ${rule}`}
           env={env}
+          variant={variant}
           onDone={({ rts }) => {
             setPracticed(summarisePractice(step.plan.trials, rts));
             setStep({ k: 'before' });
@@ -204,6 +209,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           options={MAIN_OPTIONS}
           hint={rule}
           env={env}
+          variant={step.session.variant}
           onDone={(submission) => submit(step.session, submission)}
           onVoid={() => setStep({ k: 'voided', during: 'session' })}
         />
@@ -305,7 +311,7 @@ function BeforeYouStart({
       <ul className={styles.points} aria-label="Before you start">
         <li>
           <span className={styles.icon} aria-hidden="true">
-            3′
+            2′
           </span>
           About two minutes, at full speed
         </li>

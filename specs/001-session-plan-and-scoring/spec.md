@@ -92,6 +92,7 @@ The input must already be valid. Definitions:
   - `caught`: a target withheld;
   - `commission`: a target pressed (at any RT, including an anticipation).
 - **`longestSteadyRun`:** the longest run of consecutive correct trials (`steady` or `caught` in `trialOutcomes`), for the session-journey UI.
+- **`trialOutcome(isTarget, rt)`** is exported (Spec 006): the outcome rule above as one function, so the browser's live game points use exactly the server's rule. Game points are never part of the score; they are always `scorePoints(trialOutcomes)`.
 - The result always includes `scoringVersion`.
 
 ## Test cases (Vitest)

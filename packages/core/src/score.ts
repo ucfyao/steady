@@ -14,6 +14,16 @@ export function isTransitionTrial(index: number, probeAfter: readonly number[]):
   return probeAfter.some((p) => index > p && index <= p + C.postProbeTrials);
 }
 
+/**
+ * One trial's outcome from its RT (Spec 001): the only place this rule lives, used by
+ * scoreSession and by the browser's live points (Spec 006).
+ */
+export function trialOutcome(isTarget: boolean, rt: number | null): TrialOutcome {
+  if (isTarget) return rt === null ? 'caught' : 'commission';
+  if (rt === null) return 'omission';
+  return rt < C.anticipationMs ? 'anticipation' : 'steady';
+}
+
 /** Expects a submission that passed validateSubmission. */
 export function scoreSession(plan: SessionPlan, submission: Submission): SessionScore {
   const { trials, probeAfter } = plan;
@@ -41,11 +51,7 @@ export function scoreSession(plan: SessionPlan, submission: Submission): Session
   const H = (hits + 0.5) / (targets.length + 1);
   const F = (falseAlarms + 0.5) / (goTrials.length + 1);
 
-  const trialOutcomes = trials.map((t): TrialOutcome => {
-    if (t.isTarget) return pressed(t.index) ? 'commission' : 'caught';
-    if (!pressed(t.index)) return 'omission';
-    return anticipated(t.index) ? 'anticipation' : 'steady';
-  });
+  const trialOutcomes = trials.map((t) => trialOutcome(t.isTarget, rts[t.index] ?? null));
 
   let longestSteadyRun = 0;
   let run = 0;

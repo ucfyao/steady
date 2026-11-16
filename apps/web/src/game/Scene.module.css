@@ -1,0 +1,54 @@
+/*
+ * The lantern's night scene (Spec 006). Always dark, whatever the system theme. `--dawn`
+ * (0 → 1, set by the game variant) blends night into dawn.
+ */
+.scene {
+  --dawn: 0;
+
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, #1b2340 calc(100% - var(--dawn) * 100%), #e9b99a) 0%,
+    color-mix(in oklab, #2d3558 calc(100% - var(--dawn) * 100%), #f3d9b8) 55%,
+    color-mix(in oklab, #3c3b52 calc(100% - var(--dawn) * 100%), #f6e7cf) 100%
+  );
+  transition: background 1.2s;
+}
+
+.stars i {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  opacity: calc(0.7 - var(--dawn) * 0.7);
+}
+
+.hills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 32%;
+}
+
+.far {
+  fill: color-mix(in oklab, #232a3f calc(100% - var(--dawn) * 100%), #9fae95);
+}
+
+.near {
+  fill: color-mix(in oklab, #1a2033 calc(100% - var(--dawn) * 100%), #6b8a6f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sky {
+    transition: none;
+  }
+}

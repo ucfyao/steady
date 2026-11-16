@@ -13,6 +13,7 @@ export function storedSession(
     completedAt: completedAt.toISOString(),
     checkIn: opts.checkIn ?? null,
     device: 'keyboard',
+    variant: 'calm',
     score: {
       scoringVersion: 3,
       commissions: 0,

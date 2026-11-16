@@ -1,4 +1,11 @@
-import type { CheckIn, InputDevice, PlanTrial, SessionScore, Submission } from '@steady/core';
+import type {
+  CheckIn,
+  InputDevice,
+  PlanTrial,
+  SessionScore,
+  Submission,
+  Variant,
+} from '@steady/core';
 import { index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
@@ -8,6 +15,8 @@ export const players = pgTable('players', {
   id: uuid('id').primaryKey().defaultRandom(),
   tokenHash: text('token_hash').notNull().unique(),
   createdAt: ts('created_at').notNull().defaultNow(),
+  // The A/B group (Spec 006), drawn at random when the player is created, then fixed.
+  variant: text('variant').$type<Variant>().notNull(),
 });
 
 export const sessions = pgTable(
@@ -24,6 +33,8 @@ export const sessions = pgTable(
     checkIn: jsonb('check_in').$type<CheckIn>(),
     // One input method per session, so keyboard and touch RTs are never mixed.
     device: text('device').$type<InputDevice>().notNull(),
+    // What the session showed: the player's variant, or a play-test override (Spec 006).
+    variant: text('variant').$type<Variant>().notNull(),
     startedAt: ts('started_at').notNull(),
     completedAt: ts('completed_at'),
     // Raw responses are kept so a future scoring version can re-score history.

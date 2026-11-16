@@ -25,6 +25,12 @@ export interface RunnerOptions {
  */
 export type Outcome = 'caught' | 'commission' | 'omission' | 'hit' | 'early';
 
+export interface PressResult {
+  index: number;
+  rt: number;
+  isTarget: boolean;
+}
+
 export type RunnerView =
   | { phase: 'waiting' }
   | { phase: 'stimulus'; index: number; digit: number; fontSize: number }
@@ -91,15 +97,24 @@ export class TrialRunner {
     return v;
   }
 
-  press(time: number, opts: { repeat?: boolean } = {}): void {
-    if (opts.repeat) return;
+  /**
+   * Records the first press in a trial's window. Returns the trial and RT when this press is
+   * the one that counts (so the page can light the lantern), otherwise null.
+   */
+  press(time: number, opts: { repeat?: boolean } = {}): PressResult | null {
+    if (opts.repeat) return null;
     // The trial whose window [onset, onset + digit + mask) contains the press, if any.
     for (let i = this.onsets.length - 1; i >= 0; i--) {
       const onset = this.onsets[i]!;
       if (time < onset) continue;
-      if (time < onset + this.windowMs(i) && this.rts[i] === null) this.rts[i] = time - onset;
-      return;
+      if (time < onset + this.windowMs(i) && this.rts[i] === null) {
+        const rt = time - onset;
+        this.rts[i] = rt;
+        return { index: i, rt, isTarget: this.trials[i]!.isTarget };
+      }
+      return null;
     }
+    return null;
   }
 
   answer(answer: ProbeAnswer, now: number): void {

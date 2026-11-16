@@ -60,3 +60,19 @@ export const SUBMIT_CONFIG = {
   ),
   expiresAfterMs: 30 * 60_000, // [P] an open session older than this cannot be submitted
 } as const;
+
+/**
+ * Game points (Spec 006). Not a measurement and never stored: a session's points are
+ * always `scorePoints(trialOutcomes)` of its outcomes, wherever they are shown.
+ */
+export const GAME_CONFIG = {
+  steadyPoints: 10, // [P] a press on a digit, not too early
+  caughtPoints: 30, // [P] a 3 held back: the hard moment pays most
+  /** [P] [correct trials in a row, multiplier], ascending: ×2 from the 5th, ×3 from the 15th… */
+  multiplierSteps: [
+    [1, 1],
+    [5, 2],
+    [15, 3],
+    [30, 5],
+  ] as const,
+} as const;
