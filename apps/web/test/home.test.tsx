@@ -43,7 +43,7 @@ describe('Home', () => {
 
   it('with no sessions: an empty week, a first-check invitation and the countdown', async () => {
     renderHome([]);
-    const week = await screen.findByRole('region', { name: 'This week' });
+    const week = await screen.findByRole('region', { name: 'Last 7 days' });
     // The target comes from core's config (Spec 004: 4 of the last 7 days).
     expect(week).toHaveTextContent(`0 of ${PROGRESS_CONFIG.weeklyTargetDays} days`);
     expect(within(week).getAllByTestId('week-day')).toHaveLength(7);
@@ -68,7 +68,7 @@ describe('Home', () => {
     expect(within(last).getByRole('group', { name: 'Catch rate' })).toHaveTextContent('75%');
     expect(stat('Longest steady run')).toHaveTextContent('41');
     expect(stat('Median response')).toHaveTextContent('388 ms');
-    expect(screen.getByRole('region', { name: 'This week' })).toHaveTextContent('2 of 4 days');
+    expect(screen.getByRole('region', { name: 'Last 7 days' })).toHaveTextContent('2 of 4 days');
     expect(screen.getByText('4 more sessions until your starting point')).toBeInTheDocument();
   });
 
@@ -81,13 +81,15 @@ describe('Home', () => {
       ),
     );
     await screen.findByRole('region', { name: /^Last check · / });
-    expect(stat('Median response')).toHaveTextContent('Not enough presses to measure');
+    // A dash and a short note on its own line, aligned like the other two stats.
+    expect(stat('Median response')).toHaveTextContent(/^—Not enough dataMedian response$/);
+    expect(screen.getByText('Not enough data')).toHaveClass(/note/);
     expect(screen.queryByText(/until your starting point/)).toBeNull();
   });
 
   it('says the weekly goal is reached on exactly the target day count', async () => {
     renderHome([0, 1, 2, 4].map((d, i) => storedSession(i + 1, {}, { completedAt: daysAgo(d) })));
-    expect(await screen.findByRole('region', { name: 'This week' })).toHaveTextContent(
+    expect(await screen.findByRole('region', { name: 'Last 7 days' })).toHaveTextContent(
       '4 days, goal reached',
     );
   });

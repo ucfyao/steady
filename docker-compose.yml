@@ -1,3 +1,6 @@
+# One fixed project name, so every worktree shares the same container and data volume.
+name: steady
+
 services:
   db:
     image: postgres:17-alpine

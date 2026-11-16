@@ -10,6 +10,7 @@
     "postinstall": "pnpm --filter @steady/core build",
     "bootstrap": "node -e \"const f=require('fs');f.existsSync('.env')||f.copyFileSync('.env.example','.env')\" && docker compose up -d --wait && pnpm --filter @steady/api db:migrate",
     "dev": "pnpm --parallel --filter @steady/api --filter @steady/web dev",
+    "seed:demo": "pnpm --filter @steady/api seed:demo",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",

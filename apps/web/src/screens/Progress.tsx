@@ -96,7 +96,7 @@ export function Progress() {
       <h1>Progress</h1>
 
       <Card as="section" aria-labelledby="week-title">
-        <h2 id="week-title">This week</h2>
+        <h2 id="week-title">Last 7 days</h2>
         <WeekDots completedAt={sessions.map((s) => s.completedAt)} />
       </Card>
 

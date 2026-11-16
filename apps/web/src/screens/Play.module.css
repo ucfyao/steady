@@ -3,8 +3,18 @@
   flex-direction: column;
 }
 
-.checkIn :global(.lead) {
+.lead {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
   margin-bottom: var(--space-7);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  margin: var(--space-4) 0;
 }
 
 .questions {

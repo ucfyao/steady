@@ -31,11 +31,19 @@ test('a new player practises, plays a full session and sees results and progress
   const resultsUrl = page.url();
 
   await page.getByRole('link', { name: 'See your progress' }).click();
-  await expect(page.getByRole('region', { name: 'This week' })).toContainText('1 of 4 days');
+  await expect(page.getByRole('region', { name: 'Last 7 days' })).toContainText('1 of 4 days');
   await expect(page.getByText('Your starting point is set after 5 more sessions.')).toBeVisible();
 
   // A second player on the same device sees none of it.
-  await page.getByRole('button', { name: /^Player: / }).click();
+  // The native dialog: Escape closes it and focus returns to the avatar.
+  const avatar = page.getByRole('button', { name: /^Player: / });
+  await avatar.click();
+  await page.getByRole('menuitem', { name: 'Add player' }).click();
+  await expect(page.getByRole('dialog', { name: 'Add a player' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(avatar).toBeFocused();
+  await avatar.click();
   await page.getByRole('menuitem', { name: 'Add player' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('Sam');
   await page.getByRole('button', { name: 'Create' }).click();

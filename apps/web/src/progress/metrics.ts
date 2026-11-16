@@ -6,11 +6,14 @@ export interface MetricView {
   hint?: string;
   /** The server's value as shown: commission rate is shown as catch rate (Spec 002). */
   show(value: number): number;
-  format(shown: number): string;
+  /** Whole numbers unless `decimals` is given (chart axes need them on narrow ranges). */
+  format(shown: number, decimals?: number): string;
 }
 
-const percent = (x: number) => `${Math.round(x * 100)}%`;
-const ms = (x: number) => `${Math.round(x)} ms`;
+const fixed = (x: number, decimals = 0) =>
+  decimals === 0 ? String(Math.round(x)) : x.toFixed(decimals);
+const percent = (x: number, decimals?: number) => `${fixed(x * 100, decimals)}%`;
+const ms = (x: number, decimals?: number) => `${fixed(x, decimals)} ms`;
 
 export const METRIC_VIEWS: MetricView[] = [
   {

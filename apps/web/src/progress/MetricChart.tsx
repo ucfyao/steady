@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { yAxis } from './axis.js';
 import { FLAG_SHORT, type MetricView } from './metrics.js';
 import styles from './MetricChart.module.css';
 import type { SessionPoint } from './series.js';
@@ -56,6 +57,9 @@ export function MetricChart({
   const data = points.map((p) => ({ ...p, value: value(p) }));
   const latest = [...data].reverse().find((d) => d.value !== null);
   const id = `chart-${view.key}`;
+  const shown = data.flatMap((d) => (d.value === null ? [] : [d.value]));
+  const axis = yAxis(baseline === null ? shown : [...shown, baseline], view.format);
+  const label = (v: number) => axis?.labels[axis.ticks.indexOf(v)] ?? view.format(v);
 
   return (
     <figure className={styles.chart} aria-labelledby={id}>
@@ -82,8 +86,9 @@ export function MetricChart({
               width={64}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v: number) => view.format(v)}
-              domain={['auto', 'auto']}
+              ticks={axis?.ticks}
+              tickFormatter={label}
+              domain={axis ? [axis.ticks[0]!, axis.ticks.at(-1)!] : ['auto', 'auto']}
             />
             {baseline !== null && (
               <ReferenceLine

@@ -16,6 +16,7 @@ import type { RunnerOptions } from '../game/runner.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { Button } from '../ui/Button.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
+import { Notice } from '../ui/Notice.js';
 import styles from './Play.module.css';
 
 const PRACTICE_OPTIONS: RunnerOptions = { feedbackMs: 800 }; // [P] Spec 004
@@ -163,9 +164,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       return (
         <section>
           {step.practiced && (
-            <p className="notice">
-              Practice complete. The real session runs at full speed the whole way.
-            </p>
+            <Notice>Practice complete. The real session runs at full speed the whole way.</Notice>
           )}
           <h1>Ready?</h1>
           <HowToPlay device={env.device} />
@@ -173,7 +172,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             About three minutes. A few times you will be asked where your mind was. Stay on this
             page until the end: leaving it voids the session.
           </p>
-          <div className="actions">
+          <div className={styles.actions}>
             <Button size="lg" onClick={() => start()}>
               Start
             </Button>
@@ -265,7 +264,7 @@ function CheckInForm({
   return (
     <form onSubmit={submit} className={styles.checkIn}>
       <h1>How are you today?</h1>
-      <p className="lead">Optional. It never changes your score.</p>
+      <p className={styles.lead}>Optional. It never changes your score.</p>
       <div className={styles.questions}>
         {group('sleep', 'Sleep', SLEEP_LEVELS)}
         {group('stress', 'Stress', STRESS_LEVELS)}
