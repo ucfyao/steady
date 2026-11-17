@@ -160,7 +160,8 @@
   position: absolute;
   top: max(var(--space-5), env(safe-area-inset-top));
   left: var(--space-5);
-  right: var(--space-5);
+  /* Leaves the top-right corner to Stop (Spec 009). */
+  right: calc(var(--space-3) + 2.75rem + var(--space-2));
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -383,4 +384,33 @@
 /* The night scene's text shadow would blur the hint on paper. */
 .plain .hint {
   text-shadow: none;
+}
+
+/* ---- Stop (Spec 009): quiet, top-right, above the probe, outside the tap area ---- */
+.stop {
+  position: absolute;
+  top: max(var(--space-3), env(safe-area-inset-top));
+  right: max(var(--space-3), env(safe-area-inset-right));
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--night-muted);
+  font-size: var(--text-2xl);
+  line-height: 1;
+  opacity: 0.4; /* [P] findable, but never competing with the digit */
+  cursor: pointer;
+}
+
+.stop:hover {
+  opacity: 1;
+}
+
+.plain .stop {
+  color: var(--color-text-muted);
 }
