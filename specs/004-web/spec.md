@@ -25,6 +25,7 @@ First session:  Home ──▶ Step 1: How it works ──▶ Practice ──▶
 Returning:      Home ──▶ Before you start ─(Start / Skip)──▶ Countdown ──▶ Trials + probes ──▶ …
                            └─ How to play ──▶ Step 1 (Try a short practice, or Skip practice ──▶ Step 2)
 During countdown, trials and probes (focus mode): leave the tab ──▶ "Session voided" (Play again ──▶ Before you start, or Back to home)
+During countdown, trials and probes (focus mode): Stop (×) or Escape ──▶ "Session stopped" (Spec 009; same two ways on)
 Home ──▶ Progress, Your data
 Any unknown address ──▶ "Page not found"
 ```

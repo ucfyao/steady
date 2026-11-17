@@ -238,6 +238,15 @@ describe('plain variant (Spec 008)', () => {
   }, 15_000);
 });
 
+describe('Stop in every variant (Spec 009)', () => {
+  for (const v of ['plain', 'calm', 'game'] as const)
+    it(`shows Stop in the ${v} variant`, async () => {
+      renderPlay(v);
+      await start();
+      expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+    });
+});
+
 describe('variant override (?variant=)', () => {
   it('reads plain, calm or game from the address, and nothing else', () => {
     expect(parseVariant('?variant=game')).toBe('game');

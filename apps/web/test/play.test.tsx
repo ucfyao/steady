@@ -451,3 +451,85 @@ describe('Play', () => {
     });
   });
 });
+
+// Spec 009: a visible way out of focus mode.
+describe('Stop', () => {
+  const stop = () => fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+  const escape = () => fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+
+  it('stops the session from the button: nothing is submitted, and the page says so', async () => {
+    const { backend, clock } = renderPlay({ returning: true });
+    await startFromCheckIn();
+    await countdown();
+    clock.advance(10_000, 50, simulatedPlayer(clock, space));
+    stop();
+    expect(screen.getByRole('heading', { name: 'Session stopped' })).toBeInTheDocument();
+    expect(screen.getByText('You stopped the session, so it was not saved.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
+    clock.advance(WHOLE_SESSION_MS);
+    expect(backend.submitted).toEqual([]);
+    expect(screen.queryByTestId('stimulus')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+    await startFromCheckIn();
+    expect(await countdown()).toBeInTheDocument();
+  });
+
+  it('stops during the countdown, and with Escape', async () => {
+    renderPlay({ returning: true });
+    await startFromCheckIn();
+    await countdown();
+    escape();
+    expect(screen.getByRole('heading', { name: 'Session stopped' })).toBeInTheDocument();
+  });
+
+  it('stops over a probe', async () => {
+    const { backend, clock } = renderPlay({ returning: true });
+    await startFromCheckIn();
+    await countdown();
+    const probe = () => screen.queryByRole('dialog', { name: /where was your mind/i });
+    const p = simulatedPlayer(clock, space, undefined, () => {});
+    while (!probe() && clock.now() < WHOLE_SESSION_MS) clock.advance(50, 50, p);
+    expect(probe()).not.toBeNull();
+    stop();
+    expect(screen.getByRole('heading', { name: 'Session stopped' })).toBeInTheDocument();
+    expect(backend.submitted).toEqual([]);
+  });
+
+  it('stops the practice, and a first-time player starts again at step 1', async () => {
+    const { clock } = renderPlay({ returning: false });
+    fireEvent.click(await screen.findByRole('button', { name: 'Try a short practice' }));
+    clock.advance(5000);
+    stop();
+    expect(screen.getByRole('heading', { name: 'Practice stopped' })).toBeInTheDocument();
+    expect(screen.getByText('You stopped the practice.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
+    expect(screen.getByText('Step 1 of 2')).toBeInTheDocument();
+  });
+
+  it('on a touch device, a tap on Stop is not a press', async () => {
+    const { backend, clock } = renderPlay({ returning: true, device: 'touch' });
+    await startFromCheckIn();
+    await countdown();
+    clock.advance(3000 + 100); // the first digit is on screen
+    expect(screen.getByTestId('stimulus').textContent).not.toBe('');
+    const button = screen.getByRole('button', { name: 'Stop' });
+    expect(screen.getByTestId('tap-area')).not.toContainElement(button);
+    fireEvent.pointerDown(button);
+    fireEvent.click(button);
+    expect(screen.getByRole('heading', { name: 'Session stopped' })).toBeInTheDocument();
+    expect(backend.submitted).toEqual([]);
+  });
+
+  it('Space does not stop, and leaving the page still says Session voided', async () => {
+    const { clock } = renderPlay({ returning: true });
+    await startFromCheckIn();
+    await countdown();
+    clock.advance(4000);
+    screen.getByRole('button', { name: 'Stop' }).focus();
+    space();
+    expect(screen.getByTestId('stimulus')).toBeInTheDocument();
+    clock.hide();
+    expect(screen.getByRole('heading', { name: 'Session voided' })).toBeInTheDocument();
+  });
+});
