@@ -8,4 +8,4 @@
 - [x] T6 Group choice for a new player: failing tests (API 201/400, web select), then API, core contract and dialog; deliberate break (variant ignored by the API)
 - [x] T7 Fixed demo tokens, a rerun refreshes the history, `pnpm bootstrap` seeds: failing tests, then the seed; deliberate break (a random token)
 - [x] T8 A new demo player per group with no sessions: failing tests, then the seed
-- [x] T9 Demo names after the group and kind (`plain · returning`, `plain · new`, …), listed by group: failing tests, then the seed; deliberate break (ordered by kind first)
+- [x] T9 Demo names `O-`/`N-` plus a first name whose initial is the group (O-Ava, N-Amy, O-Ben, N-Bella, O-Cleo, N-Cora), listed by group: failing tests, then the seed; deliberate breaks (ordered by kind first, prefixes swapped)

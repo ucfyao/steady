@@ -20,21 +20,21 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 
 ## 2. Fixed demo players, set up with the database
 
-`pnpm seed:demo` sets up six demo players, one per group and kind, named on the server (Spec 013) after their group (the variant keys of Spec 008) and whether they have history:
+`pnpm seed:demo` sets up six demo players, one old and one new per group, named on the server (Spec 013). A name is `O-` (old: has history) or `N-` (new: no sessions) and a first name whose initial stands for the group: **A** plain, **B** calm, **C** game. The group itself shows as the development tag.
 
-| Name                  | Group           | Data                                                                                                          |
-| --------------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
-| **plain · returning** | plain (control) | two weeks of history (10 sessions), played in its group                                                       |
-| **plain · new**       | plain (control) | no sessions: opening the app as them is a new player's first visit (how it works, practice, before you start) |
-| **calm · returning**  | calm            | as plain · returning                                                                                          |
-| **calm · new**        | calm            | as plain · new                                                                                                |
-| **game · returning**  | game            | as plain · returning                                                                                          |
-| **game · new**        | game            | as plain · new                                                                                                |
+| Name        | Group           | Data                                                                                                         |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------ |
+| **O-Ava**   | plain (control) | two weeks of history (10 sessions), played in its group                                                      |
+| **N-Amy**   | plain (control) | no sessions: opening the app as her is a new player's first visit (how it works, practice, before you start) |
+| **O-Ben**   | calm            | as O-Ava                                                                                                     |
+| **N-Bella** | calm            | as N-Amy                                                                                                     |
+| **O-Cleo**  | game            | as O-Ava                                                                                                     |
+| **N-Cora**  | game            | as N-Amy                                                                                                     |
 
-- The names use the group keys as they are; we checked the usual A/B conventions (`control`, `treatment_a`, `treatment_b`), and there is no standard for naming test accounts, so the keys the rest of Steady already uses are the clearest.
+- Short names on purpose: the group is not repeated in the name (the tag shows it), and a name fits one line of the player menu. We checked the usual A/B conventions (`control`, `treatment_a`, `treatment_b`); there is no standard for naming test accounts.
 - Each has a **fixed token** (derived from its batch and variant), so a rerun refreshes the same player and a browser that selected one keeps it across reruns.
 - **Running it again refreshes them:** the players with history get it rebuilt as of today and scored by the current rules; the new players are emptied again, so the first visit can be tried again. It never adds copies.
-- They are in everyone's player list (Spec 014), in the order above: by group, returning before new.
+- They are in everyone's player list (Spec 014), in the order above: by group, old before new.
 - `pnpm bootstrap` runs it last, so a new setup has the demo players with its database.
 - The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
 
@@ -48,6 +48,6 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 ## 4. Tests
 
 - Web: without the development flag no group is shown; with it, the menu and Manage players show each player's own group, and a player whose group cannot be read shows none.
-- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it; its token is the same on every run; a second run replaces its history (still 10 sessions, one player); a new demo player has no sessions, and a rerun empties it again; the list shows them by group, returning before new.
+- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it; its token is the same on every run; a second run replaces its history (still 10 sessions, one player); a new demo player has no sessions, and a rerun empties it again; the list shows them by group, old before new.
 - API: a chosen variant is stored; an unknown variant or an extra field is a 400; no body is still a random group.
 - Web: the Group choice shows only with the development flag; Random sends no variant, a chosen group is sent and then shown in the menu.

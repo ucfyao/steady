@@ -25,9 +25,10 @@ try {
   const names = VARIANTS.flatMap((v) => DEMO_KINDS.map((k) => demoName(v, k))).join(', ');
   console.log(`
 Set up six demo players (Spec 011 §2): ${names}.
-  returning: 10 sessions each over the past two weeks (session 1 not counted, sessions 2-6 the
-             starting point, some with a check-in).
-  new:       no sessions, so opening the app as one is a new player's first visit.
+  O- (old): 10 sessions each over the past two weeks (session 1 not counted, sessions 2-6 the
+            starting point, some with a check-in).
+  N- (new): no sessions, so opening the app as one is a new player's first visit.
+  Initial:  A plain, B calm, C game.
 Running this again rebuilds the history and empties the new players.
 
 With the web app running, pick them in the avatar menu: each shows its own variant on every screen.

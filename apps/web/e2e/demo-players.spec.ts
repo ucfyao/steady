@@ -9,13 +9,12 @@ test('the demo players from pnpm seed:demo are in everyone’s list, with their 
   // Spec 014: no link to open; the seeded players are already in the shared list.
   await page.goto('/progress');
   await page.getByRole('button', { name: /^Player: / }).click();
-  for (const group of ['plain', 'calm', 'game'])
-    for (const name of [`${group} · returning`, `${group} · new`])
-      await expect(
-        page.getByRole('menuitemradio', { name: new RegExp(`^${name}\\b`) }),
-      ).toHaveCount(1);
-  await page.getByRole('menuitemradio', { name: /^plain · returning/ }).click();
-  await expect(page.getByRole('button', { name: 'Player: plain · returning' })).toBeVisible();
+  for (const name of ['O-Ava', 'N-Amy', 'O-Ben', 'N-Bella', 'O-Cleo', 'N-Cora'])
+    await expect(page.getByRole('menuitemradio', { name: new RegExp(`^${name}\\b`) })).toHaveCount(
+      1,
+    );
+  await page.getByRole('menuitemradio', { name: /^O-Ava\b/ }).click();
+  await expect(page.getByRole('button', { name: 'Player: O-Ava' })).toBeVisible();
   // For screen readers only (Spec 010): attached, not visible.
   await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeAttached();
   await expect(page.getByRole('region', { name: 'Last 7 days' })).toBeVisible();

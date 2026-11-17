@@ -108,9 +108,16 @@ export const demoToken = (variant: Variant, kind: DemoKind = 'history') =>
 export type DemoKind = 'history' | 'new';
 export const DEMO_KINDS: readonly DemoKind[] = ['history', 'new'];
 
-/** A demo player's name (Spec 011 §2): their group, then whether they have history. */
+/**
+ * A demo player's name (Spec 011 §2): `O-` (old: has history) or `N-` (new: no sessions), then
+ * a first name whose initial stands for the group (A plain, B calm, C game).
+ */
+const DEMO_FIRST_NAMES: Record<DemoKind, Record<Variant, string>> = {
+  history: { plain: 'Ava', calm: 'Ben', game: 'Cleo' },
+  new: { plain: 'Amy', calm: 'Bella', game: 'Cora' },
+};
 export const demoName = (variant: Variant, kind: DemoKind) =>
-  `${variant} · ${kind === 'history' ? 'returning' : 'new'}`;
+  `${kind === 'history' ? 'O' : 'N'}-${DEMO_FIRST_NAMES[kind][variant]}`;
 
 /**
  * Sets up the demo player of one variant (the game by default, so reviewers see the points on
@@ -127,8 +134,8 @@ export async function seedDemoPlayer(
   const token = demoToken(variant, kind);
   const history = kind === 'history' ? demoSessions(now) : [];
   // Oldest first in the shared list (Spec 014): all created when the history starts, a
-  // millisecond apart by group and then kind, so the list reads plain · returning, plain · new,
-  // calm · returning, … rather than an order left to their random ids.
+  // millisecond apart by group and then kind, so the list reads O-Ava, N-Amy, O-Ben, N-Bella,
+  // O-Cleo, N-Cora rather than an order left to their random ids.
   const since = demoSessions(now)[0]!.startedAt.getTime();
   const createdAt = new Date(
     since + VARIANTS.indexOf(variant) * DEMO_KINDS.length + DEMO_KINDS.indexOf(kind),
