@@ -193,10 +193,56 @@ describe('calm variant', () => {
   });
 });
 
+describe('plain variant (Spec 008)', () => {
+  it('shows the bare digit and the ⊗ mask: no scene, lantern, frost or game layer', async () => {
+    const { clock } = renderPlay('plain');
+    await start();
+    expect(screen.queryByTestId('scene')).toBeNull();
+    expect(screen.queryByTestId('lantern')).toBeNull();
+    expect(screen.queryByTestId('frost')).toBeNull();
+    let masks = 0;
+    let digits = 0;
+    clock.advance(3000 + 5 * 1150, 50, () => {
+      const text = screen.getByTestId('stimulus').textContent;
+      if (text === '⊗') masks++;
+      else if (text) digits++;
+    });
+    expect(masks).toBeGreaterThan(0);
+    expect(digits).toBeGreaterThan(0);
+  });
+
+  it('counts down without a digit, as the other variants', async () => {
+    const { clock } = renderPlay('plain');
+    await start();
+    clock.advance(2950, 50, () => {
+      expect(screen.getByTestId('stimulus')).toHaveTextContent('');
+      expect(screen.getByTestId('countdown').textContent).not.toMatch(/\d/);
+    });
+  });
+
+  it('gives no sign that a press counted, shows no points, and ends on calm Results', async () => {
+    const { clock } = renderPlay('plain');
+    await start();
+    let probeNote = false;
+    const p = player(clock, (n) => n === 1 && space());
+    clock.advance(WHOLE_SESSION_MS, 50, () => {
+      p();
+      if (document.querySelector('[data-glow]')) throw new Error('a glow was shown');
+      if (screen.queryByText('Your answer never changes your points.')) probeNote = true;
+    });
+    expect(probeNote).toBe(false);
+    expect(screen.queryByTestId('points')).toBeNull();
+    expect(screen.queryAllByTestId('firefly')).toHaveLength(0);
+    await screen.findByRole('heading', { name: 'Session complete' });
+    expect(screen.queryByRole('region', { name: 'Your game' })).toBeNull();
+  }, 15_000);
+});
+
 describe('variant override (?variant=)', () => {
-  it('reads calm or game from the address, and nothing else', () => {
+  it('reads plain, calm or game from the address, and nothing else', () => {
     expect(parseVariant('?variant=game')).toBe('game');
     expect(parseVariant('?x=1&variant=calm')).toBe('calm');
+    expect(parseVariant('?variant=plain')).toBe('plain');
     expect(parseVariant('?variant=loud')).toBeUndefined();
     expect(parseVariant('')).toBeUndefined();
   });

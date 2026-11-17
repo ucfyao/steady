@@ -6,10 +6,11 @@ export const INPUT_DEVICES = ['keyboard', 'touch'] as const;
 export type InputDevice = (typeof INPUT_DEVICES)[number];
 
 /**
- * The A/B split (Spec 006 §5): `calm` shows the lantern only; `game` adds points, the
- * multiplier, fireflies and dawn.
+ * The A/B split (Spec 006 §5, Spec 008): `plain` is the original screen (a bare digit and the
+ * `⊗` mask), the control; `calm` shows the lantern scene; `game` adds points, the multiplier,
+ * fireflies and dawn.
  */
-export const VARIANTS = ['calm', 'game'] as const;
+export const VARIANTS = ['plain', 'calm', 'game'] as const;
 export type Variant = (typeof VARIANTS)[number];
 
 export const SLEEP_LEVELS = ['poor', 'ok', 'good'] as const;

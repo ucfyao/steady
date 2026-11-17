@@ -28,12 +28,13 @@ const start = (token: string, body: object = {}) =>
     .set(auth(token))
     .send({ device: 'keyboard', ...body });
 
-// Spec 006 §5: a new player is put in calm or game at random, and keeps it.
+// Spec 006 §5, Spec 008 §2: a new player is put in plain, calm or game at random, and keeps it.
 describe('A/B variant', () => {
-  it('assigns each new player calm or game, and both occur', async () => {
+  it('assigns each new player plain, calm or game, and all three occur', async () => {
+    // 60 players: the chance that one group never comes up is 3 × (2/3)^60, about 1e-10.
     const seen = new Set<string>();
-    for (let i = 0; i < 40; i++) seen.add(await variantOf(await newPlayer(t)));
-    expect([...seen].sort()).toEqual(['calm', 'game']);
+    for (let i = 0; i < 60; i++) seen.add(await variantOf(await newPlayer(t)));
+    expect([...seen].sort()).toEqual(['calm', 'game', 'plain']);
   });
 
   it('tells the player their variant (GET /api/me), so practice can show it', async () => {
@@ -74,6 +75,14 @@ describe('A/B variant', () => {
     expect(row!.variant).toBe(other);
     // The player's own variant is unchanged.
     expect(await variantOf(token)).not.toBe(other);
+  });
+
+  it('accepts plain as a play-test override (Spec 008)', async () => {
+    const token = await newPlayer(t);
+    const s = (await start(token, { variant: 'plain' }).expect(201)).body;
+    expect(s.variant).toBe('plain');
+    const [row] = await t.db.select().from(sessions).where(eq(sessions.id, s.id));
+    expect(row!.variant).toBe('plain');
   });
 
   it('rejects an unknown variant with 400', async () => {

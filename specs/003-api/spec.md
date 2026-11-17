@@ -98,6 +98,6 @@ Web app (next spec), accounts and token recovery, re-scoring jobs, deployment.
 
 ## Spec 006 additions
 
-- `players.variant` (`calm` | `game`): drawn at random (50/50) by `POST /api/players` and never changed; migration `0003` assigns existing players at random.
+- `players.variant` (`plain` | `calm` | `game`): drawn at random (a third each, Spec 008; 50/50 calm/game before it) by `POST /api/players` and never changed; migration `0003` assigns existing players at random between calm and game.
 - `GET /api/me` → `{ variant }` for the calling player (the practice round shows the variant before any session exists).
 - `POST /api/sessions` accepts an optional `variant` (a play-test override); the session stores the variant it shows (`sessions.variant`: the override, else the player's) and returns it. `GET /api/sessions` and the submit response include `variant`.

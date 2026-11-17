@@ -15,7 +15,7 @@ Play-testing the earlier screens (2026-11-17): the black `⊗` mask read as "wro
 
 One risk is real: a visible streak may make people slow down to keep it, which would change the speed and rhythm Steady measures [P]. So the game layer is an experiment: half of the players get it, half do not, and every session records which (§5).
 
-## 1. The scene (both variants)
+## 1. The scene (calm and game; the plain variant of Spec 008 has none)
 
 From the countdown to the last trial (focus mode), the screen is a night scene, always dark whatever the system theme: a sky gradient, a few stars, two layers of hills, and a **lantern** in the middle. The rest of the app keeps the paper look.
 
@@ -61,7 +61,7 @@ Above the conclusion, the game first: **{points} points**, "Longest streak: {lon
 ## 5. The A/B split [P]
 
 - **Variants:** `calm` (the scene, frost and glow) and `game` (plus points, multiplier, fireflies and dawn). Everything else is the same for both.
-- **Assignment:** `POST /api/players` puts each new player in one of the two at random (50/50, server-side), stored as `players.variant`. Players created before this change are assigned at random by the migration.
+- **Assignment:** `POST /api/players` puts each new player in one of the two at random (50/50, server-side), stored as `players.variant`. Players created before this change are assigned at random by the migration. Spec 008 adds a third group, `plain` (the original screen), and splits new players a third each.
 - **Sticky:** a player keeps the variant, so their baseline and history come from one variant.
 - **Recorded per session:** `POST /api/sessions` returns the session's `variant`, and stores it as `sessions.variant`; `GET /api/sessions` returns it with each completed session.
 - **Override for play-tests:** opening the app with `?variant=calm` or `?variant=game` makes this browser send that variant with each new session (`POST /api/sessions` with `variant`), until the app is reopened without it; the session stores the variant actually shown.
