@@ -155,7 +155,7 @@ describe('layout and player menu', () => {
 });
 
 describe('Manage players', () => {
-  it('explains that everyone sees every player here (Spec 014)', async () => {
+  it('explains that everyone sees every player here (Spec 016)', async () => {
     renderApp('/players');
     await avatar('Player 1');
     expect(screen.getByRole('heading', { level: 1, name: 'Players' })).toBeVisible();

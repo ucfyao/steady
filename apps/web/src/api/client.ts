@@ -48,7 +48,7 @@ export interface Api {
   listSessions(): Promise<CompletedSession[]>;
   getProgress(): Promise<ProgressResponse>;
   deleteMe(): Promise<void>;
-  /** Every player, with their tokens (Spec 014); needs no token. */
+  /** Every player, with their tokens (Spec 016); needs no token. */
   listPlayers(): Promise<PlayerListItem[]>;
 }
 

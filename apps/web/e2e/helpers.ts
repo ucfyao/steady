@@ -61,7 +61,7 @@ export async function hidePage(page: Page) {
 }
 
 /** The active player's token, to ask the API directly what it stored. */
-/** The selected player's token: the browser keeps the id, the server's list the token (Spec 014). */
+/** The selected player's token: the browser keeps the id, the server's list the token (Spec 016). */
 export async function activeToken(page: Page): Promise<string> {
   return page.evaluate(async () => {
     const id = localStorage.getItem('steady.activePlayer.v1');
@@ -71,7 +71,7 @@ export async function activeToken(page: Page): Promise<string> {
 }
 
 /**
- * Starts a test as a brand-new player (Spec 014: every browser sees the shared list, so a fresh
+ * Starts a test as a brand-new player (Spec 016: every browser sees the shared list, so a fresh
  * browser would otherwise select whoever is first). The name is unique, because the local
  * database keeps players between runs. Returns the name.
  */

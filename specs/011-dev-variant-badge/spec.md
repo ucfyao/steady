@@ -34,7 +34,7 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 - Short names on purpose: the group is not repeated in the name (the tag shows it), and a name fits one line of the player menu. We checked the usual A/B conventions (`control`, `treatment_a`, `treatment_b`); there is no standard for naming test accounts.
 - Each has a **fixed token** (derived from its batch and variant), so a rerun refreshes the same player and a browser that selected one keeps it across reruns.
 - **Running it again refreshes them:** the players with history get it rebuilt as of today and scored by the current rules; the new players are emptied again, so the first visit can be tried again. It never adds copies.
-- They are in everyone's player list (Spec 014), in the order above: by group, old before new.
+- They are in everyone's player list (Spec 016), in the order above: by group, old before new.
 - `pnpm bootstrap` runs it last, so a new setup has the demo players with its database.
 - The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
 

@@ -2,7 +2,7 @@
  * `pnpm seed:demo` (run by `pnpm bootstrap`): sets up six demo players (Spec 011 §2), one per
  * variant with two weeks of history and one per variant with none, named on the server
  * (Spec 013), in the database (DATABASE_URL). Their tokens are fixed, so a rerun refreshes the
- * same players. They appear in everyone's player list (Spec 014). Never part of the API.
+ * same players. They appear in everyone's player list (Spec 016). Never part of the API.
  */
 import { VARIANTS } from '@steady/core';
 import { drizzle } from 'drizzle-orm/node-postgres';

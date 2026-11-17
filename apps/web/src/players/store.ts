@@ -1,5 +1,5 @@
 /**
- * Players (Spec 014): the list is on the server, for everyone. This browser remembers only which
+ * Players (Spec 016): the list is on the server, for everyone. This browser remembers only which
  * player is selected, by id.
  */
 export interface Profile {

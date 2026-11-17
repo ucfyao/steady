@@ -19,7 +19,7 @@ export const players = pgTable('players', {
   variant: text('variant').$type<Variant>().notNull(),
   // The player's name (Spec 013): trimmed, 1 to 30 characters, validated by the API.
   name: text('name').notNull(),
-  // Spec 014: kept in plain text so GET /api/players can hand it out (an accepted trade-off
+  // Spec 016: kept in plain text so GET /api/players can hand it out (an accepted trade-off
   // for this project). Lookups still go through token_hash. Null for players made before it.
   token: text('token'),
 });

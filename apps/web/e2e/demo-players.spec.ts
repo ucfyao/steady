@@ -6,7 +6,7 @@ test('the demo players from pnpm seed:demo are in everyone’s list, with their 
 }) => {
   execFileSync('pnpm', ['--filter', '@steady/api', 'seed:demo'], { encoding: 'utf8' });
 
-  // Spec 014: no link to open; the seeded players are already in the shared list.
+  // Spec 016: no link to open; the seeded players are already in the shared list.
   await page.goto('/progress');
   await page.getByRole('button', { name: /^Player: / }).click();
   for (const name of ['O-Ava', 'N-Amy', 'O-Ben', 'N-Bella', 'O-Cleo', 'N-Cora'])

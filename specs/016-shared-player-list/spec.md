@@ -1,4 +1,4 @@
-# Spec 014: One shared list of players
+# Spec 016: One shared list of players
 
 Status: implemented
 Depends on: Spec 003, Spec 004, Spec 013

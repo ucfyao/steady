@@ -49,8 +49,8 @@ export class PlayersController {
   }
 
   /**
-   * Every player, oldest first, with their token (Spec 014): everyone sees every player and can
-   * act as any of them. Players without a stored token (made before Spec 014) are left out.
+   * Every player, oldest first, with their token (Spec 016): everyone sees every player and can
+   * act as any of them. Players without a stored token (made before Spec 016) are left out.
    */
   @Public()
   @Get('players')

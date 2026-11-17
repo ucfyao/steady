@@ -14,7 +14,7 @@ import { loadActiveId, normaliseName, saveActiveId, type Profile } from './store
 export interface PlayersContextValue {
   status: 'loading' | 'ready' | 'error';
   error: string | null;
-  /** Every player on the server (Spec 014), oldest first. */
+  /** Every player on the server (Spec 016), oldest first. */
   profiles: Profile[];
   /** The selected player. */
   active: Profile | null;
@@ -61,7 +61,7 @@ export function PlayersProvider({
   apiFactory?: (token: string | null) => Api;
   storage?: Storage;
 }) {
-  // Spec 014: the list comes from the server; this browser keeps only the selection.
+  // Spec 016: the list comes from the server; this browser keeps only the selection.
   const [list, setList] = useState<PlayerListItem[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(() => loadActiveId(storage));
   const [error, setError] = useState<string | null>(null);

@@ -23,7 +23,7 @@ const playerRow = async (token: string) =>
   )[0];
 
 describe('POST /api/players', () => {
-  it('returns a 256-bit base64url token, looked up by its hash and kept for the list (Spec 014)', async () => {
+  it('returns a 256-bit base64url token, looked up by its hash and kept for the list (Spec 016)', async () => {
     const res = await request(t.http).post('/api/players').send({ name: 'Ana' }).expect(201);
     const { token } = res.body as { token: string };
     expect(Object.keys(res.body)).toEqual(['token']);
@@ -103,7 +103,7 @@ describe('GET and PATCH /api/me (Spec 013)', () => {
   });
 });
 
-describe('GET /api/players (Spec 014)', () => {
+describe('GET /api/players (Spec 016)', () => {
   type Item = {
     id: string;
     name: string;

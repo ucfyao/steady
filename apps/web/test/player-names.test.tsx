@@ -6,7 +6,7 @@ import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend } from './support/fake-api.js';
 
-// Spec 013: a player's name is stored on the server; with Spec 014 the list itself is too.
+// Spec 013: a player's name is stored on the server; with Spec 016 the list itself is too.
 
 function renderApp(backend = fakeBackend(), path = '/') {
   render(

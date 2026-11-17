@@ -19,7 +19,7 @@ export interface Me {
   variant: Variant;
 }
 
-/** GET /api/players (Spec 014): every player, with the token a request uses to act as them. */
+/** GET /api/players (Spec 016): every player, with the token a request uses to act as them. */
 export interface PlayerListItem {
   id: string;
   name: string;

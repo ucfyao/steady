@@ -56,7 +56,7 @@ describe('PlayersProvider', () => {
     expect(backend.registry).toHaveLength(1);
   });
 
-  it('uses the players on the server without creating a new one (Spec 014)', async () => {
+  it('uses the players on the server without creating a new one (Spec 016)', async () => {
     const backend = fakeBackend();
     backend.addPlayer('Alex', { token: tokenN(9) });
     backend.names.set(tokenN(9), 'Alex'); // the name on the server (Spec 013)

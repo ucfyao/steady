@@ -16,6 +16,7 @@ import { Steps } from '../game/Steps.js';
 import { browserEnv, type PlayEnv } from '../game/env.js';
 import { createPracticePlan, summarisePractice, type PracticeSummary } from '../game/practice.js';
 import type { RunnerOptions } from '../game/runner.js';
+import { useNightPage } from '../Layout.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { Button } from '../ui/Button.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
@@ -70,6 +71,8 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   const [practiced, setPracticed] = useState<PracticeSummary | null>(null);
   /** The A/B variant for practice (Spec 006); the real session uses what the server says. */
   const [variant, setVariant] = useState<Variant>('calm');
+  /** Whether `variant` has arrived; until then the check stays paper (Spec 015). */
+  const [variantKnown, setVariantKnown] = useState(false);
   // Bumped by "Try again" to get the check ready once more.
   const [attempt, setAttempt] = useState(0);
 
@@ -80,6 +83,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       .then(([sessions, me]) => {
         if (cancelled) return;
         setVariant(env.variantOverride ?? me.variant);
+        setVariantKnown(true);
         const first = sessions.length === 0;
         setFirstTime(first);
         setGuided(first);
@@ -90,6 +94,9 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       cancelled = true;
     };
   }, [api, env, attempt]);
+
+  // Spec 015: calm and game see the whole check at night; plain stays paper.
+  useNightPage(variantKnown && variant !== 'plain');
 
   const intro = () => {
     setGuided(true);

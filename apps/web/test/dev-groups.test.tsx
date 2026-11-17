@@ -7,7 +7,7 @@ import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend } from './support/fake-api.js';
 
 // Spec 011: in development, each player's own group in the player menu and Manage players.
-// The groups come with the shared list of players (Spec 014).
+// The groups come with the shared list of players (Spec 016).
 
 function renderApp(opts: { devTools?: boolean; path?: string } = {}) {
   const backend = fakeBackend();
@@ -57,7 +57,7 @@ describe('Player groups in development (Spec 011)', () => {
     expect(await row('Cy').findByText('calm')).toBeInTheDocument();
   });
 
-  it('reads the groups from the one list of players, with no call per player (Spec 014)', async () => {
+  it('reads the groups from the one list of players, with no call per player (Spec 016)', async () => {
     const backend = renderApp({ devTools: true });
     await openMenu();
     await screen.findByText('game');

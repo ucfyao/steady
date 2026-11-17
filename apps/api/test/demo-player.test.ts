@@ -118,7 +118,7 @@ describe('demo player (pnpm seed:demo)', () => {
     expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toEqual([]);
   });
 
-  it('lists the demo players by group, old before new, whatever their ids (Spec 014)', async () => {
+  it('lists the demo players by group, old before new, whatever their ids (Spec 016)', async () => {
     for (let run = 0; run < 3; run++)
       for (const variant of ['game', 'plain', 'calm'] as const)
         for (const kind of ['new', 'history'] as const)

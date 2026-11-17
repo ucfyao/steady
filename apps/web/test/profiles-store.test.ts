@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ACTIVE_KEY, loadActiveId, normaliseName, saveActiveId } from '../src/players/store.js';
 
-// Spec 014: the players are on the server; this browser keeps only the selected id.
+// Spec 016: the players are on the server; this browser keeps only the selected id.
 describe('selected player', () => {
   it('saves, loads and clears the selected id', () => {
     expect(loadActiveId(localStorage)).toBeNull();

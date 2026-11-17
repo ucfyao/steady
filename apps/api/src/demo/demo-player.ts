@@ -133,7 +133,7 @@ export async function seedDemoPlayer(
 ): Promise<{ token: string }> {
   const token = demoToken(variant, kind);
   const history = kind === 'history' ? demoSessions(now) : [];
-  // Oldest first in the shared list (Spec 014): all created when the history starts, a
+  // Oldest first in the shared list (Spec 016): all created when the history starts, a
   // millisecond apart by group and then kind, so the list reads O-Ava, N-Amy, O-Ben, N-Bella,
   // O-Cleo, N-Cora rather than an order left to their random ids.
   const since = demoSessions(now)[0]!.startedAt.getTime();

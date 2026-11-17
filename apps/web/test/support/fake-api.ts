@@ -48,7 +48,7 @@ export function fakeBackend() {
     failSubmitOnce: false,
     failListOnce: false,
     failUpdateOnce: false,
-    /** GET /api/players fails once (Spec 014). */
+    /** GET /api/players fails once (Spec 016). */
     failPlayersOnce: false,
     /** What the failed list throws: a network error, or the server's own (raw) message. */
     failListKind: 'network' as 'network' | 'server',
@@ -65,7 +65,7 @@ export function fakeBackend() {
   const names = new Map<string, string>();
   /** Each PATCH /api/me, in order. */
   const updated: { token: string | null; name: string }[] = [];
-  /** The players on the server, oldest first (Spec 014). */
+  /** The players on the server, oldest first (Spec 016). */
   const registry: { id: string; token: string }[] = [];
   /** The body of each POST /api/players, in order. */
   const createdWith: Parameters<Api['createPlayer']>[0][] = [];

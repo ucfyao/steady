@@ -1,4 +1,4 @@
-# Plan: Spec 014
+# Plan: Spec 016
 
 - core: `PlayerListItem` type.
 - API: `players.token` + migration 0005 (nullable); `POST /api/players` stores it; `GET /api/players` (public) lists players with a token and their completed-session counts; seed stores the demo tokens and prints the names only.

@@ -7,7 +7,7 @@ import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { ACTIVE_KEY } from '../src/players/store.js';
 import { fakeBackend } from './support/fake-api.js';
 
-// Spec 014: one list of players on the server, for everyone; the browser keeps only the selection.
+// Spec 016: one list of players on the server, for everyone; the browser keeps only the selection.
 
 type Backend = ReturnType<typeof fakeBackend>;
 
@@ -36,7 +36,7 @@ async function openMenu() {
 
 const selected = () => localStorage.getItem(ACTIVE_KEY);
 
-describe('Shared player list (Spec 014)', () => {
+describe('Shared player list (Spec 016)', () => {
   it('shows the server’s players in the menu and selects the first, creating nobody', async () => {
     const { backend } = withAvaAndBen();
     renderApp(backend);
