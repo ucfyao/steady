@@ -32,9 +32,13 @@ export function progressOf(sessions: CompletedSession[]): ProgressResponse {
 
 export const tokenN = (n: number) => String(n).padStart(43, 'x');
 
-/** An in-memory stand-in for the API: createPlayer hands out tokens 1, 2, 3, … */
+/**
+ * An in-memory stand-in for the API: createPlayer hands out tokens 1, 2, 3, … and ids p1, p2, …;
+ * `addPlayer` puts a player on the server for a test (tokens 101, 102, …).
+ */
 export function fakeBackend() {
   let issued = 0;
+  let added = 100;
   const calls: { token: string | null; method: string }[] = [];
   const unauthorized = new Set<string>();
   const sessions = new Map<string, CompletedSession[]>();
@@ -44,6 +48,8 @@ export function fakeBackend() {
     failSubmitOnce: false,
     failListOnce: false,
     failUpdateOnce: false,
+    /** GET /api/players fails once (Spec 016). */
+    failPlayersOnce: false,
     /** What the failed list throws: a network error, or the server's own (raw) message. */
     failListKind: 'network' as 'network' | 'server',
     variant: 'calm' as Variant,
@@ -59,6 +65,8 @@ export function fakeBackend() {
   const names = new Map<string, string>();
   /** Each PATCH /api/me, in order. */
   const updated: { token: string | null; name: string }[] = [];
+  /** The players on the server, oldest first (Spec 016). */
+  const registry: { id: string; token: string }[] = [];
   /** The body of each POST /api/players, in order. */
   const createdWith: Parameters<Api['createPlayer']>[0][] = [];
 
@@ -81,6 +89,7 @@ export function fakeBackend() {
         const t = tokenN(++issued);
         names.set(t, body.name.trim());
         if (body.variant) variants.set(t, body.variant);
+        registry.push({ id: `p${issued}`, token: t });
         return { token: t };
       },
       startSession: async (body) => {
@@ -148,7 +157,24 @@ export function fakeBackend() {
       },
       deleteMe: async () => {
         call('deleteMe');
-        if (token) unauthorized.add(token);
+        if (!token) return;
+        unauthorized.add(token);
+        const i = registry.findIndex((r) => r.token === token);
+        if (i >= 0) registry.splice(i, 1);
+      },
+      listPlayers: async () => {
+        call('listPlayers');
+        if (control.failPlayersOnce) {
+          control.failPlayersOnce = false;
+          throw new ApiError('network', 'Could not reach the server.');
+        }
+        return registry.map((r, i) => ({
+          id: r.id,
+          token: r.token,
+          ...me(r.token),
+          completedSessions: (sessions.get(r.token) ?? []).length,
+          createdAt: new Date(i * 1000).toISOString(),
+        }));
       },
     };
   });
@@ -168,5 +194,21 @@ export function fakeBackend() {
     names,
     updated,
     created: () => issued,
+    registry,
+    /** Deletes a player on the server as another browser would: gone from the list, token dead. */
+    deleteElsewhere(token: string) {
+      unauthorized.add(token);
+      const i = registry.findIndex((r) => r.token === token);
+      if (i >= 0) registry.splice(i, 1);
+    },
+    /** Puts a player on the server, as another browser (or the seed) would have. */
+    addPlayer(name: string, opts: { variant?: Variant; token?: string; id?: string } = {}) {
+      const token = opts.token ?? tokenN(++added);
+      const id = opts.id ?? `seed-${registry.length + 1}-${name.toLowerCase()}`;
+      registry.push({ id, token });
+      names.set(token, name);
+      if (opts.variant) variants.set(token, opts.variant);
+      return { id, token };
+    },
   };
 }

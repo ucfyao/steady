@@ -1,4 +1,5 @@
 import {
+  VARIANTS,
   SART_CONFIG,
   TRIAL_MS,
   createSessionPlan,
@@ -98,25 +99,47 @@ export function demoSessions(now: Date): DemoSession[] {
  * A demo player's fixed token (Spec 011 §2): SHA-256 of a name per variant, base64url, so it
  * has the 43 characters of a real token and its import link never changes. Local data only.
  */
-export const demoToken = (variant: Variant) =>
-  createHash('sha256').update(`steady-demo-${variant}`).digest('base64url');
+export const demoToken = (variant: Variant, kind: DemoKind = 'history') =>
+  createHash('sha256')
+    .update(kind === 'new' ? `steady-demo-new-${variant}` : `steady-demo-${variant}`)
+    .digest('base64url');
 
-/** The demo players' names (Spec 013): distinct initials, so their avatars differ. */
-export const DEMO_NAMES: Record<Variant, string> = { plain: 'Ava', calm: 'Ben', game: 'Cleo' };
+/** Spec 011 §2: a demo player with two weeks of history, or a new one with no sessions. */
+export type DemoKind = 'history' | 'new';
+export const DEMO_KINDS: readonly DemoKind[] = ['history', 'new'];
+
+/**
+ * A demo player's name (Spec 011 §2): `O-` (old: has history) or `N-` (new: no sessions), then
+ * a first name whose initial stands for the group (A plain, B calm, C game).
+ */
+const DEMO_FIRST_NAMES: Record<DemoKind, Record<Variant, string>> = {
+  history: { plain: 'Ava', calm: 'Ben', game: 'Cleo' },
+  new: { plain: 'Amy', calm: 'Bella', game: 'Cora' },
+};
+export const demoName = (variant: Variant, kind: DemoKind) =>
+  `${kind === 'history' ? 'O' : 'N'}-${DEMO_FIRST_NAMES[kind][variant]}`;
 
 /**
  * Sets up the demo player of one variant (the game by default, so reviewers see the points on
- * Results; Spec 011 seeds one per variant) with its sessions. Its token is fixed, so a rerun
- * replaces the same player's history (as of `now`, scored by the current rules) rather than
- * adding a copy. Returns the token.
+ * Results; Spec 011 seeds one per variant and kind): with history, or new (no sessions). Its
+ * token is fixed, so a rerun replaces the same player (history rebuilt as of `now` and scored
+ * by the current rules; a new player emptied again) rather than adding a copy. Returns the token.
  */
 export async function seedDemoPlayer(
   db: Db,
   now: Date,
   variant: Variant = 'game',
+  kind: DemoKind = 'history',
 ): Promise<{ token: string }> {
-  const token = demoToken(variant);
-  const history = demoSessions(now);
+  const token = demoToken(variant, kind);
+  const history = kind === 'history' ? demoSessions(now) : [];
+  // Oldest first in the shared list (Spec 016): all created when the history starts, a
+  // millisecond apart by group and then kind, so the list reads O-Ava, N-Amy, O-Ben, N-Bella,
+  // O-Cleo, N-Cora rather than an order left to their random ids.
+  const since = demoSessions(now)[0]!.startedAt.getTime();
+  const createdAt = new Date(
+    since + VARIANTS.indexOf(variant) * DEMO_KINDS.length + DEMO_KINDS.indexOf(kind),
+  );
   await db.transaction(async (tx) => {
     // The sessions go with the player (ON DELETE CASCADE).
     await tx.delete(players).where(eq(players.tokenHash, hashToken(token)));
@@ -124,11 +147,13 @@ export async function seedDemoPlayer(
       .insert(players)
       .values({
         tokenHash: hashToken(token),
-        createdAt: history[0]!.startedAt,
+        token,
+        createdAt,
         variant,
-        name: DEMO_NAMES[variant],
+        name: demoName(variant, kind),
       })
       .returning({ id: players.id });
+    if (history.length === 0) return;
     await tx.insert(sessions).values(
       history.map((s) => {
         const check = validateSubmission(s.plan, s.submission);

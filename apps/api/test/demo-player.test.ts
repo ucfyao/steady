@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 import { players, sessions } from '../src/db/schema.js';
 import { demoSessions, seedDemoPlayer } from '../src/demo/demo-player.js';
 import { startTestApp, type TestApp } from './support/app.js';
-import { auth, newPlayer } from './support/players.js';
+import { auth, newPlayer, playSession } from './support/players.js';
 
 const NOW = new Date(2026, 10, 16, 14, 0); // local time, so the day checks hold in any zone
 const DAY = 86_400_000;
@@ -69,7 +69,7 @@ describe('demo player (pnpm seed:demo)', () => {
     for (const variant of ['plain', 'calm', 'game'] as const) {
       const { token } = await seedDemoPlayer(t.db, NOW, variant);
       expect((await request(t.http).get('/api/me').set(auth(token)).expect(200)).body).toEqual({
-        name: { plain: 'Ava', calm: 'Ben', game: 'Cleo' }[variant],
+        name: { plain: 'O-Ava', calm: 'O-Ben', game: 'O-Cleo' }[variant],
         variant,
       });
       const list = (await request(t.http).get('/api/sessions').set(auth(token)).expect(200))
@@ -96,6 +96,39 @@ describe('demo player (pnpm seed:demo)', () => {
       .body as CompletedSession[];
     expect(list).toHaveLength(10);
     expect(new Date(list.at(-1)!.completedAt).getTime()).toBeGreaterThan(NOW.getTime());
+  });
+
+  it('seeds new demo players with no sessions, and a rerun empties them again (Spec 011 §2)', async () => {
+    for (const [variant, name] of [
+      ['plain', 'N-Amy'],
+      ['calm', 'N-Bella'],
+      ['game', 'N-Cora'],
+    ] as const) {
+      const { token } = await seedDemoPlayer(t.db, NOW, variant, 'new');
+      expect(token).not.toBe((await seedDemoPlayer(t.db, NOW, variant)).token);
+      const me = await request(t.http).get('/api/me').set(auth(token)).expect(200);
+      expect(me.body).toEqual({ name, variant });
+      expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toEqual([]);
+    }
+    // Played once, then seeded again: a new player once more, under the same token.
+    const { token } = await seedDemoPlayer(t.db, NOW, 'calm', 'new');
+    await playSession(t, token);
+    expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toHaveLength(1);
+    expect((await seedDemoPlayer(t.db, NOW, 'calm', 'new')).token).toBe(token);
+    expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toEqual([]);
+  });
+
+  it('lists the demo players by group, old before new, whatever their ids (Spec 016)', async () => {
+    for (let run = 0; run < 3; run++)
+      for (const variant of ['game', 'plain', 'calm'] as const)
+        for (const kind of ['new', 'history'] as const)
+          await seedDemoPlayer(t.db, NOW, variant, kind);
+    const names = (
+      (await request(t.http).get('/api/players').expect(200)).body as { name: string }[]
+    )
+      .map((p) => p.name)
+      .filter((n) => /^[ON]-/.test(n));
+    expect(names).toEqual(['O-Ava', 'N-Amy', 'O-Ben', 'N-Bella', 'O-Cleo', 'N-Cora']);
   });
 
   it('is the same history on every run', () => {

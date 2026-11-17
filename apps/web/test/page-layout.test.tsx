@@ -1,12 +1,11 @@
 import type { CompletedSession } from '@steady/core';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Api } from '../src/api/client.js';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
-import { saveProfiles } from '../src/players/store.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { storedSession } from './support/sessions.js';
 
@@ -75,24 +74,20 @@ describe('Spec 010 §1: screen titles', () => {
 
   it('Results says "Session complete." while the history loads, never a blank line', async () => {
     const s1 = storedSession(1);
-    saveProfiles(localStorage, {
-      profiles: [{ id: 'ana', name: 'Ana', token: tokenN(1) }],
-      activeId: 'ana',
-    });
     open({ pathname: '/results/s1', state: { session: s1, playerId: 'ana' } }, [s1], {
       wrap: () => ({ listSessions: never }),
+      setup: (b) => b.addPlayer('Ana', { token: tokenN(1), id: 'ana' }),
     });
     expect(await screen.findByTestId('conclusion')).toHaveTextContent(/^Session complete\.$/);
   });
 
   it('Results says "Session complete." when the history fails', async () => {
     const s1 = storedSession(1);
-    saveProfiles(localStorage, {
-      profiles: [{ id: 'ana', name: 'Ana', token: tokenN(1) }],
-      activeId: 'ana',
-    });
     open({ pathname: '/results/s1', state: { session: s1, playerId: 'ana' } }, [s1], {
-      setup: (b) => (b.control.failListOnce = true),
+      setup: (b) => {
+        b.addPlayer('Ana', { token: tokenN(1), id: 'ana' });
+        b.control.failListOnce = true;
+      },
     });
     expect(await screen.findByTestId('conclusion')).toHaveTextContent(/^Session complete\.$/);
   });
@@ -120,25 +115,6 @@ describe('Spec 010 §3: waiting', () => {
     open('/', [storedSession(1)]);
     expect(await screen.findByRole('region', { name: 'Last 7 days' })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'Loading your history' })).toBeNull();
-  });
-
-  it('Import waits with the shared status', async () => {
-    const DEMO = tokenN(42);
-    const backend = fakeBackend();
-    const factory = (token: string | null): Api => {
-      const api = backend.factory(token);
-      return token === DEMO ? { ...api, listSessions: never } : api;
-    };
-    const path = `/import#token=${DEMO}&name=Demo`;
-    window.history.replaceState(null, '', path);
-    render(
-      <PlayersProvider apiFactory={factory} storage={localStorage}>
-        <MemoryRouter initialEntries={[path]}>
-          <AppRoutes />
-        </MemoryRouter>
-      </PlayersProvider>,
-    );
-    expect(await screen.findByRole('status')).toHaveTextContent('Checking the link…');
   });
 });
 
@@ -182,29 +158,5 @@ describe('Spec 010 §3: errors in plain words', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByRole('heading', { name: 'How are you today?' })).toBeVisible();
-  });
-
-  it("Import's error is a status page", async () => {
-    const DEMO = tokenN(42);
-    const backend = fakeBackend();
-    backend.unauthorized.add(DEMO);
-    const path = `/import#token=${DEMO}&name=Demo`;
-    window.history.replaceState(null, '', path);
-    render(
-      <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
-        <MemoryRouter initialEntries={[path]}>
-          <AppRoutes />
-        </MemoryRouter>
-      </PlayersProvider>,
-    );
-    const title = await screen.findByRole('heading', {
-      level: 1,
-      name: "Couldn't import this player",
-    });
-    // The shared status page: its round mark sits right before the title.
-    expect(title.previousElementSibling).toHaveAttribute('aria-hidden', 'true');
-    expect(within(title.parentElement!).getByRole('alert')).toHaveTextContent(
-      /doesn.t match a player/i,
-    );
   });
 });

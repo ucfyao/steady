@@ -10,15 +10,21 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { CreatePlayerSchema, UpdateMeSchema, VARIANTS, type Me } from '@steady/core';
+import {
+  CreatePlayerSchema,
+  UpdateMeSchema,
+  VARIANTS,
+  type Me,
+  type PlayerListItem,
+} from '@steady/core';
 import { Throttle } from '@nestjs/throttler';
-import { eq } from 'drizzle-orm';
+import { and, asc, count, eq, isNotNull } from 'drizzle-orm';
 import { PlayerId } from '../auth/player-id.decorator.js';
 import { Public } from '../auth/public.decorator.js';
 import { hashToken, newToken } from '../auth/token.js';
 import { ZodValidationPipe } from '../common/zod.pipe.js';
 import { DB, type Db } from '../db/db.module.js';
-import { players } from '../db/schema.js';
+import { players, sessions } from '../db/schema.js';
 import type { z } from 'zod';
 
 @Controller()
@@ -36,8 +42,34 @@ export class PlayersController {
     // [P] Spec 006 §5, Spec 008: a third each, kept for the player's whole history.
     // Spec 011 §3: the development tools may choose it; the app never does for a player.
     const variant = body.variant ?? VARIANTS[randomInt(VARIANTS.length)]!;
-    await this.db.insert(players).values({ tokenHash: hashToken(token), variant, name: body.name });
+    await this.db
+      .insert(players)
+      .values({ tokenHash: hashToken(token), token, variant, name: body.name });
     return { token };
+  }
+
+  /**
+   * Every player, oldest first, with their token (Spec 016): everyone sees every player and can
+   * act as any of them. Players without a stored token (made before Spec 016) are left out.
+   */
+  @Public()
+  @Get('players')
+  async list(): Promise<PlayerListItem[]> {
+    const rows = await this.db
+      .select({
+        id: players.id,
+        name: players.name,
+        variant: players.variant,
+        token: players.token,
+        createdAt: players.createdAt,
+        completedSessions: count(sessions.id),
+      })
+      .from(players)
+      .leftJoin(sessions, and(eq(sessions.playerId, players.id), isNotNull(sessions.completedAt)))
+      .where(isNotNull(players.token))
+      .groupBy(players.id)
+      .orderBy(asc(players.createdAt), asc(players.id));
+    return rows.map((r) => ({ ...r, token: r.token!, createdAt: r.createdAt.toISOString() }));
   }
 
   /** The player's name (Spec 013) and A/B variant (Spec 006), which practice already shows. */

@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { activeToken, hidePage, playBlock, skipCheckIn } from './helpers.js';
+import { activeToken, asNewPlayer, hidePage, playBlock, skipCheckIn } from './helpers.js';
 
 test('a new player practises, plays a full session and sees results and progress', async ({
   page,
+  request,
 }) => {
+  const me = await asNewPlayer(page, request, 'New');
   await page.goto('/play');
 
   // First visit: step 1 (how it works), the practice round, then step 2 (before you start)
@@ -54,21 +56,22 @@ test('a new player practises, plays a full session and sees results and progress
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(add).toBeFocused();
   await add.click();
-  await page.getByRole('textbox', { name: 'Name' }).fill('Sam');
+  const sam = `Sam ${Date.now() % 100_000}`;
+  await page.getByRole('textbox', { name: 'Name' }).fill(sam);
   await page.getByRole('button', { name: 'Create' }).click();
-  await expect(page.getByRole('listitem').filter({ hasText: 'Sam' })).toBeVisible();
+  await expect(page.getByRole('listitem').filter({ hasText: sam })).toBeVisible();
   // Adding does not switch player; the menu does.
   await avatar.click();
-  await page.getByRole('menuitemradio', { name: 'Sam' }).click();
-  await expect(page.getByRole('button', { name: 'Player: Sam' })).toBeVisible();
+  await page.getByRole('menuitemradio', { name: sam }).click();
+  await expect(page.getByRole('button', { name: `Player: ${sam}` })).toBeVisible();
   await page.getByRole('link', { name: 'Progress' }).click();
   await expect(page.getByText(/no sessions yet/i)).toBeVisible();
   await page.goto(resultsUrl);
   await expect(page.getByRole('heading', { name: 'Session not found' })).toBeVisible();
 
-  // Switching back shows the first player's session again.
-  await page.getByRole('button', { name: 'Player: Sam' }).click();
-  await page.getByRole('menuitemradio').first().click();
+  // Switching back shows this player's session again.
+  await page.getByRole('button', { name: `Player: ${sam}` }).click();
+  await page.getByRole('menuitemradio', { name: me }).click();
   // For screen readers only (Spec 010): attached, not visible.
   await expect(page.getByRole('heading', { level: 1, name: 'Session complete' })).toBeAttached();
 
@@ -82,6 +85,7 @@ test('a new player practises, plays a full session and sees results and progress
 });
 
 test('leaving the page during trials voids the session', async ({ page, request }) => {
+  await asNewPlayer(page, request, 'Leaver');
   await page.goto('/play');
   await page.getByRole('button', { name: 'Try a short practice' }).click();
   await playBlock(page);

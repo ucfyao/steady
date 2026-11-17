@@ -46,8 +46,8 @@ export function Players() {
         </div>
       </div>
       <p className={styles.lead}>
-        Each player&apos;s name and sessions are stored on the server under their own key. This
-        browser holds the keys, so clearing its data loses access to every player&apos;s history.
+        Everyone using Steady sees every player here. Choose one in the avatar menu to see their
+        sessions and progress.
       </p>
 
       <ul className={styles.list}>
@@ -230,10 +230,7 @@ function PlayerRow({
           aria-label={`Delete all data for ${player.name}`}
           className={styles.confirm}
         >
-          <p>
-            Deletes {player.name}&apos;s sessions from the server and removes {player.name} from
-            this browser. This cannot be undone.
-          </p>
+          <p>Deletes {player.name} and all their sessions, for everyone. This cannot be undone.</p>
           <div className={styles.formButtons}>
             <Button
               variant="danger"

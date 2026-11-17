@@ -3,6 +3,7 @@ import type {
   CompletedSession,
   InputDevice,
   Me,
+  PlayerListItem,
   ProgressResponse,
   StartedSession,
   Submission,
@@ -47,6 +48,8 @@ export interface Api {
   listSessions(): Promise<CompletedSession[]>;
   getProgress(): Promise<ProgressResponse>;
   deleteMe(): Promise<void>;
+  /** Every player, with their tokens (Spec 016); needs no token. */
+  listPlayers(): Promise<PlayerListItem[]>;
 }
 
 const KIND_BY_STATUS: Record<number, ApiErrorKind> = {
@@ -99,6 +102,7 @@ export function createApi(token: string | null, fetchFn: typeof fetch = fetch): 
     listSessions: () => request('GET', '/sessions'),
     getProgress: () => request('GET', '/progress'),
     deleteMe: () => request('DELETE', '/me'),
+    listPlayers: () => request('GET', '/players'),
   };
 }
 

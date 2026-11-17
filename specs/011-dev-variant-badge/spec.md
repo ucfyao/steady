@@ -18,13 +18,25 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 - A player whose group cannot be read shows no group.
 - The bottom-left badge is gone. The `?variant=` override (Spec 006 §5) stays for quick play-tests, without anything on screen.
 
-## 2. Three fixed demo players, set up with the database
+## 2. Fixed demo players, set up with the database
 
-- `pnpm seed:demo` sets up three demo players, one per variant (named on the server by Spec 013: **Ava**, **Ben** and **Cleo**), each with the same two weeks of history played in its own variant, and prints an import link for each.
-- Each has a **fixed token** (derived from its variant), so its link never changes: a browser that has imported a demo player keeps it across database resets and reruns.
-- **Running it again refreshes them:** the same three players get their history rebuilt, so it stays "the past two weeks" and is scored by the current rules. It never adds copies.
+`pnpm seed:demo` sets up six demo players, one old and one new per group, named on the server (Spec 013). A name is `O-` (old: has history) or `N-` (new: no sessions) and a first name whose initial stands for the group: **A** plain, **B** calm, **C** game. The group itself shows as the development tag.
+
+| Name        | Group           | Data                                                                                                         |
+| ----------- | --------------- | ------------------------------------------------------------------------------------------------------------ |
+| **O-Ava**   | plain (control) | two weeks of history (10 sessions), played in its group                                                      |
+| **N-Amy**   | plain (control) | no sessions: opening the app as her is a new player's first visit (how it works, practice, before you start) |
+| **O-Ben**   | calm            | as O-Ava                                                                                                     |
+| **N-Bella** | calm            | as N-Amy                                                                                                     |
+| **O-Cleo**  | game            | as O-Ava                                                                                                     |
+| **N-Cora**  | game            | as N-Amy                                                                                                     |
+
+- Short names on purpose: the group is not repeated in the name (the tag shows it), and a name fits one line of the player menu. We checked the usual A/B conventions (`control`, `treatment_a`, `treatment_b`); there is no standard for naming test accounts.
+- Each has a **fixed token** (derived from its batch and variant), so a rerun refreshes the same player and a browser that selected one keeps it across reruns.
+- **Running it again refreshes them:** the players with history get it rebuilt as of today and scored by the current rules; the new players are emptied again, so the first visit can be tried again. It never adds copies.
+- They are in everyone's player list (Spec 016), in the order above: by group, old before new.
 - `pnpm bootstrap` runs it last, so a new setup has the demo players with its database.
-- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged. The links point at `http://localhost:5173` unless `WEB_URL` says otherwise.
+- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
 
 ## 3. Choosing the group of a new player (development only)
 
@@ -36,6 +48,6 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 ## 4. Tests
 
 - Web: without the development flag no group is shown; with it, the menu and Manage players show each player's own group, and a player whose group cannot be read shows none.
-- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it; its token is the same on every run; a second run replaces its history (still 10 sessions, one player).
+- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it; its token is the same on every run; a second run replaces its history (still 10 sessions, one player); a new demo player has no sessions, and a rerun empties it again; the list shows them by group, old before new.
 - API: a chosen variant is stored; an unknown variant or an extra field is a 400; no body is still a random group.
 - Web: the Group choice shows only with the development flag; Random sends no variant, a chosen group is sent and then shown in the menu.
