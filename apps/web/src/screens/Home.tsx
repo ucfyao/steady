@@ -40,21 +40,25 @@ function Stat({
   );
 }
 
-/** For a player with no checks yet: what Steady is, before anything about history (Spec 005). */
+/**
+ * For a player with no checks yet: what Steady is, before anything about history (Spec 005).
+ * No panel (Spec 014 §3): a sentence and three points, without repeating the hero's lead.
+ */
 function Welcome() {
   return (
-    <Card as="section" aria-labelledby="welcome-title">
-      <h2 id="welcome-title">What Steady does</h2>
-      <p className={styles.empty}>
-        A short game that shows how steady your attention is today. Play a few times a week to see
-        your own pattern.
+    <section aria-labelledby="welcome-title" className={styles.welcome}>
+      <h2 id="welcome-title" className="visually-hidden">
+        What Steady does
+      </h2>
+      <p className={styles.welcomeLead}>
+        A short game that shows how steady your attention is today.
       </p>
-      <ul className={styles.points}>
-        <li>About two minutes</li>
+      <ul className={styles.welcomePoints}>
         <li>Starts with a 30-second practice</li>
         <li>Compared only with your own results</li>
+        <li>Best a few times a week</li>
       </ul>
-    </Card>
+    </section>
   );
 }
 
@@ -114,17 +118,33 @@ export function Home() {
   return (
     <section className={styles.home}>
       {/* The lantern's scene (Spec 007 §1); a game player sees the last sky they reached. */}
-      <section aria-label="Today's check" className={styles.hero}>
-        <Scene ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))} />
-        <span className={styles.heroLantern} aria-hidden="true" />
-        <div className={styles.heroText}>
-          <h1 id="hero-title">Hi, {active?.name}</h1>
-          {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
-          <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
-          {lastSky !== null && <p className={styles.sky}>Last sky: dawn {lastSky}%</p>}
-          <Button to="/play" size="lg" className={styles.start}>
-            Start today&apos;s check
-          </Button>
+      {/* `--dawn` on the hero too, so the wash behind the text grows only as the sky lightens. */}
+      <section
+        aria-label="Today's check"
+        className={styles.hero}
+        ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
+      >
+        <Scene
+          rich
+          ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
+        />
+        <div className={styles.heroInner}>
+          {/* A lit paper lantern on a cord, drawn in CSS (Spec 014 §2). */}
+          <span className={styles.heroLantern} aria-hidden="true" data-testid="hero-lantern">
+            <span className={styles.cord} />
+            <span className={styles.lanternCap} />
+            <span className={styles.lanternGlass} />
+            <span className={styles.lanternBase} />
+          </span>
+          <div className={styles.heroText}>
+            <h1 id="hero-title">Hi, {active?.name}</h1>
+            {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
+            <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
+            {lastSky !== null && <p className={styles.sky}>Last sky: dawn {lastSky}%</p>}
+            <Button to="/play" size="lg" className={styles.start}>
+              Start today&apos;s check
+            </Button>
+          </div>
         </div>
       </section>
       {failed && (

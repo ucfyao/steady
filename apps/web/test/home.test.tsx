@@ -50,17 +50,19 @@ describe('Home', () => {
     renderHome([]);
     const welcome = await screen.findByRole('region', { name: 'What Steady does' });
     expect(welcome).toHaveTextContent(
-      'A short game that shows how steady your attention is today. Play a few times a week to see your own pattern.',
+      'A short game that shows how steady your attention is today.',
     );
     expect(
       within(welcome)
         .getAllByRole('listitem')
         .map((li) => li.textContent),
     ).toEqual([
-      'About two minutes',
       'Starts with a 30-second practice',
       'Compared only with your own results',
+      'Best a few times a week',
     ]);
+    // The hero's lead already says how long it takes (Spec 014 §3).
+    expect(welcome).not.toHaveTextContent('About two minutes');
     expect(screen.queryByRole('region', { name: 'Last 7 days' })).toBeNull();
     expect(screen.queryByRole('region', { name: /^Last check/ })).toBeNull();
     expect(screen.queryByText(/until your starting point/)).toBeNull();
