@@ -6,9 +6,9 @@ import { Home } from './screens/Home.js';
 import { Import } from './screens/Import.js';
 import { NotFound } from './screens/NotFound.js';
 import { Play } from './screens/Play.js';
+import { Players } from './screens/Players.js';
 import { Progress } from './screens/Progress.js';
 import { Results } from './screens/Results.js';
-import { YourData } from './screens/YourData.js';
 
 /** `playEnv` lets tests drive the game with a fake clock. */
 export function AppRoutes({ playEnv }: { playEnv?: PlayEnv } = {}) {
@@ -19,7 +19,7 @@ export function AppRoutes({ playEnv }: { playEnv?: PlayEnv } = {}) {
         <Route path="play" element={<Play env={playEnv} />} />
         <Route path="results/:id" element={<Results />} />
         <Route path="progress" element={<Progress />} />
-        <Route path="data" element={<YourData />} />
+        <Route path="players" element={<Players />} />
         <Route path="import" element={<Import />} />
         <Route path="*" element={<NotFound />} />
       </Route>

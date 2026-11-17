@@ -4,6 +4,7 @@ import {
   STORAGE_KEY,
   activeProfile,
   addProfile,
+  importProfile,
   loadProfiles,
   normaliseName,
   removeProfile,
@@ -31,10 +32,18 @@ describe('profile store', () => {
     expect(loadProfiles(localStorage)).toEqual(state);
   });
 
-  it('makes a newly added profile active', () => {
+  it('makes only the first profile active; adding another keeps the active one', () => {
     const state = addProfile(addProfile(EMPTY, alex), sam);
     expect(state.profiles.map((p) => p.name)).toEqual(['Alex', 'Sam']);
-    expect(activeProfile(state)).toEqual(sam);
+    expect(activeProfile(state)).toEqual(alex);
+  });
+
+  it('imports a new profile as the active one, or switches to a known token', () => {
+    const state = addProfile(EMPTY, alex);
+    expect(activeProfile(importProfile(state, sam))).toEqual(sam);
+    const again = importProfile(importProfile(state, sam), { ...alex, id: 'other' });
+    expect(again.profiles).toHaveLength(2);
+    expect(activeProfile(again)).toEqual(alex);
   });
 
   it('switches only to a known profile', () => {
@@ -52,7 +61,7 @@ describe('profile store', () => {
   });
 
   it('falls back to the first remaining profile when the active one is removed', () => {
-    const state = addProfile(addProfile(EMPTY, alex), sam); // Sam active
+    const state = switchProfile(addProfile(addProfile(EMPTY, alex), sam), 's');
     const removed = removeProfile(state, 's');
     expect(removed.profiles).toEqual([alex]);
     expect(activeProfile(removed)).toEqual(alex);
@@ -60,7 +69,7 @@ describe('profile store', () => {
   });
 
   it('keeps the active profile when another one is removed', () => {
-    const state = addProfile(addProfile(EMPTY, alex), sam);
+    const state = switchProfile(addProfile(addProfile(EMPTY, alex), sam), 's');
     expect(activeProfile(removeProfile(state, 'a'))).toEqual(sam);
   });
 });
