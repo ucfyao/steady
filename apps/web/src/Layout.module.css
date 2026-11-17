@@ -132,6 +132,20 @@
   font-weight: var(--font-weight-medium);
 }
 
+/* A group of choices stretches its items like the menu does, so the checked dot sits right. */
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A small label over a group of choices (Appearance, Spec 012). */
+.groupLabel {
+  display: block;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
 .separator {
   height: 1px;
   margin: var(--space-2) 0;

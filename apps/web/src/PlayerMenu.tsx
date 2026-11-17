@@ -1,12 +1,29 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
 import { usePlayers } from './players/usePlayers.js';
+import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from './theme/theme.js';
 import styles from './Layout.module.css';
+
+const THEME_NAMES: Record<Theme, string> = {
+  system: 'Match system',
+  light: 'Light',
+  dark: 'Dark',
+};
+
+/** localStorage, or nothing where reading it throws (blocked site data). */
+const browserStorage = () => {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+};
 
 const initialOf = (name: string) => Array.from(name.trim())[0]?.toUpperCase() ?? '?';
 
 /**
- * The avatar menu (WAI-ARIA menu button): switch player, or open Manage players.
+ * The avatar menu (WAI-ARIA menu button): switch player, open Manage players, or choose light
+ * or dark (Spec 012).
  * Opens on click, Enter, Space or the arrow keys; the arrows, Home and End move between
  * items; Escape closes it and returns focus to the avatar; Tab or a click outside closes it.
  */
@@ -17,6 +34,8 @@ export function PlayerMenu() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const appearanceId = useId();
+  const [theme, setTheme] = useState<Theme>(() => readTheme(browserStorage()));
 
   const items = () =>
     Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []);
@@ -116,6 +135,31 @@ export function PlayerMenu() {
           >
             Manage players
           </Link>
+          <div role="separator" className={styles.separator} />
+          {/* This browser's choice for every player, not a player's setting (Spec 012). */}
+          <div role="group" aria-labelledby={appearanceId} className={styles.group}>
+            <span id={appearanceId} className={styles.groupLabel}>
+              Appearance
+            </span>
+            {THEMES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                role="menuitemradio"
+                aria-checked={t === theme}
+                tabIndex={-1}
+                className={styles.item}
+                onClick={() => {
+                  setTheme(t);
+                  saveTheme(browserStorage(), t);
+                  applyTheme(document.documentElement, t);
+                  close();
+                }}
+              >
+                {THEME_NAMES[t]}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

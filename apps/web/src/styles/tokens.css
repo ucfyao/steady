@@ -100,9 +100,12 @@
   }
 }
 
-/* Dark: the same paper at night. Warm near-black, sage lifted so it still reads as the accent. */
+/*
+ * Dark: the same paper at night. With the system (Match system), or chosen in the avatar menu
+ * (Spec 012: data-theme on <html>). Light chosen on a dark system keeps the light set above.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
 
     --color-bg: #1d1b18;
@@ -130,6 +133,36 @@
     --color-viz-early: #e0b252;
     --color-viz-missed: #2b3035;
   }
+}
+
+/* The same values as the block above: change both together. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #1d1b18;
+  --color-surface: #26231f;
+  --color-text: #ece6da;
+  --color-text-muted: #a8a191;
+  --color-border: #3a362f;
+  --color-border-strong: #4d483f;
+
+  --color-accent: #9cbba0;
+  --color-on-accent: #1d1b18;
+  --color-accent-soft: #7f9c83;
+  --color-link: #a9c6ad;
+  --color-danger: #e8907f;
+  --color-on-danger: #1d1b18;
+  --color-focus: #a9c6ad;
+  --color-accent-tint: #2f3b31;
+  --color-danger-tint: #4a2c26;
+  --color-surface-sunken: #2f2b26;
+  --color-mark: #3a362f;
+  --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
+
+  --color-viz-steady: #3f7f71;
+  --color-viz-caught: #7fb0ec;
+  --color-viz-early: #e0b252;
+  --color-viz-missed: #2b3035;
 }
 
 /* Reset */
