@@ -1,7 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { bootScript } from '../src/theme/boot.js';
@@ -89,48 +89,98 @@ function renderApp() {
   );
 }
 
-async function openMenu() {
-  await userEvent.click(await screen.findByRole('button', { name: /^Player: / }));
-  return screen.getByRole('menu', { name: 'Player' });
+/** A system colour scheme the test can change, as `matchMedia` reports it. */
+function fakeSystem(dark: boolean) {
+  const listeners = new Set<() => void>();
+  const query = {
+    get matches() {
+      return dark;
+    },
+    addEventListener: (_: 'change', l: () => void) => listeners.add(l),
+    removeEventListener: (_: 'change', l: () => void) => listeners.delete(l),
+  };
+  window.matchMedia = vi.fn((q: string) =>
+    q === '(prefers-color-scheme: dark)' ? query : { matches: false },
+  ) as unknown as typeof window.matchMedia;
+  return {
+    set(next: boolean) {
+      dark = next;
+      act(() => listeners.forEach((l) => l()));
+    },
+  };
 }
 
-const choice = (menu: HTMLElement, name: string) =>
-  within(within(menu).getByRole('group', { name: 'Appearance' })).getByRole('menuitemradio', {
-    name,
+const toggle = () => screen.findByRole('button', { name: /^Switch to (dark|light)$/ });
+
+describe('the light/dark button in the header', () => {
+  afterEach(() => {
+    delete (window as { matchMedia?: unknown }).matchMedia;
   });
 
-describe('Appearance in the avatar menu', () => {
-  it('offers Match system, Light and Dark, with Match system checked by default', async () => {
+  it('follows a light system until clicked, then keeps dark', async () => {
+    fakeSystem(false);
     renderApp();
-    const menu = await openMenu();
-    const group = within(menu).getByRole('group', { name: 'Appearance' });
-    expect(
-      within(group)
-        .getAllByRole('menuitemradio')
-        .map((i) => i.textContent),
-    ).toEqual(['Match system', 'Light', 'Dark']);
-    expect(choice(menu, 'Match system')).toHaveAttribute('aria-checked', 'true');
-    expect(choice(menu, 'Dark')).toHaveAttribute('aria-checked', 'false');
-  });
+    const button = await toggle();
+    expect(button).toHaveAccessibleName('Switch to dark');
+    expect(root).not.toHaveAttribute('data-theme');
 
-  it('applies and keeps Dark, then closes and returns focus to the avatar', async () => {
-    renderApp();
-    await userEvent.click(choice(await openMenu(), 'Dark'));
+    await userEvent.click(button);
     expect(root).toHaveAttribute('data-theme', 'dark');
     expect(localStorage.getItem(KEY)).toBe('dark');
-    expect(screen.queryByRole('menu')).toBeNull();
-    expect(screen.getByRole('button', { name: /^Player: / })).toHaveFocus();
-    expect(choice(await openMenu(), 'Dark')).toHaveAttribute('aria-checked', 'true');
+    expect(button).toHaveAccessibleName('Switch to light');
+
+    await userEvent.click(button);
+    expect(root).toHaveAttribute('data-theme', 'light');
+    expect(localStorage.getItem(KEY)).toBe('light');
+    expect(button).toHaveAccessibleName('Switch to dark');
   });
 
-  it('Match system hands control back to the system', async () => {
-    localStorage.setItem(KEY, 'light');
-    root.setAttribute('data-theme', 'light');
+  it('offers light on a dark system, and follows the system while nothing is chosen', async () => {
+    const system = fakeSystem(true);
     renderApp();
-    const menu = await openMenu();
-    expect(choice(menu, 'Light')).toHaveAttribute('aria-checked', 'true');
-    await userEvent.click(choice(menu, 'Match system'));
-    expect(root).not.toHaveAttribute('data-theme');
-    expect(localStorage.getItem(KEY)).toBeNull();
+    const button = await toggle();
+    expect(button).toHaveAccessibleName('Switch to light');
+    system.set(false);
+    expect(button).toHaveAccessibleName('Switch to dark');
+  });
+
+  it('keeps a stored choice whatever the system does', async () => {
+    localStorage.setItem(KEY, 'dark');
+    const system = fakeSystem(false);
+    renderApp();
+    const button = await toggle();
+    expect(button).toHaveAccessibleName('Switch to light');
+    system.set(true);
+    system.set(false);
+    expect(button).toHaveAccessibleName('Switch to light');
+  });
+
+  it('still switches the page when storage is blocked', async () => {
+    fakeSystem(false);
+    const original = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    renderApp();
+    const button = await toggle();
+    Object.defineProperty(window, 'localStorage', { configurable: true, get: () => blocked });
+    try {
+      await userEvent.click(button);
+      expect(root).toHaveAttribute('data-theme', 'dark');
+      expect(button).toHaveAccessibleName('Switch to light');
+    } finally {
+      Object.defineProperty(window, 'localStorage', original);
+    }
+  });
+
+  it('works without matchMedia, as light', async () => {
+    renderApp();
+    expect(await toggle()).toHaveAccessibleName('Switch to dark');
+  });
+
+  it('is no longer in the avatar menu', async () => {
+    fakeSystem(false);
+    renderApp();
+    await userEvent.click(await screen.findByRole('button', { name: /^Player: / }));
+    const menu = screen.getByRole('menu', { name: 'Player' });
+    expect(within(menu).queryByRole('group', { name: 'Appearance' })).toBeNull();
+    expect(within(menu).queryByText('Dark')).toBeNull();
   });
 });

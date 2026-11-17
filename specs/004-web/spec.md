@@ -26,7 +26,7 @@ Returning:      Home ──▶ Before you start ─(Start / Skip and start)─�
                            └─ How to play ──▶ Step 1 (Try a short practice, or Skip practice ──▶ Step 2)
 During countdown, trials and probes (focus mode): leave the tab ──▶ "Session voided" (Play again ──▶ Before you start, or Back to home)
 During countdown, trials and probes (focus mode): Stop (×) or Escape ──▶ "Session stopped" (Spec 009; same two ways on)
-Home ──▶ Progress; avatar menu ──▶ Manage players, Appearance (Spec 012)
+Home ──▶ Progress; avatar menu ──▶ Manage players; light/dark button in the header (Spec 012)
 Any unknown address ──▶ "Page not found"
 ```
 
@@ -96,7 +96,7 @@ One shared component (`src/ui/StatusPage`) for every "this did not work" page: a
 ## Accessibility and look
 
 - "Quiet paper" look (approved design, 2026-11-16): warm paper surfaces, a sage accent, Fraunces headings and Inter text. Every colour, font, size, space and radius is a CSS variable in `src/styles/tokens.css`, with a dark set for `prefers-color-scheme: dark`; text colours are adjusted where needed to meet WCAG AA. Shared controls live in `src/ui` (Button, Chip/ChipGroup on native radios, Card) with CSS Modules.
-- Calm, high-contrast colours; respects `prefers-reduced-motion` (no animated transitions) and the system colour scheme, unless Light or Dark is chosen in the avatar menu (Spec 012).
+- Calm, high-contrast colours; respects `prefers-reduced-motion` (no animated transitions) and the system colour scheme, until light or dark is chosen with the header's button (Spec 012).
 - Everything outside the trial block works with a keyboard and a screen reader. During the block, the digit area is not announced (it would interfere with the task).
 - Usable at phone width.
 
