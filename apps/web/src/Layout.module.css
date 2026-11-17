@@ -1,4 +1,5 @@
 .app {
+  position: relative;
   max-width: var(--content-width);
   min-height: 100vh;
   margin: 0 auto;
@@ -45,6 +46,42 @@
   color: var(--color-text);
   text-decoration: underline;
   text-underline-offset: 0.3em;
+}
+
+/*
+ * On Home the header lies on the night scene (Spec 013): out of the flow, over the top of the
+ * hero, in the night colours. Only the header's own controls change, so the avatar menu keeps
+ * the surface colours.
+ */
+.overHero {
+  position: absolute;
+  top: 0;
+  left: var(--gutter);
+  right: var(--gutter);
+  z-index: 2;
+  margin-bottom: 0;
+}
+
+.overHero .brand,
+.overHero .navLink,
+.overHero .avatar,
+.overHero .themeButton {
+  --color-focus: var(--night-text);
+
+  color: var(--night-text);
+}
+
+.overHero .avatar,
+.overHero .themeButton {
+  border-color: rgb(236 230 218 / 0.4);
+}
+
+.overHero .navLink:hover,
+.overHero .avatar:hover,
+.overHero .avatar[aria-expanded='true'],
+.overHero .themeButton:hover {
+  color: var(--night-text);
+  border-color: var(--night-text);
 }
 
 /* Avatar menu */

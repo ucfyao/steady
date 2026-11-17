@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
-import { NavLink, Outlet, useOutletContext } from 'react-router';
+import { NavLink, Outlet, useMatch, useOutletContext } from 'react-router';
 import type { Variant } from '@steady/core';
 import { VariantBadge } from './dev/VariantBadge.js';
 import { PlayerMenu } from './PlayerMenu.js';
@@ -30,11 +30,14 @@ export function Layout({ devTools }: { devTools?: { override?: Variant } } = {})
   const { status, error, retry, notice, dismissNotice, active } = usePlayers();
   const [focusMode, setFocusMode] = useState(false);
   const outletContext = useMemo<LayoutContext>(() => ({ setFocusMode }), []);
+  // Spec 013: on Home the header lies on the night scene, unless a notice sits between them.
+  const onHome = useMatch('/') !== null;
+  const overHero = onHome && status === 'ready' && !notice;
 
   return (
-    <div className={styles.app}>
+    <div className={styles.app} data-over-hero={overHero || undefined}>
       {!focusMode && (
-        <header className={styles.header}>
+        <header className={overHero ? `${styles.header} ${styles.overHero}` : styles.header}>
           <NavLink to="/" className={styles.brand}>
             Steady
           </NavLink>

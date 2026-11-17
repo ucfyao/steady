@@ -46,10 +46,6 @@
   color: var(--color-text-muted);
 }
 
-.empty {
-  color: var(--color-text-muted);
-}
-
 .baseline {
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border);
@@ -75,29 +71,48 @@
   border-radius: var(--radius-md);
 }
 
-.points {
-  margin: var(--space-4) 0 0;
-  padding-left: var(--space-5);
-  font-size: var(--text-md);
-}
-
-.points li + li {
-  margin-top: var(--space-1);
-}
-
-/* The hero (Spec 007): the lantern's night scene, always dark, with the greeting on it. */
+/*
+ * The hero (Spec 007, Spec 013): the lantern's night scene, always dark, across the whole
+ * window width and from the top of the page. Its content stays on the content column.
+ */
 .hero {
+  --header-height: calc(2 * var(--space-7) + 2.25rem);
+
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  min-height: 22rem;
-  margin-bottom: var(--space-6);
-  padding: var(--space-6) var(--space-5) var(--space-5);
-  border-radius: var(--radius-md);
+  width: 100vw;
+  min-height: max(24rem, 60vh);
+  margin-inline: calc(50% - 50vw);
+  margin-bottom: var(--space-7);
+  padding: var(--space-6) 0 var(--space-7);
   color: var(--night-text);
   background: var(--night-bg);
+}
+
+/* The header lies on the scene: leave room for it above the lantern. */
+:global([data-over-hero]) .hero {
+  padding-top: calc(var(--header-height) + var(--space-4));
+}
+
+/* A dark wash behind the header, so its light text stays readable at any dawn. */
+:global([data-over-hero]) .hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: calc(var(--header-height) * 1.6);
+  background: linear-gradient(180deg, rgb(20 22 40 / 0.6), transparent);
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .hero {
+    min-height: max(26rem, 72vh);
+    padding-bottom: var(--space-9);
+  }
 }
 
 /* A dark wash under the text, so it stays readable however far the sky got to dawn. */
@@ -105,8 +120,22 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 30%, rgb(20 22 40 / 0.7) 100%);
+  background: linear-gradient(180deg, transparent 35%, rgb(20 22 40 / 0.72) 100%);
   pointer-events: none;
+}
+
+/* The content column inside the full-width scene. */
+.heroInner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
 }
 
 .heroText {
@@ -120,39 +149,123 @@
   color: var(--night-text);
 }
 
-/* A small unlit lantern, drawn in CSS (the shapes of the focus-mode lantern). */
-.heroLantern {
-  position: absolute;
-  top: var(--space-6);
-  right: var(--space-6);
-  width: 3.5rem;
-  height: 4.25rem;
-  border-radius: 44% 44% 40% 40% / 30% 30% 26% 26%;
-  background: rgb(246 242 234 / 0.92);
-  box-shadow: 0 0 30px 6px rgb(255 214 150 / 0.35);
+@media (min-width: 640px) {
+  .heroText .start {
+    width: auto;
+    min-width: 16rem;
+  }
 }
 
-.heroLantern::before,
-.heroLantern::after {
-  content: '';
+/* A lit paper lantern on a cord (Spec 013 §2), hanging in the top right of the column. */
+.heroLantern {
   position: absolute;
-  left: 25%;
-  right: 25%;
-  height: 0.4rem;
+  top: 0;
+  right: calc(var(--gutter) + var(--space-2));
+  width: 4.5rem;
+  aspect-ratio: 17 / 20;
+  filter: drop-shadow(0 0 28px rgb(255 200 120 / 0.55));
+}
+
+@media (min-width: 640px) {
+  .heroLantern {
+    width: 6rem;
+  }
+}
+
+.cord {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 1px;
+  height: var(--space-9);
+  /* Fades out upwards, so it never runs into the header. */
+  background: linear-gradient(transparent, rgb(236 230 218 / 0.35));
+}
+
+.lanternCap,
+.lanternBase {
+  position: absolute;
+  left: 28%;
+  right: 28%;
+  height: 9%;
   border-radius: 3px;
   background: #3d332b;
 }
 
-.heroLantern::before {
-  top: -0.3rem;
+.lanternCap {
+  top: 0;
 }
 
-.heroLantern::after {
-  bottom: -0.3rem;
+.lanternBase {
+  bottom: 0;
+}
+
+.lanternGlass {
+  position: absolute;
+  inset: 7% 4%;
+  border-radius: 44% 44% 40% 40% / 30% 30% 26% 26%;
+  /* Ribs over a warm glass, lightest where the flame would be. */
+  background:
+    repeating-linear-gradient(180deg, transparent 0 17%, rgb(150 90 30 / 0.18) 17% calc(17% + 1px)),
+    radial-gradient(circle at 50% 55%, #fff4dc 0, #ffe2a8 40%, var(--lantern) 62%, #f0b866 100%);
+  box-shadow: inset 0 0 0 1px rgb(120 80 40 / 0.25);
 }
 
 .sky {
   margin: calc(-1 * var(--space-3)) 0 var(--space-5);
   font-size: var(--text-sm);
   color: var(--lantern);
+}
+
+/* A new player's welcome (Spec 013 §3): no panel, a sentence and three points. */
+.welcome {
+  padding-top: var(--space-2);
+}
+
+.welcomeLead {
+  margin-bottom: var(--space-5);
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.welcomePoints {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.welcomePoints li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.welcomePoints li::before {
+  content: '';
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+}
+
+@media (min-width: 640px) {
+  .welcomePoints {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+
+  .welcomePoints li {
+    align-items: baseline;
+  }
+
+  .welcomePoints li::before {
+    transform: translateY(-0.1em);
+  }
 }
