@@ -1,6 +1,8 @@
 # Plan: Spec 011
 
-- `apps/web/src/dev/VariantBadge.tsx` (+ CSS module): reads `getMe()` through `usePlayers`, takes the override as a prop, renders the panel and plain `<a>` links.
-- `Layout` takes `devTools?: { override?: Variant }` and renders the badge, keyed by the active player, when set and not in focus mode.
-- `AppRoutes` takes `devTools?: boolean` and passes the override it plays with (`playEnv`'s, or the one read at startup, now exported from `game/env.ts`). `App` passes `import.meta.env.DEV`. Tests keep it off unless they test it.
-- No core or API change.
+- `apps/web/src/dev/devTools.ts`: a context with the development flag, set by `AppRoutes devTools` (`App` passes `import.meta.env.DEV`).
+- `apps/web/src/dev/usePlayerGroups.ts`: each profile's `getMe()` through `apiFor(id)`, a new `PlayersContext` function that returns a raw client for that profile's token.
+- `PlayerMenu` and `Players` show the group after each name when the flag is on; each use is guarded by `import.meta.env.DEV`, so a production build shows nothing and asks nothing.
+- Remove `dev/VariantBadge` and the `devTools` prop on `Layout`.
+- `apps/api/src/demo/demo-player.ts`: `seedDemoPlayer(db, now, variant = 'game')`; `seed-demo.ts` seeds one per variant and reads `WEB_URL`.
+- Test fake: `getMe` per token.

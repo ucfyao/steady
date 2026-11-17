@@ -46,6 +46,11 @@ export interface PlayersContextValue {
    */
   deletePlayer(id: string): Promise<void>;
   retry(): void;
+  /**
+   * A plain API client for one profile's token, without the 401 handling of `api`.
+   * Development tools only (Spec 011): it reads that player's own group.
+   */
+  apiFor(id: string): Api | null;
 }
 
 export const PlayersContext = createContext<PlayersContextValue | null>(null);
@@ -164,6 +169,14 @@ export function PlayersProvider({
     [state.profiles, apiFactory],
   );
 
+  const apiFor = useCallback(
+    (id: string) => {
+      const p = state.profiles.find((x) => x.id === id);
+      return p ? apiFactory(p.token) : null;
+    },
+    [state.profiles, apiFactory],
+  );
+
   const value: PlayersContextValue = {
     status: error ? 'error' : active ? 'ready' : 'loading',
     error,
@@ -178,6 +191,7 @@ export function PlayersProvider({
     importPlayer,
     deletePlayer,
     retry: () => setError(null),
+    apiFor,
   };
 
   return <PlayersContext.Provider value={value}>{children}</PlayersContext.Provider>;

@@ -50,6 +50,10 @@ export function fakeBackend() {
   const started: { token: string | null; body: Parameters<Api['startSession']>[0] }[] = [];
   const submitted: { id: string; body: Submission }[] = [];
   const plans = new Map<string, StartedSession>();
+  /** A player's own group by token (GET /api/me); `control.variant` otherwise. */
+  const variants = new Map<string, Variant>();
+  /** Tokens whose GET /api/me fails. */
+  const meFails = new Set<string>();
 
   const factory = vi.fn((token: string | null): Api => {
     const call = (method: string) => {
@@ -95,7 +99,12 @@ export function fakeBackend() {
           score: scoreSession({ seed: 0, ...plan }, body),
         };
       },
-      getMe: async () => (call('getMe'), { variant: control.variant }),
+      getMe: async () => {
+        call('getMe');
+        if (token && meFails.has(token))
+          throw new ApiError('network', 'Could not reach the server.');
+        return { variant: (token && variants.get(token)) || control.variant };
+      },
       listSessions: async () => {
         call('listSessions');
         if (control.failListOnce) {
@@ -126,6 +135,8 @@ export function fakeBackend() {
     started,
     submitted,
     plans,
+    variants,
+    meFails,
     created: () => issued,
   };
 }

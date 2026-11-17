@@ -62,6 +62,18 @@ describe('demo player (pnpm seed:demo)', () => {
     );
   });
 
+  it('can be seeded in any variant: its group and every session are in it (Spec 011)', async () => {
+    for (const variant of ['plain', 'calm', 'game'] as const) {
+      const { token } = await seedDemoPlayer(t.db, NOW, variant);
+      expect((await request(t.http).get('/api/me').set(auth(token)).expect(200)).body).toEqual({
+        variant,
+      });
+      const list = (await request(t.http).get('/api/sessions').set(auth(token)).expect(200))
+        .body as CompletedSession[];
+      expect(list.map((s) => s.variant)).toEqual(Array(10).fill(variant));
+    }
+  });
+
   it('is the same history on every run, apart from the token', () => {
     expect(demoSessions(NOW)).toEqual(demoSessions(NOW));
     const ids = demoSessions(NOW).map((s) => s.plan.seed);

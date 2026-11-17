@@ -9,6 +9,7 @@ import {
   type ProbeAnswer,
   type SessionPlan,
   type Submission,
+  type Variant,
 } from '@steady/core';
 import { newToken, hashToken } from '../auth/token.js';
 import type { Db } from '../db/db.module.js';
@@ -91,15 +92,22 @@ export function demoSessions(now: Date): DemoSession[] {
   });
 }
 
-/** Creates the player and its sessions; returns the player's token (shown once, never stored). */
-export async function seedDemoPlayer(db: Db, now: Date): Promise<{ token: string }> {
+/**
+ * Creates the player and its sessions in one variant (the game by default, so reviewers see
+ * the points on Results; Spec 011 seeds one per variant). Returns the player's token (shown
+ * once, never stored).
+ */
+export async function seedDemoPlayer(
+  db: Db,
+  now: Date,
+  variant: Variant = 'game',
+): Promise<{ token: string }> {
   const token = newToken();
   const history = demoSessions(now);
   await db.transaction(async (tx) => {
     const [player] = await tx
       .insert(players)
-      // The game variant, so reviewers see the points on Results (Spec 006).
-      .values({ tokenHash: hashToken(token), createdAt: history[0]!.startedAt, variant: 'game' })
+      .values({ tokenHash: hashToken(token), createdAt: history[0]!.startedAt, variant })
       .returning({ id: players.id });
     await tx.insert(sessions).values(
       history.map((s) => {
@@ -112,7 +120,7 @@ export async function seedDemoPlayer(db: Db, now: Date): Promise<{ token: string
           probeAfter: s.plan.probeAfter,
           checkIn: s.checkIn,
           device: 'keyboard' as const,
-          variant: 'game' as const,
+          variant,
           startedAt: s.startedAt,
           completedAt: s.completedAt,
           submission: s.submission,

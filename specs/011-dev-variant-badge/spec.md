@@ -1,4 +1,4 @@
-# Spec 011: A development badge for the variants
+# Spec 011: Seeing and reaching the variants in development
 
 Status: implemented
 Depends on: Spec 006 §5, Spec 008
@@ -6,22 +6,25 @@ Changes: nothing a player sees
 
 ## Why
 
-There are three variants (plain, calm, game; Spec 008). A player's group is drawn by the server and never shown, and the play-test override (`?variant=`) is invisible once the page has loaded. During development and play-tests it is hard to tell which version you are looking at, or how to reach the others, without the browser console.
+There are three variants (plain, calm, game; Spec 008). Each player is in one group for good, and every screen follows it: Play, Home, Results and Progress. In development it was hard to tell which group a player is in, and a new player's group is drawn at random, so reaching a given variant meant creating players until one landed there.
 
-## 1. The badge
+A first version put a badge in the bottom-left corner with links to the `?variant=` override. It sat over the page, and the override changes Play only, so Home, Results and Progress still showed the player's own group. Switching **players** gives the whole experience of a variant, so the tools now work through players.
 
-- Shown **only in development** (`pnpm dev`, Vite's `import.meta.env.DEV`). A production build neither renders nor contains it.
-- A small fixed panel in the bottom-left corner, named "Dev: version", on every screen except focus mode (it never shows during the countdown, trials or probes).
-- It says:
-  - **Group:** the active player's own variant, from `GET /api/me` (Spec 006 §5). This decides Home, Results and Progress.
-  - **Playing:** the variant this browser plays: the override from `?variant=` when the app was opened, marked "(override)", or the group otherwise.
-- **Links to every variant:** "Play as" plain, calm and game, each opening `/play?variant=…`, and **Own group** (`/play`, no override) while an override is on. They are full page loads, because the override is read once when the app opens (Spec 006 §5). The variant being played is marked as current.
-- It belongs to the active player: switching player shows the new player's group.
-- Nothing is stored and nothing new is sent: it reads `GET /api/me`, which the app already calls.
+## 1. Each player's group, in development
 
-## 2. Tests
+- Shown **only in development** (`pnpm dev`, Vite's `import.meta.env.DEV`). A production build shows nothing and sends no request for it (an empty hook is all that is left of it).
+- The **player menu** shows each player's group after the name ("Ana · plain"), and so does **Manage players**.
+- The group is each player's own `GET /api/me`, with that player's token. Nothing new is stored or sent.
+- A player whose group cannot be read shows no group.
+- The bottom-left badge is gone. The `?variant=` override (Spec 006 §5) stays for quick play-tests, without anything on screen.
 
-- Without the development flag there is no badge.
-- With it: the group from the API, "Playing" equal to the group, and the three links with their addresses; with an override: "Playing" is the override, its link is current, and "Own group" opens `/play`.
-- Hidden in focus mode.
-- A player switch shows the new player's group.
+## 2. One demo player per group
+
+- `pnpm seed:demo` creates three demo players, **Demo plain**, **Demo calm** and **Demo game**, each with the same two weeks of history, played in its own variant, and prints an import link for each.
+- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
+- The links point at `http://localhost:5173` unless `WEB_URL` says otherwise (for a second dev server on another port).
+
+## 3. Tests
+
+- Web: without the development flag no group is shown; with it, the menu and Manage players show each player's own group, and a player whose group cannot be read shows none.
+- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it.

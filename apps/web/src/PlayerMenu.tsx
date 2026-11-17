@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
+import { GroupTag } from './dev/GroupTag.js';
+import { usePlayerGroups } from './dev/usePlayerGroups.js';
 import { usePlayers } from './players/usePlayers.js';
 import { applyTheme, readTheme, saveTheme, THEMES, type Theme } from './theme/theme.js';
 import styles from './Layout.module.css';
@@ -36,6 +38,7 @@ export function PlayerMenu() {
   const menuId = useId();
   const appearanceId = useId();
   const [theme, setTheme] = useState<Theme>(() => readTheme(browserStorage()));
+  const groups = usePlayerGroups();
 
   const items = () =>
     Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []);
@@ -123,6 +126,7 @@ export function PlayerMenu() {
               }}
             >
               {p.name}
+              <GroupTag variant={groups[p.id]} />
             </button>
           ))}
           <div role="separator" className={styles.separator} />

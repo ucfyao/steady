@@ -1,4 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
+import type { Variant } from '@steady/core';
+import { GroupTag } from '../dev/GroupTag.js';
+import { usePlayerGroups } from '../dev/usePlayerGroups.js';
 import { AddPlayerDialog } from '../players/AddPlayerDialog.js';
 import type { Profile } from '../players/store.js';
 import { usePlayers } from '../players/usePlayers.js';
@@ -17,6 +20,7 @@ type Return = { id: string; to: 'rename' | 'delete' };
  */
 export function Players() {
   const { profiles, active } = usePlayers();
+  const groups = usePlayerGroups();
   const [open, setOpen] = useState<Open | null>(null);
   const [returnTo, setReturnTo] = useState<Return | null>(null);
   const [adding, setAdding] = useState(false);
@@ -52,6 +56,7 @@ export function Players() {
             key={p.id}
             player={p}
             isActive={p.id === active?.id}
+            group={groups[p.id]}
             open={open?.id === p.id ? open.kind : null}
             focus={returnTo?.id === p.id ? returnTo.to : null}
             onOpen={(kind) => {
@@ -82,6 +87,7 @@ export function Players() {
 function PlayerRow({
   player,
   isActive,
+  group,
   open,
   focus,
   onOpen,
@@ -90,6 +96,8 @@ function PlayerRow({
 }: {
   player: Profile;
   isActive: boolean;
+  /** Development only (Spec 011): the player's own group. */
+  group: Variant | undefined;
   open: Open['kind'] | null;
   focus: Return['to'] | null;
   onOpen(kind: Open['kind']): void;
@@ -162,6 +170,7 @@ function PlayerRow({
         <div className={styles.summary}>
           <span className={styles.name}>
             {player.name}
+            <GroupTag variant={group} />
             {isActive && <span className={styles.tag}>Playing now</span>}
           </span>
           {open !== 'delete' && (
