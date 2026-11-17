@@ -12,7 +12,7 @@ Focus mode removes the header and all navigation (Spec 004), so once the countdo
 ## 1. The stop control
 
 - A small **×** button in the top-right corner, named **Stop**, from the countdown to the last trial, in practice and in the real session, and over a probe. It is in all three variants (plain, calm, game), so it cannot explain a difference between them.
-- It is quiet (low contrast, no fill) so it does not compete with the digit, and it sits outside the tap area: on a touch device a tap on it is not a press.
+- It is quiet (40% opacity, full on hover; no fill) so it does not compete with the digit, yet always visible: a touch screen has no hover, and a hidden control would not be found. It sits outside the tap area: on a touch device a tap on it is not a press.
 - **Escape** does the same on a keyboard.
 - Space never activates it: the block already takes Space for presses.
 
