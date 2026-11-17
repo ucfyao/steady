@@ -100,25 +100,16 @@ describe('layout and player menu', () => {
 
     await userEvent.keyboard('{Enter}');
     const menu = screen.getByRole('menu', { name: 'Player' });
-    // In order: the players, Manage players, then Appearance (Spec 012).
     const items = Array.from(menu.querySelectorAll<HTMLElement>('[role^="menuitem"]'));
-    expect(items.map((i) => i.textContent)).toEqual([
-      'Player 1',
-      'Manage players',
-      'Match system',
-      'Light',
-      'Dark',
-    ]);
+    expect(items.map((i) => i.textContent)).toEqual(['Player 1', 'Manage players']);
     expect(items[0]).toHaveFocus();
 
     await userEvent.keyboard('{ArrowDown}');
     expect(items[1]).toHaveFocus();
-    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
-    expect(items[4]).toHaveFocus(); // wraps around
     await userEvent.keyboard('{ArrowDown}');
-    expect(items[0]).toHaveFocus();
+    expect(items[0]).toHaveFocus(); // wraps around
     await userEvent.keyboard('{End}');
-    expect(items[4]).toHaveFocus();
+    expect(items[1]).toHaveFocus();
     await userEvent.keyboard('{Home}');
     expect(items[0]).toHaveFocus();
 
@@ -129,7 +120,7 @@ describe('layout and player menu', () => {
 
     await userEvent.keyboard('{ArrowUp}');
     expect(
-      within(screen.getByRole('menu')).getByRole('menuitemradio', { name: 'Dark' }),
+      within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Manage players' }),
     ).toHaveFocus();
   });
 
@@ -186,8 +177,8 @@ describe('Manage players', () => {
       expect(row(name).getByRole('button', { name: `Rename ${name}` })).toBeInTheDocument();
       expect(row(name).getByRole('button', { name: `Delete ${name}` })).toBeInTheDocument();
     }
-    // Switching stays in the avatar menu.
-    expect(screen.queryByRole('button', { name: /switch/i })).toBeNull();
+    // Switching stays in the avatar menu. (The header's "Switch to dark" is the colour scheme.)
+    expect(within(screen.getByRole('main')).queryByRole('button', { name: /switch/i })).toBeNull();
   });
 
   it('adds a player in a modal dialog and stays on the page, as the same player', async () => {

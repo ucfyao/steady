@@ -3,7 +3,7 @@
 Status: implemented
 Design note: `docs/design-note.md` §3
 Depends on: Spec 004, Spec 008, Spec 010
-Changes: Spec 004 (the app follows the system colour scheme only; the avatar menu)
+Changes: Spec 004 (the app follows the system colour scheme only; the header)
 
 ## Why
 
@@ -11,11 +11,13 @@ The app has a full dark set of tokens, but it follows only the system's colour s
 
 ## 1. The choice
 
-- In the avatar menu, after Manage players and a separator, a group named **Appearance** with three choices: **Match system** (the default), **Light** and **Dark**. They are radio items (`menuitemradio`); the current one is checked. The keyboard behaviour of the menu (arrows, Home, End, Escape, Tab) covers them like the other items.
-- Choosing one applies it at once, closes the menu and returns focus to the avatar, like switching player.
-- **Match system** follows the system scheme as now, including a change of the system scheme while the app is open.
-- The choice belongs to **this browser**, not to a player: it is kept in `localStorage` (`steady.theme.v1`) and is the same for every player here. It never reaches the server.
-- If storage cannot be read or written (a private window, blocked site data), the app behaves as **Match system** and the choice lasts until the page is reloaded.
+Revised after the first version: the choice was three items (Match system, Light, Dark) under **Appearance** in the avatar menu. Nobody looks for the colour scheme in the menu for switching players, and it suggested a per-player setting. It is now a button of its own in the header.
+
+- **A round icon button in the header**, between Progress and the avatar, the same size and outline as the avatar (36 px, with a 44 px tap area). It is in the header on every screen outside focus mode, whether or not a player is ready.
+- **One click switches** between light and dark. It shows what a click does: a **moon** while the page is light (named **"Switch to dark"**) and a **sun** while it is dark (**"Switch to light"**). The icons are SVG, in the text colour.
+- **Until the first click it matches the system**, including a change of the system scheme while the app is open; the icon follows. After a click the choice is kept and the system no longer decides. There is no way back to matching the system in the app [P]: two states are enough for one button, and clearing site data restores it.
+- The choice belongs to **this browser**, not to a player: it is kept in `localStorage` (`steady.theme.v1`, `light` or `dark`) and is the same for every player here. It never reaches the server.
+- If storage cannot be read or written (a private window, blocked site data), the page still switches, and the choice lasts until the page is reloaded.
 
 ## 2. How it applies
 
@@ -26,9 +28,10 @@ The app has a full dark set of tokens, but it follows only the system's colour s
 
 ## 3. Tests
 
-- The menu shows the three choices with Match system checked by default; choosing Dark sets `data-theme="dark"`, stores it, checks Dark and returns focus to the avatar; Match system removes the attribute and the stored value.
-- The stored choice is applied on start; an unknown stored value is treated as Match system; storage that throws does not break the menu.
-- The keyboard order of the menu now ends with the three choices.
+- The header has the button; with nothing stored it follows the system: "Switch to dark" on a light system, "Switch to light" on a dark one, and it changes when the system does.
+- A click on a light page sets `data-theme="dark"`, stores `dark` and renames the button "Switch to light"; a second click sets and stores `light`. A stored choice is used on start, whatever the system.
+- An unknown stored value is treated as no choice; storage that throws does not break the button.
+- The avatar menu no longer has an Appearance group.
 - The inline script in `index.html` sets the attribute from storage (tested as the same function the app uses to read the choice, so the two cannot disagree on the key or the values).
 
 ## 4. Out of scope
