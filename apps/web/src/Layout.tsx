@@ -1,5 +1,7 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useOutletContext } from 'react-router';
+import type { Variant } from '@steady/core';
+import { VariantBadge } from './dev/VariantBadge.js';
 import { PlayerMenu } from './PlayerMenu.js';
 import { usePlayers } from './players/usePlayers.js';
 import { Button } from './ui/Button.js';
@@ -22,7 +24,8 @@ export function useFocusMode() {
   }, [setFocusMode]);
 }
 
-export function Layout() {
+/** `devTools`: the development version badge (Spec 011), never in a production build. */
+export function Layout({ devTools }: { devTools?: { override?: Variant } } = {}) {
   const { status, error, retry, notice, dismissNotice, active } = usePlayers();
   const [focusMode, setFocusMode] = useState(false);
   const outletContext = useMemo<LayoutContext>(() => ({ setFocusMode }), []);
@@ -59,6 +62,11 @@ export function Layout() {
             screen can carry over another player's data or an open confirmation. */}
         {status === 'ready' && <Outlet key={active!.id} context={outletContext} />}
       </main>
+
+      {/* `import.meta.env.DEV` first, so a production build drops the badge entirely. */}
+      {import.meta.env.DEV && devTools && status === 'ready' && !focusMode && (
+        <VariantBadge key={active!.id} override={devTools.override} />
+      )}
     </div>
   );
 }
