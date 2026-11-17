@@ -1,7 +1,8 @@
 /**
- * `pnpm seed:demo`: adds three demo players, one per variant (Spec 011), each with two weeks
- * of history, to the local database (DATABASE_URL), then prints a link that adds each to the
- * browser. Never part of the API.
+ * `pnpm seed:demo` (run by `pnpm bootstrap`): sets up three demo players, one per variant
+ * (Spec 011 §2), each with two weeks of history, in the database (DATABASE_URL), then prints a
+ * link that adds each to the browser. Their tokens are fixed, so the links never change and a
+ * rerun refreshes their history. Never part of the API.
  */
 import { VARIANTS } from '@steady/core';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -32,8 +33,9 @@ try {
     );
   }
   console.log(`
-Created three demo players, one per variant (plain, calm, game), each with 10 sessions over
+Set up three demo players, one per variant (plain, calm, game), each with 10 sessions over
 the past two weeks (session 1 not counted, sessions 2-6 the starting point, some with a check-in).
+The links never change; running this again refreshes the history.
 
 With the web app running, open each link to add that player and see its Progress:
 

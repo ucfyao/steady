@@ -7,13 +7,16 @@ import {
 } from '@steady/core';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { sessions } from '../src/db/schema.js';
+import { createHash } from 'node:crypto';
+import { eq } from 'drizzle-orm';
+import { players, sessions } from '../src/db/schema.js';
 import { demoSessions, seedDemoPlayer } from '../src/demo/demo-player.js';
 import { startTestApp, type TestApp } from './support/app.js';
 import { auth, newPlayer } from './support/players.js';
 
 const NOW = new Date(2026, 10, 16, 14, 0); // local time, so the day checks hold in any zone
 const DAY = 86_400_000;
+const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 let t: TestApp;
 beforeAll(async () => {
@@ -74,7 +77,27 @@ describe('demo player (pnpm seed:demo)', () => {
     }
   });
 
-  it('is the same history on every run, apart from the token', () => {
+  it('has a fixed token per variant, and a rerun refreshes the same player (Spec 011 §2)', async () => {
+    const first = await seedDemoPlayer(t.db, NOW, 'calm');
+    const later = new Date(NOW.getTime() + 3 * DAY);
+    const again = await seedDemoPlayer(t.db, later, 'calm');
+    expect(again.token).toBe(first.token);
+    expect(first.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect((await seedDemoPlayer(t.db, NOW, 'plain')).token).not.toBe(first.token);
+
+    // One player, ten sessions, rebuilt as of the later run.
+    const rows = await t.db
+      .select()
+      .from(players)
+      .where(eq(players.tokenHash, sha256(first.token)));
+    expect(rows).toHaveLength(1);
+    const list = (await request(t.http).get('/api/sessions').set(auth(first.token)).expect(200))
+      .body as CompletedSession[];
+    expect(list).toHaveLength(10);
+    expect(new Date(list.at(-1)!.completedAt).getTime()).toBeGreaterThan(NOW.getTime());
+  });
+
+  it('is the same history on every run', () => {
     expect(demoSessions(NOW)).toEqual(demoSessions(NOW));
     const ids = demoSessions(NOW).map((s) => s.plan.seed);
     expect(new Set(ids).size).toBe(10);

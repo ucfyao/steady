@@ -11,7 +11,9 @@ import {
   type Submission,
   type Variant,
 } from '@steady/core';
-import { newToken, hashToken } from '../auth/token.js';
+import { createHash } from 'node:crypto';
+import { eq } from 'drizzle-orm';
+import { hashToken } from '../auth/token.js';
 import type { Db } from '../db/db.module.js';
 import { players, sessions } from '../db/schema.js';
 
@@ -93,18 +95,28 @@ export function demoSessions(now: Date): DemoSession[] {
 }
 
 /**
- * Creates the player and its sessions in one variant (the game by default, so reviewers see
- * the points on Results; Spec 011 seeds one per variant). Returns the player's token (shown
- * once, never stored).
+ * A demo player's fixed token (Spec 011 §2): SHA-256 of a name per variant, base64url, so it
+ * has the 43 characters of a real token and its import link never changes. Local data only.
+ */
+export const demoToken = (variant: Variant) =>
+  createHash('sha256').update(`steady-demo-${variant}`).digest('base64url');
+
+/**
+ * Sets up the demo player of one variant (the game by default, so reviewers see the points on
+ * Results; Spec 011 seeds one per variant) with its sessions. Its token is fixed, so a rerun
+ * replaces the same player's history (as of `now`, scored by the current rules) rather than
+ * adding a copy. Returns the token.
  */
 export async function seedDemoPlayer(
   db: Db,
   now: Date,
   variant: Variant = 'game',
 ): Promise<{ token: string }> {
-  const token = newToken();
+  const token = demoToken(variant);
   const history = demoSessions(now);
   await db.transaction(async (tx) => {
+    // The sessions go with the player (ON DELETE CASCADE).
+    await tx.delete(players).where(eq(players.tokenHash, hashToken(token)));
     const [player] = await tx
       .insert(players)
       .values({ tokenHash: hashToken(token), createdAt: history[0]!.startedAt, variant })

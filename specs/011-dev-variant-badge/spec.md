@@ -18,11 +18,13 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 - A player whose group cannot be read shows no group.
 - The bottom-left badge is gone. The `?variant=` override (Spec 006 §5) stays for quick play-tests, without anything on screen.
 
-## 2. One demo player per group
+## 2. Three fixed demo players, set up with the database
 
-- `pnpm seed:demo` creates three demo players, **Demo plain**, **Demo calm** and **Demo game**, each with the same two weeks of history, played in its own variant, and prints an import link for each.
-- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
-- The links point at `http://localhost:5173` unless `WEB_URL` says otherwise (for a second dev server on another port).
+- `pnpm seed:demo` sets up three demo players, **Demo plain**, **Demo calm** and **Demo game**, each with the same two weeks of history played in its own variant, and prints an import link for each.
+- Each has a **fixed token** (derived from its variant), so its link never changes: a browser that has imported a demo player keeps it across database resets and reruns.
+- **Running it again refreshes them:** the same three players get their history rebuilt, so it stays "the past two weeks" and is scored by the current rules. It never adds copies.
+- `pnpm bootstrap` runs it last, so a new setup has the demo players with its database.
+- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged. The links point at `http://localhost:5173` unless `WEB_URL` says otherwise.
 
 ## 3. Choosing the group of a new player (development only)
 
@@ -34,6 +36,6 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 ## 4. Tests
 
 - Web: without the development flag no group is shown; with it, the menu and Manage players show each player's own group, and a player whose group cannot be read shows none.
-- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it.
+- API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it; its token is the same on every run; a second run replaces its history (still 10 sessions, one player).
 - API: a chosen variant is stored; an unknown variant or an extra field is a 400; no body is still a random group.
 - Web: the Group choice shows only with the development flag; Random sends no variant, a chosen group is sent and then shown in the menu.
