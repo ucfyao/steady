@@ -1,7 +1,7 @@
 import type { HTMLAttributes } from 'react';
 import styles from './Card.module.css';
 
-/** A group of content set apart by a thin rule and space, not a box or a shadow. */
+/** A panel (Spec 010): a group of content in a thin border, never a fill or a shadow. */
 export function Card({
   as: Tag = 'div',
   className,

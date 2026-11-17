@@ -1,11 +1,9 @@
 /*
  * Focus mode on the lantern scene (Spec 006): always dark, whatever the system theme.
- * Colours here are the scene's own; the rest of the app keeps the paper tokens.
+ * Its colours are the night tokens (tokens.css, Spec 010); the rest of the app is paper.
  */
 .focus {
   --digit-max: clamp(4.5rem, min(26vw, 20vh), 7.5rem); /* the largest digit fits the glass */
-  --night-text: #ece6da;
-  --night-muted: rgb(236 230 218 / 0.7);
   --glow-warm: rgb(255 200 110);
   --glow-bad: rgb(214 90 70);
   --streak: 0;
@@ -17,7 +15,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #1b2340;
+  background: var(--night-bg);
   color: var(--night-text);
   outline: none;
   overscroll-behavior: none;
@@ -140,7 +138,7 @@
 }
 
 .dots i.on {
-  background: #ffd696;
+  background: var(--lantern);
 }
 
 .word {
@@ -184,7 +182,7 @@
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
   background: rgb(29 27 24 / 0.45);
-  color: #ffd696;
+  color: var(--lantern);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
 }
@@ -200,7 +198,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ffe2a0;
+  background: var(--lantern-hover);
   box-shadow: 0 0 10px 3px rgb(255 214 150 / 0.7);
   animation: drift 4s ease-in-out infinite alternate;
 }
@@ -228,7 +226,7 @@
   top: 22%;
   transform: translateX(-50%);
   font-weight: var(--font-weight-bold);
-  color: #ffd696;
+  color: var(--lantern);
   animation: up 0.7s ease-out forwards;
 }
 

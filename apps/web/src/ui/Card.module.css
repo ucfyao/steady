@@ -1,13 +1,32 @@
+/*
+ * A panel (Spec 010): a border, rounded corners and padding on the content surface. No tinted
+ * fill: the muted text is below WCAG AA on --color-surface-sunken (4.35:1), not on the surface.
+ */
 .card {
-  padding: var(--space-5) 0;
-  border-top: 1px solid var(--color-border);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.card {
+  margin-bottom: var(--space-4);
+}
+
+.card:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 539px) {
+  .card {
+    padding: var(--space-4);
+  }
 }
 
 .card h2 {
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-regular);
-  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
   letter-spacing: 0;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
 }

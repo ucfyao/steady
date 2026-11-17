@@ -12,7 +12,8 @@ test('the link printed by pnpm seed:demo opens the demo player on Progress', asy
   expect(hash).toMatch(/^#token=.+&name=Demo$/);
 
   await page.goto(pathname + hash);
-  await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
+  // For screen readers only (Spec 010): attached, not visible.
+  await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeAttached();
   await expect(page.getByRole('button', { name: 'Player: Demo' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Last 7 days' })).toBeVisible();
   // The token is gone from the address bar.
@@ -20,7 +21,8 @@ test('the link printed by pnpm seed:demo opens the demo player on Progress', asy
 
   // Opening the same link again does not add a second copy of the player.
   await page.goto(pathname + hash);
-  await expect(page.getByRole('heading', { name: 'Progress' })).toBeVisible();
+  // For screen readers only (Spec 010): attached, not visible.
+  await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeAttached();
   await page.getByRole('button', { name: 'Player: Demo' }).click();
   await expect(page.getByRole('menuitemradio', { name: 'Demo' })).toHaveCount(1);
   await page.keyboard.press('Escape');
@@ -34,6 +36,7 @@ test('the link printed by pnpm seed:demo opens the demo player on Progress', asy
   const sessions = page.getByRole('region', { name: 'Your sessions' });
   await expect(sessions.getByRole('link')).toHaveCount(10);
   await sessions.getByRole('link', { name: /Session 10/ }).click();
-  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
+  // For screen readers only (Spec 010): attached, not visible.
+  await expect(page.getByRole('heading', { level: 1, name: 'Session complete' })).toBeAttached();
   await expect(page).toHaveURL(/\/results\//);
 });

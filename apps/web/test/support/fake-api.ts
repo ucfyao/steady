@@ -43,6 +43,8 @@ export function fakeBackend() {
     failCreate: false,
     failSubmitOnce: false,
     failListOnce: false,
+    /** What the failed list throws: a network error, or the server's own (raw) message. */
+    failListKind: 'network' as 'network' | 'server',
     variant: 'calm' as Variant,
   };
   const started: { token: string | null; body: Parameters<Api['startSession']>[0] }[] = [];
@@ -98,7 +100,9 @@ export function fakeBackend() {
         call('listSessions');
         if (control.failListOnce) {
           control.failListOnce = false;
-          throw new ApiError('network', 'Could not reach the server.');
+          throw control.failListKind === 'network'
+            ? new ApiError('network', 'Could not reach the server.')
+            : new ApiError('server', 'Request failed (500)', 500);
         }
         return sessions.get(token ?? '') ?? [];
       },

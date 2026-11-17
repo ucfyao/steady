@@ -8,7 +8,7 @@ import {
 } from '@steady/core';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { ApiError } from '../api/client.js';
+import { ApiError, errorWords } from '../api/client.js';
 import { Block, type VoidReason } from '../game/Block.js';
 import { HowToPlay } from '../game/HowToPlay.js';
 import { PracticeLine } from '../game/PracticeLine.js';
@@ -41,7 +41,7 @@ type Step =
   | { k: 'submitting'; session: StartedSession; submission: Submission }
   | { k: 'submit-error'; session: StartedSession; submission: Submission; error: ApiError }
   | { k: 'voided'; during: 'practice' | 'session'; reason: VoidReason }
-  | { k: 'error'; message: string };
+  | { k: 'error'; error: unknown };
 
 const LABELS: Record<string, string> = {
   poor: 'Poor',
@@ -70,6 +70,8 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   const [practiced, setPracticed] = useState<PracticeSummary | null>(null);
   /** The A/B variant for practice (Spec 006); the real session uses what the server says. */
   const [variant, setVariant] = useState<Variant>('calm');
+  // Bumped by "Try again" to get the check ready once more.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!api) return;
@@ -83,11 +85,11 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         setGuided(first);
         setStep(first ? { k: 'intro' } : { k: 'before' });
       })
-      .catch((e: unknown) => !cancelled && setStep({ k: 'error', message: message(e) }));
+      .catch((error: unknown) => !cancelled && setStep({ k: 'error', error }));
     return () => {
       cancelled = true;
     };
-  }, [api, env]);
+  }, [api, env, attempt]);
 
   const intro = () => {
     setGuided(true);
@@ -108,7 +110,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       });
       setStep({ k: 'running', session });
     } catch (e) {
-      setStep({ k: 'error', message: message(e) });
+      setStep({ k: 'error', error: e });
     }
   }
 
@@ -143,11 +145,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       return (
         <section className={styles.screen}>
           <Steps step={1} label="How it works" />
-          <h1>
-            {'Catch every digit. '}
-            <br />
-            Hold back on 3.
-          </h1>
+          <h1 className={styles.balanced}>Catch every digit. Hold back on 3.</h1>
           <p className={styles.lead}>Digits flash one at a time. React to each one, except 3.</p>
           <HowToPlay device={env.device} />
           <Button size="lg" onClick={practice}>
@@ -222,7 +220,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       const retryable = !['unprocessable', 'conflict'].includes(step.error.kind);
       return (
         <div role="alert" className="error">
-          <p>{step.error.message}</p>
+          <p>{retryable ? errorWords(step.error) : 'This session could not be saved.'}</p>
           {retryable ? (
             <Button onClick={() => submit(step.session, step.submission)}>Try again</Button>
           ) : (
@@ -268,10 +266,20 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
 
     case 'error':
       return (
-        <div role="alert" className="error">
-          <p>{step.message}</p>
-          <Link to="/">Back to home</Link>
-        </div>
+        <StatusPage
+          title="Could not get the check ready"
+          alert
+          primary={{
+            label: 'Try again',
+            onClick: () => {
+              setStep({ k: 'loading' });
+              setAttempt((n) => n + 1);
+            },
+          }}
+          secondary={{ label: 'Back to home', to: '/' }}
+        >
+          {errorWords(step.error)}
+        </StatusPage>
       );
   }
 }
@@ -351,8 +359,9 @@ function BeforeYouStart({
         Start
       </Button>
       <div className={styles.links}>
+        {/* It starts the session at once, so it says so (Spec 010). */}
         <Button variant="link" onClick={onSkip}>
-          Skip
+          Skip and start
         </Button>
         <Button variant="link" onClick={onHowToPlay}>
           How to play

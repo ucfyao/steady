@@ -53,6 +53,6 @@
 
 .day[data-played='true'] .lantern {
   border: 1.5px solid #e0a64a;
-  background: radial-gradient(circle at 50% 45%, #fff3d6, #ffd696 70%);
+  background: radial-gradient(circle at 50% 45%, #fff3d6, var(--lantern) 70%);
   box-shadow: 0 0 10px 2px rgb(255 200 110 / 0.55);
 }

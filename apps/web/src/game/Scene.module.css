@@ -22,7 +22,7 @@
     ),
     linear-gradient(
       180deg,
-      color-mix(in oklab, #1b2340 calc(100% - var(--dawn) * 100%), #e9b99a) 0%,
+      color-mix(in oklab, var(--night-bg) calc(100% - var(--dawn) * 100%), #e9b99a) 0%,
       color-mix(in oklab, #2d3558 calc(100% - var(--dawn) * 100%), #f3d9b8) 55%,
       color-mix(in oklab, #3c3b52 calc(100% - var(--dawn) * 100%), #f6e7cf) 100%
     );
