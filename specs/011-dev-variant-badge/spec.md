@@ -20,7 +20,7 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 
 ## 2. Three fixed demo players, set up with the database
 
-- `pnpm seed:demo` sets up three demo players, **Demo plain**, **Demo calm** and **Demo game**, each with the same two weeks of history played in its own variant, and prints an import link for each.
+- `pnpm seed:demo` sets up three demo players, one per variant (named on the server by Spec 013: **Ava**, **Ben** and **Cleo**), each with the same two weeks of history played in its own variant, and prints an import link for each.
 - Each has a **fixed token** (derived from its variant), so its link never changes: a browser that has imported a demo player keeps it across database resets and reruns.
 - **Running it again refreshes them:** the same three players get their history rebuilt, so it stays "the past two weeks" and is scored by the current rules. It never adds copies.
 - `pnpm bootstrap` runs it last, so a new setup has the demo players with its database.

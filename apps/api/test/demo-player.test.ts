@@ -69,6 +69,7 @@ describe('demo player (pnpm seed:demo)', () => {
     for (const variant of ['plain', 'calm', 'game'] as const) {
       const { token } = await seedDemoPlayer(t.db, NOW, variant);
       expect((await request(t.http).get('/api/me').set(auth(token)).expect(200)).body).toEqual({
+        name: { plain: 'Ava', calm: 'Ben', game: 'Cleo' }[variant],
         variant,
       });
       const list = (await request(t.http).get('/api/sessions').set(auth(token)).expect(200))

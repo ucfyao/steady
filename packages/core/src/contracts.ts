@@ -22,15 +22,22 @@ export const CheckInSchema = z.object({
   stress: z.enum(STRESS_LEVELS).optional(),
 });
 
+/** A player's name (Spec 013): trimmed, 1 to 30 characters, not necessarily unique. */
+export const PlayerNameSchema = z.string().trim().min(1).max(30);
+
 /**
- * POST /api/players. A variant is chosen only by the development tools (Spec 011 §3); without
- * it the server draws one. Strict, so a typo is a 400 rather than ignored.
+ * POST /api/players (Spec 013). A variant is chosen only by the development tools (Spec 011
+ * §3); without it the server draws one. Strict, so a typo is a 400 rather than ignored.
  */
 export const CreatePlayerSchema = z
   .object({
+    name: PlayerNameSchema,
     variant: z.enum(VARIANTS).optional(),
   })
   .strict();
+
+/** PATCH /api/me (Spec 013): only the name can change; the group never does. */
+export const UpdateMeSchema = z.object({ name: PlayerNameSchema }).strict();
 
 /** POST /api/sessions */
 export const StartSessionSchema = z.object({

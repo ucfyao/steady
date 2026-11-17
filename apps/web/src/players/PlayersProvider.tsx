@@ -32,15 +32,20 @@ export interface PlayersContextValue {
   api: Api | null;
   notice: string | null;
   dismissNotice(): void;
-  /** `variant`: development only (Spec 011 §3); without it the server draws the group. */
+  /**
+   * Creates a player on the server with its name ("Player N" when none is given; Spec 013).
+   * `variant`: development only (Spec 011 §3); without it the server draws the group.
+   */
   addPlayer(name?: string, variant?: Variant): Promise<void>;
   switchTo(id: string): void;
-  rename(id: string, name: string): void;
+  /** Renames a player on the server with its own token, then here. Throws if the API fails. */
+  rename(id: string, name: string): Promise<void>;
   /**
-   * Checks the token with the API, then adds that player here (or switches to it if this
-   * device already has it) and makes it active. Throws the API's error if the check fails.
+   * Reads the player's name from the server (which also checks the token), then adds that
+   * player here (or switches to it if this device already has it) and makes it active.
+   * Throws the API's error if the check fails.
    */
-  importPlayer(token: string, name: string): Promise<void>;
+  importPlayer(token: string): Promise<void>;
   /**
    * Deletes a player's data on the server with that player's own token, then removes the
    * profile here. Any player on this device can be deleted; deleting the active one makes
@@ -48,11 +53,8 @@ export interface PlayersContextValue {
    */
   deletePlayer(id: string): Promise<void>;
   retry(): void;
-  /**
-   * A plain API client for one profile's token, without the 401 handling of `api`.
-   * Development tools only (Spec 011): it reads that player's own group.
-   */
-  apiFor(id: string): Api | null;
+  /** Each player's group, by profile id, read with their names (for Spec 011's tags). */
+  groups: Partial<Record<string, Variant>>;
 }
 
 export const PlayersContext = createContext<PlayersContextValue | null>(null);
@@ -85,20 +87,44 @@ export function PlayersProvider({
 
   useEffect(() => saveProfiles(storage, state), [storage, state]);
 
+  const count = state.profiles.length;
   const createProfile = useCallback(
     async (name?: string, variant?: Variant) => {
-      const { token } = await apiFactory(null).createPlayer(variant ? { variant } : undefined);
-      const id = crypto.randomUUID();
-      setState((s) =>
-        addProfile(s, {
-          id,
-          token,
-          name: normaliseName(name ?? '', `Player ${s.profiles.length + 1}`),
-        }),
+      // Spec 013: the name is stored with the player; the server keeps the trimmed one.
+      const chosen = normaliseName(name ?? '', `Player ${count + 1}`);
+      const { token } = await apiFactory(null).createPlayer(
+        variant ? { name: chosen, variant } : { name: chosen },
       );
+      setState((s) => addProfile(s, { id: crypto.randomUUID(), token, name: chosen }));
     },
-    [apiFactory],
+    [apiFactory, count],
   );
+
+  // Spec 013: the server's names win over the cached ones; the groups come with them.
+  const [groups, setGroups] = useState<Partial<Record<string, Variant>>>({});
+  const tokens = state.profiles.map((p) => `${p.id}:${p.token}`).join(' ');
+  useEffect(() => {
+    let cancelled = false;
+    for (const pair of tokens ? tokens.split(' ') : []) {
+      const [id, token] = pair.split(':') as [string, string];
+      apiFactory(token)
+        .getMe()
+        .then((me) => {
+          if (cancelled) return;
+          // Only a real change touches the state, so screens do not reload for nothing.
+          setState((s) => {
+            const p = s.profiles.find((x) => x.id === id);
+            return p && p.name !== me.name ? renameProfile(s, id, me.name) : s;
+          });
+          setGroups((g) => ({ ...g, [id]: me.variant }));
+        })
+        // A player the server no longer knows is removed when it is next used (`api`).
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [tokens, apiFactory]);
 
   // A device with no players (first visit, or after deleting the last one) gets a new one.
   useEffect(() => {
@@ -112,47 +138,57 @@ export function PlayersProvider({
 
   const active = activeProfile(state);
 
+  // Keyed by the player's id and token, not the profile: a rename (Spec 013) must not give
+  // screens a new client, which would make them load everything again.
+  const activeId = active?.id;
+  const activeToken = active?.token;
   const api = useMemo<Api | null>(() => {
-    if (!active) return null;
-    const inner = apiFactory(active.token);
+    if (!activeId || !activeToken) return null;
+    const inner = apiFactory(activeToken);
     const forget = (e: unknown) => {
       if (e instanceof ApiError && e.kind === 'unauthorized') {
-        setState((s) => removeProfile(s, active.id));
+        setState((s) => removeProfile(s, activeId));
         // Two calls failing for the same player count it once.
         setNotice((n) =>
           n?.kind !== 'gone'
-            ? { kind: 'gone', ids: [active.id] }
-            : n.ids.includes(active.id)
+            ? { kind: 'gone', ids: [activeId] }
+            : n.ids.includes(activeId)
               ? n
-              : { kind: 'gone', ids: [...n.ids, active.id] },
+              : { kind: 'gone', ids: [...n.ids, activeId] },
         );
       }
       throw e;
     };
     return {
-      createPlayer: () => inner.createPlayer(),
+      createPlayer: (body) => inner.createPlayer(body),
       startSession: (body) => inner.startSession(body).catch(forget),
       submitSession: (id, submission) => inner.submitSession(id, submission).catch(forget),
       getMe: () => inner.getMe().catch(forget),
+      updateMe: (body) => inner.updateMe(body).catch(forget),
       listSessions: () => inner.listSessions().catch(forget),
       getProgress: () => inner.getProgress().catch(forget),
       deleteMe: () => inner.deleteMe().catch(forget),
     };
-  }, [active, apiFactory]);
+  }, [activeId, activeToken, apiFactory]);
 
   const importPlayer = useCallback(
-    async (token: string, name: string) => {
+    async (token: string) => {
       // A raw client: a 401 here means a bad link, not that the active player is gone.
-      await apiFactory(token).listSessions();
-      setState((s) =>
-        importProfile(s, {
-          id: crypto.randomUUID(),
-          token,
-          name: normaliseName(name, `Player ${s.profiles.length + 1}`),
-        }),
-      );
+      const me = await apiFactory(token).getMe();
+      setState((s) => importProfile(s, { id: crypto.randomUUID(), token, name: me.name }));
     },
     [apiFactory],
+  );
+
+  const rename = useCallback(
+    async (id: string, name: string) => {
+      const target = state.profiles.find((p) => p.id === id);
+      if (!target) return;
+      // With that player's own token; the server's (trimmed) name is the one kept.
+      const me = await apiFactory(target.token).updateMe({ name });
+      setState((s) => renameProfile(s, id, me.name));
+    },
+    [state.profiles, apiFactory],
   );
 
   const deletePlayer = useCallback(
@@ -171,14 +207,6 @@ export function PlayersProvider({
     [state.profiles, apiFactory],
   );
 
-  const apiFor = useCallback(
-    (id: string) => {
-      const p = state.profiles.find((x) => x.id === id);
-      return p ? apiFactory(p.token) : null;
-    },
-    [state.profiles, apiFactory],
-  );
-
   const value: PlayersContextValue = {
     status: error ? 'error' : active ? 'ready' : 'loading',
     error,
@@ -189,11 +217,11 @@ export function PlayersProvider({
     dismissNotice: () => setNotice(null),
     addPlayer: createProfile,
     switchTo: (id) => setState((s) => switchProfile(s, id)),
-    rename: (id, name) => setState((s) => renameProfile(s, id, name)),
+    rename,
     importPlayer,
     deletePlayer,
     retry: () => setError(null),
-    apiFor,
+    groups,
   };
 
   return <PlayersContext.Provider value={value}>{children}</PlayersContext.Provider>;

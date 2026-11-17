@@ -40,7 +40,7 @@ describe('A/B variant', () => {
   it('tells the player their variant (GET /api/me), so practice can show it', async () => {
     const token = await newPlayer(t);
     const res = await request(t.http).get('/api/me').set(auth(token)).expect(200);
-    expect(res.body).toEqual({ variant: await variantOf(token) });
+    expect(res.body).toEqual({ name: 'Test player', variant: await variantOf(token) });
     await request(t.http).get('/api/me').expect(401);
   });
 
@@ -89,15 +89,19 @@ describe('A/B variant', () => {
     // Five per variant: a random draw would match all 15 only once in 3^15 (about 14 million).
     for (const variant of ['plain', 'calm', 'game'] as const)
       for (let i = 0; i < 5; i++) {
-        const { token } = (await request(t.http).post('/api/players').send({ variant }).expect(201))
-          .body as { token: string };
+        const { token } = (
+          await request(t.http).post('/api/players').send({ name: 'P', variant }).expect(201)
+        ).body as { token: string };
         expect(await variantOf(token)).toBe(variant);
       }
   });
 
   it('rejects an unknown variant or extra fields for a new player with 400', async () => {
-    await request(t.http).post('/api/players').send({ variant: 'loud' }).expect(400);
-    await request(t.http).post('/api/players').send({ variant: 'plain', admin: true }).expect(400);
+    await request(t.http).post('/api/players').send({ name: 'P', variant: 'loud' }).expect(400);
+    await request(t.http)
+      .post('/api/players')
+      .send({ name: 'P', variant: 'plain', admin: true })
+      .expect(400);
   });
 
   it('rejects an unknown variant with 400', async () => {

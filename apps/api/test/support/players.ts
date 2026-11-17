@@ -4,8 +4,9 @@ import type { TestApp } from './app.js';
 
 export const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 
-export async function newPlayer(t: TestApp): Promise<string> {
-  const res = await request(t.http).post('/api/players').expect(201);
+/** A new player; the name is stored with it (Spec 013). */
+export async function newPlayer(t: TestApp, name = 'Test player'): Promise<string> {
+  const res = await request(t.http).post('/api/players').send({ name }).expect(201);
   return res.body.token as string;
 }
 

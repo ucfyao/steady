@@ -8,20 +8,23 @@ import { saveProfiles } from '../src/players/store.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 
 // Spec 011: in development, each player's own group in the player menu and Manage players.
+// Pre-seeded players use tokens 101+, so they never clash with those the fake server hands out.
 
 function renderApp(opts: { devTools?: boolean; path?: string } = {}) {
   saveProfiles(localStorage, {
     profiles: [
-      { id: 'ana', name: 'Ana', token: tokenN(1) },
-      { id: 'ben', name: 'Ben', token: tokenN(2) },
-      { id: 'cy', name: 'Cy', token: tokenN(3) },
+      { id: 'ana', name: 'Ana', token: tokenN(101) },
+      { id: 'ben', name: 'Ben', token: tokenN(102) },
+      { id: 'cy', name: 'Cy', token: tokenN(103) },
     ],
     activeId: 'ana',
   });
   const backend = fakeBackend();
-  backend.variants.set(tokenN(1), 'plain');
-  backend.variants.set(tokenN(2), 'game');
-  backend.meFails.add(tokenN(3)); // Cy's group cannot be read
+  backend.names.set(tokenN(101), 'Ana');
+  backend.names.set(tokenN(102), 'Ben');
+  backend.variants.set(tokenN(101), 'plain');
+  backend.variants.set(tokenN(102), 'game');
+  backend.meFails.add(tokenN(103)); // Cy's group cannot be read
   render(
     <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
       <MemoryRouter initialEntries={[opts.path ?? '/']}>
@@ -71,7 +74,7 @@ describe('Player groups in development (Spec 011)', () => {
     await openMenu();
     await screen.findByText('game');
     const asked = backend.calls.filter((c) => c.method === 'getMe').map((c) => c.token);
-    expect(new Set(asked)).toEqual(new Set([tokenN(1), tokenN(2), tokenN(3)]));
+    expect(new Set(asked)).toEqual(new Set([tokenN(101), tokenN(102), tokenN(103)]));
   });
 
   it('has no bottom-left badge any more', async () => {
@@ -94,7 +97,7 @@ describe('Player groups in development (Spec 011)', () => {
     await userEvent.type(dialog.getByRole('textbox', { name: 'Name' }), 'Sam');
     await userEvent.selectOptions(group, 'calm');
     await userEvent.click(dialog.getByRole('button', { name: 'Create' }));
-    expect(backend.createdWith.at(-1)).toEqual({ variant: 'calm' });
+    expect(backend.createdWith.at(-1)).toEqual({ name: 'Sam', variant: 'calm' });
     const menu = await openMenu();
     expect(await within(item(menu, 'Sam')).findByText('calm')).toBeInTheDocument();
   });
@@ -104,7 +107,7 @@ describe('Player groups in development (Spec 011)', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Add a player' }));
     let dialog = within(screen.getByRole('dialog', { name: 'Add a player' }));
     await userEvent.click(dialog.getByRole('button', { name: 'Create' }));
-    expect(backend.createdWith.at(-1)).toBeUndefined();
+    expect(backend.createdWith.at(-1)).toEqual({ name: 'Player 4' }); // no group: the server draws it
     cleanup();
 
     renderApp({ path: '/players' });

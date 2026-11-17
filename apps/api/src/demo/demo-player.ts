@@ -101,6 +101,9 @@ export function demoSessions(now: Date): DemoSession[] {
 export const demoToken = (variant: Variant) =>
   createHash('sha256').update(`steady-demo-${variant}`).digest('base64url');
 
+/** The demo players' names (Spec 013): distinct initials, so their avatars differ. */
+export const DEMO_NAMES: Record<Variant, string> = { plain: 'Ava', calm: 'Ben', game: 'Cleo' };
+
 /**
  * Sets up the demo player of one variant (the game by default, so reviewers see the points on
  * Results; Spec 011 seeds one per variant) with its sessions. Its token is fixed, so a rerun
@@ -119,7 +122,12 @@ export async function seedDemoPlayer(
     await tx.delete(players).where(eq(players.tokenHash, hashToken(token)));
     const [player] = await tx
       .insert(players)
-      .values({ tokenHash: hashToken(token), createdAt: history[0]!.startedAt, variant })
+      .values({
+        tokenHash: hashToken(token),
+        createdAt: history[0]!.startedAt,
+        variant,
+        name: DEMO_NAMES[variant],
+      })
       .returning({ id: players.id });
     await tx.insert(sessions).values(
       history.map((s) => {

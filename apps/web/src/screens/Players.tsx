@@ -46,8 +46,8 @@ export function Players() {
         </div>
       </div>
       <p className={styles.lead}>
-        Each player&apos;s sessions are stored on the server under their own key. This browser holds
-        the keys and the names, so clearing its data loses access to every player&apos;s history.
+        Each player&apos;s name and sessions are stored on the server under their own key. This
+        browser holds the keys, so clearing its data loses access to every player&apos;s history.
       </p>
 
       <ul className={styles.list}>
@@ -112,11 +112,20 @@ function PlayerRow({
   const trimmed = draft.trim();
   const unchanged = trimmed === '' || trimmed === player.name;
 
-  function save(e: FormEvent) {
+  // Spec 013: the name is renamed on the server first; a failure keeps the old name.
+  async function save(e: FormEvent) {
     e.preventDefault();
-    if (unchanged) return;
-    rename(player.id, draft);
-    onClose('rename');
+    if (unchanged || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await rename(player.id, draft);
+      setBusy(false);
+      onClose('rename');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setBusy(false);
+    }
   }
 
   async function remove() {
@@ -158,13 +167,24 @@ function PlayerRow({
             autoFocus
           />
           <div className={styles.formButtons}>
-            <Button type="submit" disabled={unchanged}>
-              Save
+            <Button type="submit" disabled={unchanged || busy}>
+              {busy ? 'Saving…' : 'Save'}
             </Button>
-            <Button variant="secondary" onClick={() => onClose('rename')}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setError(null);
+                onClose('rename');
+              }}
+            >
               Cancel
             </Button>
           </div>
+          {error && (
+            <p role="alert" className={styles.error}>
+              {error}
+            </p>
+          )}
         </form>
       ) : (
         <div className={styles.summary}>

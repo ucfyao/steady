@@ -43,6 +43,7 @@ export function fakeBackend() {
     failCreate: false,
     failSubmitOnce: false,
     failListOnce: false,
+    failUpdateOnce: false,
     /** What the failed list throws: a network error, or the server's own (raw) message. */
     failListKind: 'network' as 'network' | 'server',
     variant: 'calm' as Variant,
@@ -54,8 +55,18 @@ export function fakeBackend() {
   const variants = new Map<string, Variant>();
   /** Tokens whose GET /api/me fails. */
   const meFails = new Set<string>();
+  /** Each player's name on the server, by token (Spec 013). */
+  const names = new Map<string, string>();
+  /** Each PATCH /api/me, in order. */
+  const updated: { token: string | null; name: string }[] = [];
   /** The body of each POST /api/players, in order. */
   const createdWith: Parameters<Api['createPlayer']>[0][] = [];
+
+  /** GET /api/me: the stored name ("Player" when the test never set one) and the group. */
+  const me = (token: string | null) => ({
+    name: (token && names.get(token)) || 'Player',
+    variant: (token && variants.get(token)) || control.variant,
+  });
 
   const factory = vi.fn((token: string | null): Api => {
     const call = (method: string) => {
@@ -68,7 +79,8 @@ export function fakeBackend() {
         if (control.failCreate) throw new ApiError('network', 'Could not reach the server.');
         createdWith.push(body);
         const t = tokenN(++issued);
-        if (body?.variant) variants.set(t, body.variant);
+        names.set(t, body.name.trim());
+        if (body.variant) variants.set(t, body.variant);
         return { token: t };
       },
       startSession: async (body) => {
@@ -108,7 +120,17 @@ export function fakeBackend() {
         call('getMe');
         if (token && meFails.has(token))
           throw new ApiError('network', 'Could not reach the server.');
-        return { variant: (token && variants.get(token)) || control.variant };
+        return me(token);
+      },
+      updateMe: async (body) => {
+        call('updateMe');
+        if (control.failUpdateOnce) {
+          control.failUpdateOnce = false;
+          throw new ApiError('network', 'Could not reach the server.');
+        }
+        if (token) names.set(token, body.name.trim());
+        updated.push({ token, name: body.name });
+        return me(token);
       },
       listSessions: async () => {
         call('listSessions');
@@ -143,6 +165,8 @@ export function fakeBackend() {
     variants,
     meFails,
     createdWith,
+    names,
+    updated,
     created: () => issued,
   };
 }

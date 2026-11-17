@@ -2,6 +2,7 @@ import type {
   CheckIn,
   CompletedSession,
   InputDevice,
+  Me,
   ProgressResponse,
   StartedSession,
   Submission,
@@ -31,15 +32,17 @@ export class ApiError extends Error {
 }
 
 export interface Api {
-  /** `variant`: development only (Spec 011 §3); the API refuses it otherwise. */
-  createPlayer(body?: { variant?: Variant }): Promise<{ token: string }>;
+  /** The name is stored with the player (Spec 013); `variant` is for the development tools (Spec 011 §3). */
+  createPlayer(body: { name: string; variant?: Variant }): Promise<{ token: string }>;
   startSession(body: {
     checkIn?: CheckIn | null;
     device: InputDevice;
     variant?: Variant;
   }): Promise<StartedSession>;
-  /** The player's A/B variant (Spec 006). */
-  getMe(): Promise<{ variant: Variant }>;
+  /** The player's name (Spec 013) and A/B variant (Spec 006). */
+  getMe(): Promise<Me>;
+  /** Renames the player (Spec 013). */
+  updateMe(body: { name: string }): Promise<Me>;
   submitSession(id: string, submission: Submission): Promise<CompletedSession>;
   listSessions(): Promise<CompletedSession[]>;
   getProgress(): Promise<ProgressResponse>;
@@ -92,6 +95,7 @@ export function createApi(token: string | null, fetchFn: typeof fetch = fetch): 
     submitSession: (id, submission) =>
       request('POST', `/sessions/${encodeURIComponent(id)}/submit`, submission),
     getMe: () => request('GET', '/me'),
+    updateMe: (body) => request('PATCH', '/me', body),
     listSessions: () => request('GET', '/sessions'),
     getProgress: () => request('GET', '/progress'),
     deleteMe: () => request('DELETE', '/me'),

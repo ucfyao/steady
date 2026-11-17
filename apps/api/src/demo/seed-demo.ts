@@ -8,7 +8,7 @@ import { VARIANTS } from '@steady/core';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import * as schema from '../db/schema.js';
-import { seedDemoPlayer } from './demo-player.js';
+import { DEMO_NAMES, seedDemoPlayer } from './demo-player.js';
 
 // `pnpm dev`, or another dev server's address (e.g. a second worktree on another port).
 const WEB_URL = process.env.WEB_URL ?? 'http://localhost:5173';
@@ -26,14 +26,13 @@ try {
   const links: string[] = [];
   for (const variant of VARIANTS) {
     const { token } = await seedDemoPlayer(db, now, variant);
-    const name = `Demo ${variant}`;
+    const name = DEMO_NAMES[variant];
     // The token goes in the hash, which the browser never sends to a server (apps/web /import).
-    links.push(
-      `  ${name.padEnd(11)} ${WEB_URL}/import#${new URLSearchParams({ token, name }).toString()}`,
-    );
+    // The name is on the server (Spec 013), so the link carries only the token.
+    links.push(`  ${`${name} (${variant})`.padEnd(13)} ${WEB_URL}/import#token=${token}`);
   }
   console.log(`
-Set up three demo players, one per variant (plain, calm, game), each with 10 sessions over
+Set up three demo players, Ava (plain), Ben (calm) and Cleo (game), each with 10 sessions over
 the past two weeks (session 1 not counted, sessions 2-6 the starting point, some with a check-in).
 The links never change; running this again refreshes the history.
 
