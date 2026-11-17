@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Scene } from '../src/game/Scene.js';
 
-describe('Scene (Spec 013 §2)', () => {
+describe('Scene (Spec 014 §2)', () => {
   it('is unchanged by default, as focus mode draws it (Spec 006)', () => {
     const { container } = render(<Scene />);
     expect(container.querySelectorAll('i')).toHaveLength(36);

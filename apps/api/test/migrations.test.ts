@@ -33,7 +33,7 @@ const columns = async (table: string) =>
 const newPlayer = async () =>
   (
     await pool.query<{ id: string }>(
-      `insert into players (token_hash, variant) values (md5(random()::text), 'calm') returning id`,
+      `insert into players (token_hash, variant, name) values (md5(random()::text), 'calm', 'P') returning id`,
     )
   ).rows[0]!.id;
 
@@ -45,8 +45,8 @@ const newSession = (playerId: string) =>
   );
 
 describe('committed migrations (Spec 003 storage)', () => {
-  it('create players with only an id, a token hash and a timestamp', async () => {
-    expect(await columns('players')).toEqual(['created_at', 'id', 'token_hash', 'variant']);
+  it('create players with an id, a token hash, a timestamp, a group and a name', async () => {
+    expect(await columns('players')).toEqual(['created_at', 'id', 'name', 'token_hash', 'variant']);
   });
 
   it('create sessions with trials, raw submission and score kept per row', async () => {
@@ -84,9 +84,11 @@ describe('committed migrations (Spec 003 storage)', () => {
   });
 
   it('reject a duplicate token hash', async () => {
-    await pool.query(`insert into players (token_hash, variant) values ('same', 'calm')`);
+    await pool.query(
+      `insert into players (token_hash, variant, name) values ('same', 'calm', 'P')`,
+    );
     await expect(
-      pool.query(`insert into players (token_hash, variant) values ('same', 'calm')`),
+      pool.query(`insert into players (token_hash, variant, name) values ('same', 'calm', 'P')`),
     ).rejects.toThrow(/unique/);
   });
 });
@@ -117,5 +119,19 @@ describe('migration 0002 (Spec 005): sessions of the old length are deleted', ()
     expect(rows).toEqual([{ n: 81 }]);
     const players = await pool.query('select id from players where id = $1', [player]);
     expect(players.rowCount).toBe(1);
+  });
+
+  it('0004 names existing players "Player", then requires a name (Spec 013)', async () => {
+    await pool.query('alter table players drop column name');
+    const { rows } = await pool.query<{ id: string }>(
+      `insert into players (token_hash, variant) values (md5(random()::text), 'calm') returning id`,
+    );
+    await pool.query(readFileSync(`${MIGRATIONS}/0004_player_name.sql`, 'utf8'));
+
+    const named = await pool.query('select name from players where id = $1', [rows[0]!.id]);
+    expect(named.rows).toEqual([{ name: 'Player' }]);
+    await expect(
+      pool.query(`insert into players (token_hash, variant) values (md5(random()::text), 'calm')`),
+    ).rejects.toThrow(/null value in column "name"/);
   });
 });

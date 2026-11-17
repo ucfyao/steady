@@ -61,7 +61,7 @@ describe('Home', () => {
       'Compared only with your own results',
       'Best a few times a week',
     ]);
-    // The hero's lead already says how long it takes (Spec 013 §3).
+    // The hero's lead already says how long it takes (Spec 014 §3).
     expect(welcome).not.toHaveTextContent('About two minutes');
     expect(screen.queryByRole('region', { name: 'Last 7 days' })).toBeNull();
     expect(screen.queryByRole('region', { name: /^Last check/ })).toBeNull();

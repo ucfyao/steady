@@ -1,4 +1,4 @@
-# Plan: Spec 013
+# Plan: Spec 014
 
 - `apps/web/src/Layout.tsx`: on `/` (React Router's `useMatch`), with the players ready and no notice, the app root gets `data-over-hero` and the header the `overHero` class.
 - `apps/web/src/Layout.module.css`: `.app` is `position: relative`; `.overHero` takes the header out of the flow (absolute, over the top of the column, above the scene) and sets the night colours on the brand, link and two round buttons only, so the avatar menu keeps the surface colours.

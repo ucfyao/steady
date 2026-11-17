@@ -184,10 +184,10 @@ body {
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   color: var(--color-text);
-  /* One paper across the whole window (Spec 013 §1): no lighter column on a darker page. */
+  /* One paper across the whole window (Spec 014 §1): no lighter column on a darker page. */
   background: var(--color-surface);
   -webkit-font-smoothing: antialiased;
-  /* Home's hero is 100vw wide (Spec 013): a vertical scroll bar must not add a horizontal one. */
+  /* Home's hero is 100vw wide (Spec 014): a vertical scroll bar must not add a horizontal one. */
   overflow-x: clip;
 }
 

@@ -71,7 +71,7 @@
 }
 
 /*
- * The hero (Spec 007, Spec 013): the lantern's night scene, always dark, across the whole
+ * The hero (Spec 007, Spec 014): the lantern's night scene, always dark, across the whole
  * window width and from the top of the page. The lantern is its centre, with the greeting,
  * lead and button under it on the content column.
  */
@@ -172,7 +172,7 @@
   }
 }
 
-/* A lit paper lantern on a cord (Spec 013 §2): the centre of the scene. */
+/* A lit paper lantern on a cord (Spec 014 §2): the centre of the scene. */
 .heroLantern {
   position: relative;
   flex: none;
@@ -233,7 +233,7 @@
   color: var(--lantern);
 }
 
-/* A new player's welcome (Spec 013 §3): no panel, a sentence and three points. */
+/* A new player's welcome (Spec 014 §3): no panel, a sentence and three points. */
 .welcome {
   padding-top: var(--space-2);
 }

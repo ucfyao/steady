@@ -1,4 +1,7 @@
-/** Local player profiles (Spec 004). Names stay in this browser; the server only sees tokens. */
+/**
+ * Local player profiles (Spec 004): the tokens of this device's players. A name here is only a
+ * cache of the server's (Spec 013), so the menu can show it before the server answers.
+ */
 export interface Profile {
   id: string;
   name: string;

@@ -1,4 +1,4 @@
-# Tasks: Spec 013
+# Tasks: Spec 014
 
 - [x] T1 Write spec, plan and tasks
 - [x] T2 Failing tests (header over the scene on Home only and not with a notice, the lantern hidden, the new welcome), then the code

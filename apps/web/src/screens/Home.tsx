@@ -42,7 +42,7 @@ function Stat({
 
 /**
  * For a player with no checks yet: what Steady is, before anything about history (Spec 005).
- * No panel (Spec 013 §3): a sentence and three points, without repeating the hero's lead.
+ * No panel (Spec 014 §3): a sentence and three points, without repeating the hero's lead.
  */
 function Welcome() {
   return (
@@ -129,7 +129,7 @@ export function Home() {
           ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
         />
         <div className={styles.heroInner}>
-          {/* A lit paper lantern on a cord, drawn in CSS (Spec 013 §2). */}
+          {/* A lit paper lantern on a cord, drawn in CSS (Spec 014 §2). */}
           <span className={styles.heroLantern} aria-hidden="true" data-testid="hero-lantern">
             <span className={styles.cord} />
             <span className={styles.lanternCap} />

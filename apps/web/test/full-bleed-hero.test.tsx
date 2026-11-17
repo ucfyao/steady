@@ -19,7 +19,7 @@ function renderApp(path = '/', backend = fakeBackend()) {
 
 const overHero = () => screen.getByRole('banner').closest('[data-over-hero]');
 
-describe('Home: the scene across the whole width (Spec 013)', () => {
+describe('Home: the scene across the whole width (Spec 014)', () => {
   it('lays the header on the scene on Home', async () => {
     renderApp('/');
     await screen.findByRole('region', { name: "Today's check" });

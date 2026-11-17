@@ -39,16 +39,13 @@ const activeName = () => {
 afterEach(() => window.history.replaceState(null, '', '/'));
 
 describe('parseImportHash', () => {
-  it('reads the token and the name', () => {
-    expect(parseImportHash(`#token=${DEMO}&name=Demo`)).toEqual({ token: DEMO, name: 'Demo' });
-    expect(parseImportHash(`#name=Demo%20player&token=${DEMO}`)).toEqual({
-      token: DEMO,
-      name: 'Demo player',
-    });
+  it('reads the token; the name is on the server, so an old link’s name= is ignored (Spec 013)', () => {
+    expect(parseImportHash(`#token=${DEMO}`)).toEqual({ token: DEMO });
+    expect(parseImportHash(`#token=${DEMO}&name=Demo`)).toEqual({ token: DEMO });
+    expect(parseImportHash(`#name=Demo%20player&token=${DEMO}`)).toEqual({ token: DEMO });
   });
 
-  it('allows a missing name, but not a missing token', () => {
-    expect(parseImportHash(`#token=${DEMO}`)).toEqual({ token: DEMO, name: '' });
+  it('needs a token', () => {
     expect(parseImportHash('#name=Demo')).toBeNull();
     expect(parseImportHash('#token=&name=Demo')).toBeNull();
     expect(parseImportHash('')).toBeNull();
@@ -81,11 +78,12 @@ describe('import link', () => {
   it('checks the token, adds the player, clears the hash and opens Progress', async () => {
     const backend = fakeBackend();
     backend.sessions.set(DEMO, [storedSession(1), storedSession(2)]);
-    openLink(link(`#token=${DEMO}&name=Demo`), backend);
+    backend.names.set(DEMO, 'Demo'); // the name on the server (Spec 013)
+    openLink(link(`#token=${DEMO}`), backend);
 
     expect(await screen.findByRole('heading', { name: 'Progress' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Player: Demo' })).toBeInTheDocument();
-    expect(backend.calls).toContainEqual({ token: DEMO, method: 'listSessions' });
+    expect(backend.calls).toContainEqual({ token: DEMO, method: 'getMe' });
     await expectNames(['Player 1', 'Demo']);
     expect(activeName()).toBe('Demo');
     expect(window.location.hash).toBe('');
@@ -93,7 +91,9 @@ describe('import link', () => {
   });
 
   it('does not add the same player twice', async () => {
-    openLink(link(`#token=${DEMO}&name=Demo`));
+    const backend = fakeBackend();
+    backend.names.set(DEMO, 'Demo');
+    openLink(link(`#token=${DEMO}`), backend);
     await screen.findByRole('button', { name: 'Player: Demo' });
     await expectNames(['Player 1', 'Demo']);
     window.history.replaceState(null, '', '/');
@@ -105,7 +105,7 @@ describe('import link', () => {
     );
     cleanup();
 
-    openLink(link(`#token=${DEMO}&name=Demo`));
+    openLink(link(`#token=${DEMO}`), backend);
     expect(await screen.findByRole('button', { name: 'Player: Demo' })).toBeInTheDocument();
     await expectNames(['Player 1', 'Demo']);
   });
@@ -127,7 +127,7 @@ describe('import link', () => {
   it('explains a link without a token', async () => {
     const backend = openLink(link('#name=Demo'));
     expect(await screen.findByRole('alert')).toHaveTextContent(/incomplete/i);
-    expect(backend.calls.map((c) => c.method)).not.toContain('listSessions');
+    expect(backend.calls.filter((c) => c.token === DEMO)).toEqual([]);
     await expectNames(['Player 1']);
   });
 
@@ -138,8 +138,7 @@ describe('import link', () => {
       return token === DEMO
         ? {
             ...api,
-            listSessions: () =>
-              Promise.reject(new ApiError('network', 'Could not reach the server.')),
+            getMe: () => Promise.reject(new ApiError('network', 'Could not reach the server.')),
           }
         : api;
     };

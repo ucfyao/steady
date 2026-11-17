@@ -1,4 +1,4 @@
-# Spec 013: Home's night scene across the whole width
+# Spec 014: Home's night scene across the whole width
 
 Status: implemented
 Design note: `docs/design-note.md` §3

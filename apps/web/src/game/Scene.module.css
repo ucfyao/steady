@@ -49,7 +49,7 @@
   fill: color-mix(in oklab, #232a3f calc(100% - var(--dawn) * 100%), #9fae95);
 }
 
-/* Home's richer scene (Spec 013 §2): taller hills, a third layer and a warm horizon. */
+/* Home's richer scene (Spec 014 §2): taller hills, a third layer and a warm horizon. */
 .rich .hills {
   height: 42%;
 }

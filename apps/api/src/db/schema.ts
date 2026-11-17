@@ -17,6 +17,8 @@ export const players = pgTable('players', {
   createdAt: ts('created_at').notNull().defaultNow(),
   // The A/B group (Spec 006), drawn at random when the player is created, then fixed.
   variant: text('variant').$type<Variant>().notNull(),
+  // The player's name (Spec 013): trimmed, 1 to 30 characters, validated by the API.
+  name: text('name').notNull(),
 });
 
 export const sessions = pgTable(

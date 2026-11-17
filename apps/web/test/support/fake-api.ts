@@ -43,6 +43,7 @@ export function fakeBackend() {
     failCreate: false,
     failSubmitOnce: false,
     failListOnce: false,
+    failUpdateOnce: false,
     /** What the failed list throws: a network error, or the server's own (raw) message. */
     failListKind: 'network' as 'network' | 'server',
     variant: 'calm' as Variant,
@@ -50,6 +51,22 @@ export function fakeBackend() {
   const started: { token: string | null; body: Parameters<Api['startSession']>[0] }[] = [];
   const submitted: { id: string; body: Submission }[] = [];
   const plans = new Map<string, StartedSession>();
+  /** A player's own group by token (GET /api/me); `control.variant` otherwise. */
+  const variants = new Map<string, Variant>();
+  /** Tokens whose GET /api/me fails. */
+  const meFails = new Set<string>();
+  /** Each player's name on the server, by token (Spec 013). */
+  const names = new Map<string, string>();
+  /** Each PATCH /api/me, in order. */
+  const updated: { token: string | null; name: string }[] = [];
+  /** The body of each POST /api/players, in order. */
+  const createdWith: Parameters<Api['createPlayer']>[0][] = [];
+
+  /** GET /api/me: the stored name ("Player" when the test never set one) and the group. */
+  const me = (token: string | null) => ({
+    name: (token && names.get(token)) || 'Player',
+    variant: (token && variants.get(token)) || control.variant,
+  });
 
   const factory = vi.fn((token: string | null): Api => {
     const call = (method: string) => {
@@ -57,10 +74,14 @@ export function fakeBackend() {
       if (token && unauthorized.has(token)) throw new ApiError('unauthorized', 'Unauthorized', 401);
     };
     return {
-      createPlayer: async () => {
+      createPlayer: async (body) => {
         call('createPlayer');
         if (control.failCreate) throw new ApiError('network', 'Could not reach the server.');
-        return { token: tokenN(++issued) };
+        createdWith.push(body);
+        const t = tokenN(++issued);
+        names.set(t, body.name.trim());
+        if (body.variant) variants.set(t, body.variant);
+        return { token: t };
       },
       startSession: async (body) => {
         call('startSession');
@@ -95,7 +116,22 @@ export function fakeBackend() {
           score: scoreSession({ seed: 0, ...plan }, body),
         };
       },
-      getMe: async () => (call('getMe'), { variant: control.variant }),
+      getMe: async () => {
+        call('getMe');
+        if (token && meFails.has(token))
+          throw new ApiError('network', 'Could not reach the server.');
+        return me(token);
+      },
+      updateMe: async (body) => {
+        call('updateMe');
+        if (control.failUpdateOnce) {
+          control.failUpdateOnce = false;
+          throw new ApiError('network', 'Could not reach the server.');
+        }
+        if (token) names.set(token, body.name.trim());
+        updated.push({ token, name: body.name });
+        return me(token);
+      },
       listSessions: async () => {
         call('listSessions');
         if (control.failListOnce) {
@@ -126,6 +162,11 @@ export function fakeBackend() {
     started,
     submitted,
     plans,
+    variants,
+    meFails,
+    createdWith,
+    names,
+    updated,
     created: () => issued,
   };
 }

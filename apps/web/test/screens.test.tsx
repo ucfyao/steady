@@ -160,7 +160,9 @@ describe('Manage players', () => {
     renderApp('/players');
     await avatar('Player 1');
     expect(screen.getByRole('heading', { level: 1, name: 'Players' })).toBeVisible();
-    expect(screen.getByText(/this browser holds the keys and the names/i)).toBeInTheDocument();
+    // Spec 013: the names are on the server too; this browser holds only the keys.
+    expect(screen.getByText(/name and sessions are stored on the server/i)).toBeInTheDocument();
+    expect(screen.getByText(/browser holds the keys,/i)).toBeInTheDocument();
     expect(screen.getByText(/loses access to every player/i)).toBeInTheDocument();
   });
 

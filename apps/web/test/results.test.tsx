@@ -48,9 +48,11 @@ const neverPressed = completed('s2', () => null);
 function renderResults(
   entry: string | { pathname: string; state: unknown },
   history: CompletedSession[] = [mixed, neverPressed],
+  setup?: (backend: ReturnType<typeof fakeBackend>) => void,
 ) {
   const backend = fakeBackend();
   backend.sessions.set(tokenN(1), history);
+  setup?.(backend);
   render(
     <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
       <MemoryRouter initialEntries={[entry]}>
@@ -145,7 +147,14 @@ describe('Results', () => {
       ],
       activeId: 'ana',
     });
-    renderResults({ pathname: '/results/s1', state: { session: mixed, playerId: 'ana' } });
+    renderResults(
+      { pathname: '/results/s1', state: { session: mixed, playerId: 'ana' } },
+      undefined,
+      (b) => {
+        b.names.set(tokenN(1), 'Ana'); // the names on the server (Spec 013)
+        b.names.set(tokenN(2), 'Ben');
+      },
+    );
     expect(await screen.findByRole('group', { name: '3s held back' })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Player: Ana' }));

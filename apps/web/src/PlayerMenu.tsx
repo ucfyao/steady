@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
+import { GroupTag } from './dev/GroupTag.js';
+import { usePlayerGroups } from './dev/usePlayerGroups.js';
 import { usePlayers } from './players/usePlayers.js';
 import styles from './Layout.module.css';
 
@@ -17,6 +19,7 @@ export function PlayerMenu() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const groups = usePlayerGroups();
 
   const items = () =>
     Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []);
@@ -104,6 +107,7 @@ export function PlayerMenu() {
               }}
             >
               {p.name}
+              <GroupTag variant={groups[p.id]} />
             </button>
           ))}
           <div role="separator" className={styles.separator} />

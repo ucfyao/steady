@@ -1,4 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { VARIANTS, type Variant } from '@steady/core';
+import { useDevTools } from '../dev/devTools.js';
 import { Button } from '../ui/Button.js';
 import { usePlayers } from './usePlayers.js';
 import styles from './AddPlayerDialog.module.css';
@@ -11,6 +13,9 @@ import styles from './AddPlayerDialog.module.css';
 export function AddPlayerDialog({ onDone }: { onDone(): void }) {
   const { addPlayer } = usePlayers();
   const [name, setName] = useState('');
+  // Development only (Spec 011 §3): '' is Random, the server's draw.
+  const [group, setGroup] = useState<Variant | ''>('');
+  const devTools = useDevTools();
   const [error, setError] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -34,7 +39,7 @@ export function AddPlayerDialog({ onDone }: { onDone(): void }) {
     e.preventDefault();
     setError(null);
     try {
-      await addPlayer(name);
+      await addPlayer(name, group || undefined);
       close();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -71,6 +76,27 @@ export function AddPlayerDialog({ onDone }: { onDone(): void }) {
             maxLength={30}
           />
         </label>
+        {import.meta.env.DEV && devTools && (
+          <div className={styles.field}>
+            <label htmlFor={`${titleId}-group`}>Group</label>
+            <select
+              id={`${titleId}-group`}
+              aria-describedby={`${titleId}-group-note`}
+              value={group}
+              onChange={(e) => setGroup(e.target.value as Variant | '')}
+            >
+              <option value="">Random</option>
+              {VARIANTS.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <span id={`${titleId}-group-note`} className={styles.devNote}>
+              Development only
+            </span>
+          </div>
+        )}
         {error && (
           <p role="alert" className={styles.dialogError}>
             {error}

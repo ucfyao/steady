@@ -9,7 +9,7 @@ const STARS = Array.from({ length: 36 }, (_, i) => ({
   alpha: 1,
 }));
 
-/** Home's wider sky (Spec 013 §2): the same stars plus fainter, smaller ones in between. */
+/** Home's wider sky (Spec 014 §2): the same stars plus fainter, smaller ones in between. */
 const RICH_STARS = [
   ...STARS,
   ...Array.from({ length: 84 }, (_, i) => ({
@@ -23,7 +23,7 @@ const RICH_STARS = [
 /**
  * The night scene behind the lantern (Spec 006 §1): sky, stars and two layers of hills.
  * Static: the game layer only sets `--dawn` (0 → 1) on it, which blends night into dawn.
- * `rich` (Home's full-width hero, Spec 013): more stars, a third hill and a glow on the
+ * `rich` (Home's full-width hero, Spec 014): more stars, a third hill and a glow on the
  * horizon. Focus mode never passes it, so the task's scene is unchanged.
  */
 export function Scene({ ref, rich = false }: { ref?: Ref<HTMLDivElement>; rich?: boolean }) {
