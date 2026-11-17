@@ -100,19 +100,25 @@ describe('layout and player menu', () => {
 
     await userEvent.keyboard('{Enter}');
     const menu = screen.getByRole('menu', { name: 'Player' });
-    const items = [
-      ...within(menu).getAllByRole('menuitemradio'),
-      ...within(menu).getAllByRole('menuitem'),
-    ];
-    expect(items.map((i) => i.textContent)).toEqual(['Player 1', 'Manage players']);
+    // In order: the players, Manage players, then Appearance (Spec 012).
+    const items = Array.from(menu.querySelectorAll<HTMLElement>('[role^="menuitem"]'));
+    expect(items.map((i) => i.textContent)).toEqual([
+      'Player 1',
+      'Manage players',
+      'Match system',
+      'Light',
+      'Dark',
+    ]);
     expect(items[0]).toHaveFocus();
 
     await userEvent.keyboard('{ArrowDown}');
     expect(items[1]).toHaveFocus();
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    expect(items[4]).toHaveFocus(); // wraps around
     await userEvent.keyboard('{ArrowDown}');
-    expect(items[0]).toHaveFocus(); // wraps around
+    expect(items[0]).toHaveFocus();
     await userEvent.keyboard('{End}');
-    expect(items[1]).toHaveFocus();
+    expect(items[4]).toHaveFocus();
     await userEvent.keyboard('{Home}');
     expect(items[0]).toHaveFocus();
 
@@ -123,7 +129,7 @@ describe('layout and player menu', () => {
 
     await userEvent.keyboard('{ArrowUp}');
     expect(
-      within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Manage players' }),
+      within(screen.getByRole('menu')).getByRole('menuitemradio', { name: 'Dark' }),
     ).toHaveFocus();
   });
 
