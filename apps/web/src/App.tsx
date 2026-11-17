@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router';
-import type { PlayEnv } from './game/env.js';
+import { STARTUP_OVERRIDE, type PlayEnv } from './game/env.js';
 import { Layout } from './Layout.js';
 import { PlayersProvider } from './players/PlayersProvider.js';
 import { Home } from './screens/Home.js';
@@ -10,11 +10,15 @@ import { Players } from './screens/Players.js';
 import { Progress } from './screens/Progress.js';
 import { Results } from './screens/Results.js';
 
-/** `playEnv` lets tests drive the game with a fake clock. */
-export function AppRoutes({ playEnv }: { playEnv?: PlayEnv } = {}) {
+/**
+ * `playEnv` lets tests drive the game with a fake clock. `devTools` shows the development
+ * version badge (Spec 010) with the override this app plays.
+ */
+export function AppRoutes({ playEnv, devTools }: { playEnv?: PlayEnv; devTools?: boolean } = {}) {
+  const override = playEnv ? playEnv.variantOverride : STARTUP_OVERRIDE;
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route element={<Layout devTools={devTools ? { override } : undefined} />}>
         <Route index element={<Home />} />
         <Route path="play" element={<Play env={playEnv} />} />
         <Route path="results/:id" element={<Results />} />
@@ -31,7 +35,7 @@ export function App() {
   return (
     <PlayersProvider>
       <BrowserRouter>
-        <AppRoutes />
+        <AppRoutes devTools={import.meta.env.DEV} />
       </BrowserRouter>
     </PlayersProvider>
   );
