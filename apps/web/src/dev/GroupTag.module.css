@@ -1,0 +1,12 @@
+/* Development only (Spec 011): quiet, dashed, so it never reads as part of the product. */
+.tag {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.6;
+  white-space: nowrap;
+}

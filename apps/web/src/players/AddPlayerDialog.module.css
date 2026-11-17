@@ -26,8 +26,18 @@
   color: var(--color-text-muted);
 }
 
-.field input {
+.field input,
+.field select {
   color: var(--color-text);
+}
+
+.field + .field {
+  margin-top: var(--space-4);
+}
+
+/* Spec 011 §3: the Group choice is a development tool, and says so. */
+.devNote {
+  font-size: var(--text-xs, 0.75rem);
 }
 
 .actions {

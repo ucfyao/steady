@@ -13,6 +13,12 @@ export type InputDevice = (typeof INPUT_DEVICES)[number];
 export const VARIANTS = ['plain', 'calm', 'game'] as const;
 export type Variant = (typeof VARIANTS)[number];
 
+/** GET and PATCH /api/me (Spec 013). */
+export interface Me {
+  name: string;
+  variant: Variant;
+}
+
 export const SLEEP_LEVELS = ['poor', 'ok', 'good'] as const;
 export const STRESS_LEVELS = ['low', 'medium', 'high'] as const;
 

@@ -61,6 +61,7 @@ describe('PlayersProvider', () => {
       JSON.stringify({ profiles: [{ id: 'a', name: 'Alex', token: tokenN(9) }], activeId: 'a' }),
     );
     const backend = fakeBackend();
+    backend.names.set(tokenN(9), 'Alex'); // the name on the server (Spec 013)
     renderWith(backend);
     await screen.findByText('status: ready');
     expect(screen.getByText('active: Alex')).toBeInTheDocument();
@@ -146,6 +147,7 @@ describe('PlayersProvider', () => {
     );
     backend.unauthorized.add(tokenN(7));
     backend.unauthorized.add(tokenN(8));
+    backend.names.set(tokenN(9), 'Cy');
     renderWith(backend);
     await screen.findByText('active: Alex');
     await userEvent.click(screen.getByText('list'));
@@ -225,9 +227,9 @@ describe('PlayersProvider', () => {
       const api = backend.factory(token);
       return {
         ...api,
-        createPlayer: async () => {
+        createPlayer: async (body) => {
           if (fail) throw new ApiError('network', 'Could not reach the server.');
-          return api.createPlayer();
+          return api.createPlayer(body);
         },
       };
     };

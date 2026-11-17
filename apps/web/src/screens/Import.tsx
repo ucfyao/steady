@@ -18,7 +18,8 @@ const MISSING =
   'This link is incomplete: it has no player token. Copy the whole link printed by pnpm seed:demo and open it again.';
 
 /**
- * `/import#token=…&name=…`: adds a player from a link (the demo player from `pnpm seed:demo`).
+ * `/import#token=…`: adds a player from a link (the demo players from `pnpm seed:demo`). The
+ * name comes from the server (Spec 013); an old link's `name=` is ignored.
  * The hash is removed from the address bar at once, so the token does not stay in history.
  */
 export function Import() {
@@ -36,7 +37,7 @@ export function Import() {
       window.history.replaceState(window.history.state, '', pathname + search);
     if (!link || started.current) return;
     started.current = true;
-    importPlayer(link.token, link.name)
+    importPlayer(link.token)
       .then(() => navigate('/progress', { replace: true }))
       .catch((e: unknown) => setError(errorText(e)));
   }, [link, importPlayer, navigate]);

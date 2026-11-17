@@ -32,7 +32,7 @@ describe('serverless handler (Vercel entry)', () => {
   // `trust proxy` all players would share one rate-limit bucket.
   it('rate-limits per client address from X-Forwarded-For', async () => {
     const from = (ip: string) =>
-      request(handler.listener).post('/api/players').set('X-Forwarded-For', ip);
+      request(handler.listener).post('/api/players').set('X-Forwarded-For', ip).send({ name: 'P' });
     for (let i = 0; i < 10; i++) await from('203.0.113.1').expect(201);
     await from('203.0.113.1').expect(429);
     await from('203.0.113.2').expect(201);

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "postinstall": "pnpm --filter @steady/core build",
-    "bootstrap": "node -e \"const f=require('fs');f.existsSync('.env')||f.copyFileSync('.env.example','.env')\" && docker compose up -d --wait && pnpm --filter @steady/api db:migrate",
+    "bootstrap": "node -e \"const f=require('fs');f.existsSync('.env')||f.copyFileSync('.env.example','.env')\" && docker compose up -d --wait && pnpm --filter @steady/api db:migrate && pnpm seed:demo",
     "dev": "pnpm --filter @steady/core build && pnpm --parallel --filter @steady/core --filter @steady/api --filter @steady/web dev",
     "seed:demo": "pnpm --filter @steady/api seed:demo",
     "build": "pnpm -r build",

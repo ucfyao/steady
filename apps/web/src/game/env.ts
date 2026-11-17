@@ -24,7 +24,7 @@ export function parseVariant(search: string): Variant | undefined {
 }
 
 /** Read once when the app loads, so it lasts until the app is reopened without it. */
-export const STARTUP_OVERRIDE =
+const STARTUP_OVERRIDE =
   typeof window === 'undefined' ? undefined : parseVariant(window.location.search);
 
 export function browserEnv(): PlayEnv {

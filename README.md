@@ -10,15 +10,15 @@ Requires Node ≥ 24 (`nvm use` reads `.nvmrc`), pnpm 10 (`corepack enable` prov
 
 ```bash
 pnpm install        # also builds @steady/core
-pnpm bootstrap      # creates .env, starts Postgres 17 (Docker, host port 5433), runs migrations
+pnpm bootstrap      # creates .env, starts Postgres 17 (Docker, host port 5433), runs migrations, sets up the demo players
 pnpm dev            # web app on http://localhost:5173, API on http://localhost:4000/api
-pnpm seed:demo      # optional: prints a link to a demo player with two weeks of history
+pnpm seed:demo      # refreshes the three demo players (plain, calm, game) and prints their links
 pnpm check          # core build, lint, format check, typecheck, all tests (API tests need Docker running)
 ```
 
 Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about two minutes. To try a second player on the same device, open **Manage players** from the avatar menu (top right), add one, then switch to it in the same menu.
 
-To see Progress without playing ten sessions, run `pnpm seed:demo`. It adds a player with 10 sessions over the past two weeks (session 1 not counted, sessions 2–6 the starting point, some with a check-in), scored by the same `scoreSession` as the API; only the key presses are simulated. It prints an import link, `http://localhost:5173/import#token=…&name=Demo`: open it while `pnpm dev` is running and the app checks the token with the API, adds the player as "Demo", and opens its Progress. The token is in the URL hash, so the browser never sends it to the server or a request log, and the app removes it from the address bar at once. Opening the link again switches to the same player rather than adding a copy. The script writes to the database directly: the API accepts only a session that was just played. It runs from source with `tsx` and writes nothing to `apps/api/dist`, so running it while `pnpm dev` is up does not restart the API.
+To see Progress without playing ten sessions, use the demo players. `pnpm bootstrap` sets them up (and `pnpm seed:demo` refreshes them): three players, one per variant (Ava plain, Ben calm, Cleo game; Specs 011 and 013), named on the server, each with 10 sessions over the past two weeks (session 1 not counted, sessions 2–6 the starting point, some with a check-in), scored by the same `scoreSession` as the API; only the key presses are simulated. Their tokens are fixed, so each always has the same import link, printed by the script, `http://localhost:5173/import#token=…` (set `WEB_URL` for another address); a rerun rebuilds their history as of today instead of adding copies. Open a link while `pnpm dev` is running and the app checks the token with the API, reads the player's name, adds the player, and opens its Progress. Switching between the three in the avatar menu shows each variant on every screen; in development the menu shows each player's group. The token is in the URL hash, so the browser never sends it to the server or a request log, and the app removes it from the address bar at once. Opening the link again switches to the same player rather than adding a copy. The script writes to the database directly: the API accepts only a session that was just played. It runs from source with `tsx` and writes nothing to `apps/api/dist`, so running it while `pnpm dev` is up does not restart the API.
 
 The Docker Compose project is always named `steady`, so every checkout and worktree of the repository shares one Postgres container and one data volume (`steady_pgdata`).
 
@@ -107,7 +107,7 @@ See [docs/design-note.md](docs/design-note.md): which task and which apps I look
 
 - **Not a clinical tool.** Results are for the player's own trends; all comparisons are within-person and exploratory.
 - **Browser timing:** onset is the frame's timestamp, so display can differ by up to one frame (about 17 ms at 60 Hz), and keyboard and touch latency differ by device. The device is stored with each session; results are compared only within a player.
-- **Identity:** a player is an anonymous token kept in this browser. There are no accounts and no recovery: clearing site data loses the history. This keeps the server free of personal data; real accounts (or employer SSO) would be the next step.
+- **Identity:** a player is a token kept in this browser, with a name stored on the server (Spec 013). There are no accounts and no recovery: clearing site data loses the history. Apart from the name the server holds no personal data; real accounts (or employer SSO) would be the next step.
 - **Trust:** the server checks that a submission is plausible (length, timing, duration) and flags machine-like timing, but browser input cannot be fully trusted. It never labels a session as cheating.
 - **Leaving the page voids a session,** because timing would be interrupted. The open session expires after 30 minutes without being scored.
 - **Not built:** offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use), and an operator or employer view (designed in [docs/operator-view.md](docs/operator-view.md), not built: aggregates need real players).

@@ -10,8 +10,9 @@ afterAll(() => t?.close());
 
 describe('rate limits (Spec 003 hardening)', () => {
   it('allows 10 new players per minute per client, then answers 429', async () => {
-    for (let i = 0; i < 10; i++) await request(t.http).post('/api/players').expect(201);
-    await request(t.http).post('/api/players').expect(429);
+    for (let i = 0; i < 10; i++)
+      await request(t.http).post('/api/players').send({ name: 'P' }).expect(201);
+    await request(t.http).post('/api/players').send({ name: 'P' }).expect(429);
   });
 
   it('does not rate-limit the health check (above the 120/min default)', async () => {

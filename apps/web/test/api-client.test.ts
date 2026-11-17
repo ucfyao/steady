@@ -20,13 +20,32 @@ const callOf = (f: ReturnType<typeof fakeFetch>) => {
 };
 
 describe('API client', () => {
-  it('creates a player without a token', async () => {
+  it('creates a player with its name, without a token (Spec 013)', async () => {
     const f = fakeFetch(201, { token: TOKEN });
-    expect(await createApi(null, f).createPlayer()).toEqual({ token: TOKEN });
+    expect(await createApi(null, f).createPlayer({ name: 'Ana' })).toEqual({ token: TOKEN });
     const { url, init, headers } = callOf(f);
     expect(url).toBe('/api/players');
     expect(init.method).toBe('POST');
     expect(headers.has('authorization')).toBe(false);
+    expect(JSON.parse(String(init.body))).toEqual({ name: 'Ana' });
+  });
+
+  it('reads and renames the player with the token (Spec 013)', async () => {
+    const get = fakeFetch(200, { name: 'Ana', variant: 'calm' });
+    expect(await createApi(TOKEN, get).getMe()).toEqual({ name: 'Ana', variant: 'calm' });
+    expect(callOf(get).url).toBe('/api/me');
+    expect(callOf(get).init.method).toBe('GET');
+
+    const patch = fakeFetch(200, { name: 'Anna', variant: 'calm' });
+    expect(await createApi(TOKEN, patch).updateMe({ name: 'Anna' })).toEqual({
+      name: 'Anna',
+      variant: 'calm',
+    });
+    const { url, init, headers } = callOf(patch);
+    expect(url).toBe('/api/me');
+    expect(init.method).toBe('PATCH');
+    expect(headers.get('authorization')).toBe(`Bearer ${TOKEN}`);
+    expect(JSON.parse(String(init.body))).toEqual({ name: 'Anna' });
   });
 
   it('sends the bearer token and a JSON body when starting a session', async () => {
