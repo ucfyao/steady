@@ -6,6 +6,17 @@
   padding: 0 var(--gutter) var(--space-9);
 }
 
+/*
+ * The night look (Spec 015): the focus-mode scene fixed behind the whole window. Below the
+ * page's own stacking (z-index -1), so the header, its menu and the content keep their order.
+ * The colours are the night tokens (tokens.css, `[data-night]`).
+ */
+.nightScene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
 .header {
   display: flex;
   align-items: center;

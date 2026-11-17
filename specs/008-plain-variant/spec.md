@@ -22,7 +22,7 @@ From the countdown to the last trial, the plain variant shows:
 - **No game layer:** no points, multiplier, fireflies or dawn, and no "Your answer never changes your points." under the probe.
 - **The same countdown, practice feedback and probe** as the other variants (Ready, Set, Go with three dots; never a number), in the paper colours.
 
-Everything outside focus mode (Home, Results, Progress) is the same for plain as for calm.
+Everything outside focus mode (Home, Results, Progress) is the same for plain as for calm. (Changed by Spec 015: the rest of the check, `/play`, is in the group's look too: paper for plain, night for calm and game. Every screen outside the check is the same for all groups.)
 
 ## 2. Three groups [P]
 
