@@ -69,7 +69,7 @@ describe('demo player (pnpm seed:demo)', () => {
     for (const variant of ['plain', 'calm', 'game'] as const) {
       const { token } = await seedDemoPlayer(t.db, NOW, variant);
       expect((await request(t.http).get('/api/me').set(auth(token)).expect(200)).body).toEqual({
-        name: { plain: 'Ava', calm: 'Ben', game: 'Cleo' }[variant],
+        name: `${variant} · returning`,
         variant,
       });
       const list = (await request(t.http).get('/api/sessions').set(auth(token)).expect(200))
@@ -100,9 +100,9 @@ describe('demo player (pnpm seed:demo)', () => {
 
   it('seeds new demo players with no sessions, and a rerun empties them again (Spec 011 §2)', async () => {
     for (const [variant, name] of [
-      ['plain', 'Dana'],
-      ['calm', 'Eli'],
-      ['game', 'Finn'],
+      ['plain', 'plain · new'],
+      ['calm', 'calm · new'],
+      ['game', 'game · new'],
     ] as const) {
       const { token } = await seedDemoPlayer(t.db, NOW, variant, 'new');
       expect(token).not.toBe((await seedDemoPlayer(t.db, NOW, variant)).token);
@@ -118,7 +118,7 @@ describe('demo player (pnpm seed:demo)', () => {
     expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toEqual([]);
   });
 
-  it('lists the demo players as Ava, Ben, Cleo, Dana, Eli, Finn, whatever their ids (Spec 014)', async () => {
+  it('lists the demo players by group, returning before new, whatever their ids (Spec 014)', async () => {
     for (let run = 0; run < 3; run++)
       for (const variant of ['game', 'plain', 'calm'] as const)
         for (const kind of ['new', 'history'] as const)
@@ -127,8 +127,15 @@ describe('demo player (pnpm seed:demo)', () => {
       (await request(t.http).get('/api/players').expect(200)).body as { name: string }[]
     )
       .map((p) => p.name)
-      .filter((n) => ['Ava', 'Ben', 'Cleo', 'Dana', 'Eli', 'Finn'].includes(n));
-    expect(names).toEqual(['Ava', 'Ben', 'Cleo', 'Dana', 'Eli', 'Finn']);
+      .filter((n) => / · (returning|new)$/.test(n));
+    expect(names).toEqual([
+      'plain · returning',
+      'plain · new',
+      'calm · returning',
+      'calm · new',
+      'game · returning',
+      'game · new',
+    ]);
   });
 
   it('is the same history on every run', () => {

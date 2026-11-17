@@ -7,4 +7,5 @@
 - [x] T5 README; `pnpm check`
 - [x] T6 Group choice for a new player: failing tests (API 201/400, web select), then API, core contract and dialog; deliberate break (variant ignored by the API)
 - [x] T7 Fixed demo tokens, a rerun refreshes the history, `pnpm bootstrap` seeds: failing tests, then the seed; deliberate break (a random token)
-- [x] T8 A second batch of demo players with no sessions (Dana, Eli, Finn): failing tests, then the seed
+- [x] T8 A new demo player per group with no sessions: failing tests, then the seed
+- [x] T9 Demo names after the group and kind (`plain · returning`, `plain · new`, …), listed by group: failing tests, then the seed; deliberate break (ordered by kind first)

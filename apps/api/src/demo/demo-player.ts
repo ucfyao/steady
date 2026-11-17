@@ -108,11 +108,9 @@ export const demoToken = (variant: Variant, kind: DemoKind = 'history') =>
 export type DemoKind = 'history' | 'new';
 export const DEMO_KINDS: readonly DemoKind[] = ['history', 'new'];
 
-/** The demo players' names (Spec 013): distinct initials, so their avatars differ. */
-export const DEMO_NAMES: Record<DemoKind, Record<Variant, string>> = {
-  history: { plain: 'Ava', calm: 'Ben', game: 'Cleo' },
-  new: { plain: 'Dana', calm: 'Eli', game: 'Finn' },
-};
+/** A demo player's name (Spec 011 §2): their group, then whether they have history. */
+export const demoName = (variant: Variant, kind: DemoKind) =>
+  `${variant} · ${kind === 'history' ? 'returning' : 'new'}`;
 
 /**
  * Sets up the demo player of one variant (the game by default, so reviewers see the points on
@@ -128,11 +126,13 @@ export async function seedDemoPlayer(
 ): Promise<{ token: string }> {
   const token = demoToken(variant, kind);
   const history = kind === 'history' ? demoSessions(now) : [];
-  // Oldest first in the shared list (Spec 014): the players with history (created when their
-  // history starts), then the new ones (created just now); a millisecond apart in variant
-  // order, so the order is Ava, Ben, Cleo, Dana, Eli, Finn rather than left to random ids.
-  const since = history[0]?.startedAt ?? new Date(now.getTime() - VARIANTS.length);
-  const createdAt = new Date(since.getTime() + VARIANTS.indexOf(variant));
+  // Oldest first in the shared list (Spec 014): all created when the history starts, a
+  // millisecond apart by group and then kind, so the list reads plain · returning, plain · new,
+  // calm · returning, … rather than an order left to their random ids.
+  const since = demoSessions(now)[0]!.startedAt.getTime();
+  const createdAt = new Date(
+    since + VARIANTS.indexOf(variant) * DEMO_KINDS.length + DEMO_KINDS.indexOf(kind),
+  );
   await db.transaction(async (tx) => {
     // The sessions go with the player (ON DELETE CASCADE).
     await tx.delete(players).where(eq(players.tokenHash, hashToken(token)));
@@ -143,7 +143,7 @@ export async function seedDemoPlayer(
         token,
         createdAt,
         variant,
-        name: DEMO_NAMES[kind][variant],
+        name: demoName(variant, kind),
       })
       .returning({ id: players.id });
     if (history.length === 0) return;

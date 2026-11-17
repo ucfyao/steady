@@ -8,7 +8,7 @@ import { VARIANTS } from '@steady/core';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import * as schema from '../db/schema.js';
-import { DEMO_KINDS, DEMO_NAMES, seedDemoPlayer } from './demo-player.js';
+import { DEMO_KINDS, demoName, seedDemoPlayer } from './demo-player.js';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -20,17 +20,14 @@ const pool = new pg.Pool({ connectionString: url });
 try {
   const db = drizzle(pool, { schema });
   const now = new Date();
-  for (const kind of DEMO_KINDS)
-    for (const variant of VARIANTS) await seedDemoPlayer(db, now, variant, kind);
-  const names = (kind: 'history' | 'new') =>
-    VARIANTS.map((v) => `${DEMO_NAMES[kind][v]} (${v})`).join(', ');
+  for (const variant of VARIANTS)
+    for (const kind of DEMO_KINDS) await seedDemoPlayer(db, now, variant, kind);
+  const names = VARIANTS.flatMap((v) => DEMO_KINDS.map((k) => demoName(v, k))).join(', ');
   console.log(`
-Set up six demo players (Spec 011 §2):
-  With history: ${names('history')}
-    10 sessions each over the past two weeks (session 1 not counted, sessions 2-6 the
-    starting point, some with a check-in).
-  New:          ${names('new')}
-    No sessions: a new player's first visit.
+Set up six demo players (Spec 011 §2): ${names}.
+  returning: 10 sessions each over the past two weeks (session 1 not counted, sessions 2-6 the
+             starting point, some with a check-in).
+  new:       no sessions, so opening the app as one is a new player's first visit.
 Running this again rebuilds the history and empties the new players.
 
 With the web app running, pick them in the avatar menu: each shows its own variant on every screen.

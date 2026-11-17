@@ -32,7 +32,7 @@ Spec 004 kept a player's name only in the browser that created it. The same play
 - **Rename** sends `PATCH /api/me` with that player's own token; the row shows "Saving…" and, if it fails, an error and the old name. A name is never changed only locally.
 - **Import link:** `/import#token=…`. The name comes from the server; an old link's `name=` is ignored.
 - Manage players says each player's name and sessions are stored on the server under their own key, and this browser holds the keys, so clearing its data loses access.
-- Demo players are named on the server by the seed: **Ava** (plain), **Ben** (calm) and **Cleo** (game), distinct initials for the avatar.
+- Demo players are named on the server by the seed (since renamed after their group and kind, Spec 011 §2).
 
 ## 4. Tests
 
