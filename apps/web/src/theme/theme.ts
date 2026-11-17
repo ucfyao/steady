@@ -4,7 +4,6 @@
  * system, and a choice lasts until the page is reloaded.
  */
 export type Theme = 'system' | 'light' | 'dark';
-export const THEMES: readonly Theme[] = ['system', 'light', 'dark'];
 export const THEME_KEY = 'steady.theme.v1';
 
 export function readTheme(storage: Storage | undefined): Theme {

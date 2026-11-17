@@ -3,6 +3,7 @@ import { NavLink, Outlet, useOutletContext } from 'react-router';
 import type { Variant } from '@steady/core';
 import { VariantBadge } from './dev/VariantBadge.js';
 import { PlayerMenu } from './PlayerMenu.js';
+import { ThemeToggle } from './theme/ThemeToggle.js';
 import { usePlayers } from './players/usePlayers.js';
 import { Button } from './ui/Button.js';
 import { Notice } from './ui/Notice.js';
@@ -43,6 +44,7 @@ export function Layout({ devTools }: { devTools?: { override?: Variant } } = {})
                 Progress
               </NavLink>
             </nav>
+            <ThemeToggle />
             {status === 'ready' && <PlayerMenu />}
           </div>
         </header>
