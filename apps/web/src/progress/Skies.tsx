@@ -2,6 +2,7 @@ import type { CompletedSession } from '@steady/core';
 import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router';
 import { dawnPercent, sessionPoints } from '../game/dawn.js';
+import { Card } from '../ui/Card.js';
 import styles from './Skies.module.css';
 
 const LATEST = 12;
@@ -20,7 +21,7 @@ export function Skies({ sessions }: { sessions: CompletedSession[] }) {
   const shown = all ? skies : skies.slice(0, LATEST);
 
   return (
-    <section aria-label="Your skies" className={styles.block}>
+    <Card as="section" aria-label="Your skies">
       <h2>Your skies</h2>
       <ol className={styles.grid}>
         {shown.map(({ s, n }) => {
@@ -47,6 +48,6 @@ export function Skies({ sessions }: { sessions: CompletedSession[] }) {
           {all ? `Show only the latest ${LATEST}` : `Show all ${skies.length}`}
         </button>
       )}
-    </section>
+    </Card>
   );
 }

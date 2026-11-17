@@ -78,7 +78,7 @@ function expectHowItWorks(action: RegExp) {
   expect(within(how).getByText('Hold back')).toBeInTheDocument();
 }
 
-/** "Before you start": the check-in, then Start (or Skip). */
+/** "Before you start": the check-in, then Start (or Skip and start). */
 async function startFromCheckIn(sleep?: string) {
   await screen.findByRole('heading', { name: /how are you today/i });
   if (sleep) fireEvent.click(screen.getByRole('radio', { name: sleep }));
@@ -229,7 +229,7 @@ describe('Returning: before you start', () => {
     ).toEqual(['low', 'medium', 'high']);
     // Nothing is chosen for the player.
     for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Skip' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Skip and start' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'How to play' })).toBeInTheDocument();
 
     fireEvent.click(within(stress).getByRole('radio', { name: 'High' }));
@@ -239,20 +239,20 @@ describe('Returning: before you start', () => {
     expect(screen.queryByRole('region', { name: 'How to play' })).toBeNull();
   });
 
-  it('Skip leaves out the answers and goes straight to the countdown', async () => {
+  it('Skip and start leaves out the answers and goes straight to the countdown', async () => {
     const { backend } = renderPlay({ returning: true });
     await screen.findByRole('heading', { name: 'How are you today?' });
     fireEvent.click(screen.getByRole('radio', { name: 'Poor' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip and start' }));
     expect(await countdown()).toBeInTheDocument();
     expect(backend.started[0]!.body.checkIn).toBeNull();
   });
 
-  it('Skip also clears the chosen answers for the next try', async () => {
+  it('Skip and start also clears the chosen answers for the next try', async () => {
     const { clock } = renderPlay({ returning: true });
     await screen.findByRole('heading', { name: 'How are you today?' });
     fireEvent.click(screen.getByRole('radio', { name: 'Poor' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip and start' }));
     await countdown();
     clock.hide();
     fireEvent.click(screen.getByRole('button', { name: 'Play again' }));
@@ -421,7 +421,9 @@ describe('Play', () => {
     clock.advance(WHOLE_SESSION_MS, 50, simulatedPlayer(clock, space));
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent(/could not reach the server/i);
+    // Spec 010: plain words by the error's kind, never the raw message.
+    expect(alert).toHaveTextContent('Could not reach Steady. Check your connection and try again.');
+    expect(alert).not.toHaveTextContent(/could not reach the server/i);
     fireEvent.click(within(alert).getByRole('button', { name: 'Try again' }));
     expect(await screen.findByRole('heading', { name: 'Session complete' })).toBeInTheDocument();
     expect(backend.submitted).toHaveLength(1);

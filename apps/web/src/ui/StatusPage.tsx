@@ -19,7 +19,7 @@ function Action({ action, primary }: { action: StatusAction; primary: boolean })
 
 /**
  * A page that explains what happened and what to do next (Spec 004): a voided session,
- * a session that is not found, an unknown address. Title, reason, a primary action and
+ * a session that is not found, an unknown address, a screen that could not load. Title, reason, a primary action and
  * an optional secondary one.
  */
 export function StatusPage({
@@ -28,6 +28,7 @@ export function StatusPage({
   primary,
   secondary,
   tone = 'neutral',
+  alert = false,
 }: {
   title: string;
   /** The reason, in a sentence or two. */
@@ -36,6 +37,8 @@ export function StatusPage({
   secondary?: StatusAction;
   /** `warning`: something the player did ended it (a voided session). */
   tone?: 'neutral' | 'warning';
+  /** Announce the reason at once: the page replaces a screen that could not load (Spec 010). */
+  alert?: boolean;
 }) {
   const titleId = useId();
   return (
@@ -44,7 +47,9 @@ export function StatusPage({
         {tone === 'warning' ? '!' : '?'}
       </span>
       <h1 id={titleId}>{title}</h1>
-      <p className={styles.reason}>{children}</p>
+      <p className={styles.reason} role={alert ? 'alert' : undefined}>
+        {children}
+      </p>
       <div className={styles.actions}>
         <Action action={primary} primary />
         {secondary && <Action action={secondary} primary={false} />}
