@@ -165,6 +165,42 @@
   --color-viz-missed: #2b3035;
 }
 
+/*
+ * The night look (Spec 015): calm and game see the whole check on the lantern's scene, in
+ * every colour scheme. Its own palette, not the dark set: warm lantern accents on deep blue.
+ * Text colours are at least 4.5:1 on the surface and on the scene's sky (measured).
+ */
+[data-night] {
+  color-scheme: dark;
+
+  --color-bg: #1e2544; /* hovered menu items, the error box */
+  --color-surface: #232b4c; /* panels, fields, the menu: opaque, so the stars never show through */
+  --color-text: var(--night-text); /* 11.1:1 on the surface, 8.7:1 on the lightest sky */
+  --color-text-muted: #b8b2c4; /* 6.7:1 on the surface, 5.3:1 on the lightest sky */
+  --color-border: #3a4370;
+  --color-border-strong: #4c5584;
+
+  --color-accent: var(--lantern); /* the primary button and selected chips, as on Home */
+  --color-on-accent: var(--on-lantern);
+  --color-accent-soft: #e0b878;
+  --color-link: var(--lantern); /* 10.1:1 on the surface */
+  --color-danger: #f4a593; /* 7.0:1 on the surface */
+  --color-on-danger: #1b2340;
+  --color-focus: var(--lantern);
+  --color-accent-tint: #3a3a48;
+  --color-danger-tint: #4a2f3e;
+  --color-surface-sunken: #1e2544;
+  --color-mark: #353d63;
+  --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.45);
+
+  --color-viz-steady: #3f7f71;
+  --color-viz-caught: #7fb0ec;
+  --color-viz-early: #e0b252;
+  --color-viz-missed: #2b3035;
+
+  color: var(--color-text);
+}
+
 /* Reset */
 *,
 *::before,
