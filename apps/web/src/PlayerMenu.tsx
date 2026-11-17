@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
 import { usePlayers } from './players/usePlayers.js';
 import styles from './Layout.module.css';
@@ -6,20 +6,15 @@ import styles from './Layout.module.css';
 const initialOf = (name: string) => Array.from(name.trim())[0]?.toUpperCase() ?? '?';
 
 /**
- * The avatar menu (WAI-ARIA menu button): switch player, add a player, Your data.
+ * The avatar menu (WAI-ARIA menu button): switch player, or open Manage players.
  * Opens on click, Enter, Space or the arrow keys; the arrows, Home and End move between
  * items; Escape closes it and returns focus to the avatar; Tab or a click outside closes it.
  */
-export function PlayerMenu({
-  buttonRef,
-  onAddPlayer,
-}: {
-  buttonRef: RefObject<HTMLButtonElement | null>;
-  onAddPlayer(): void;
-}) {
+export function PlayerMenu() {
   const { profiles, active, switchTo } = usePlayers();
   const [open, setOpen] = useState<null | 'first' | 'last'>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
@@ -29,7 +24,8 @@ export function PlayerMenu({
   useEffect(() => {
     if (!open) return;
     const all = items();
-    (open === 'first' ? all[0] : all.at(-1))?.focus();
+    const checked = all.find((el) => el.getAttribute('aria-checked') === 'true');
+    (open === 'first' ? (checked ?? all[0]) : all.at(-1))?.focus();
 
     const onPointerDown = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(null);
@@ -111,26 +107,14 @@ export function PlayerMenu({
             </button>
           ))}
           <div role="separator" className={styles.separator} />
-          <button
-            type="button"
-            role="menuitem"
-            tabIndex={-1}
-            className={styles.item}
-            onClick={() => {
-              close(false);
-              onAddPlayer();
-            }}
-          >
-            Add player
-          </button>
           <Link
-            to="/data"
+            to="/players"
             role="menuitem"
             tabIndex={-1}
             className={styles.item}
             onClick={() => close()}
           >
-            Your data
+            Manage players
           </Link>
         </div>
       )}

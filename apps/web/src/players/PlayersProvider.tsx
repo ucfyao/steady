@@ -39,8 +39,12 @@ export interface PlayersContextValue {
    * device already has it) and makes it active. Throws the API's error if the check fails.
    */
   importPlayer(token: string, name: string): Promise<void>;
-  /** Deletes the active player's data on the server, then removes the profile here. */
-  deleteActive(): Promise<void>;
+  /**
+   * Deletes a player's data on the server with that player's own token, then removes the
+   * profile here. Any player on this device can be deleted; deleting the active one makes
+   * another active (or, with none left, a new player is created).
+   */
+  deletePlayer(id: string): Promise<void>;
   retry(): void;
 }
 
@@ -144,17 +148,21 @@ export function PlayersProvider({
     [apiFactory],
   );
 
-  const deleteActive = useCallback(async () => {
-    if (!active) return;
-    try {
-      await apiFactory(active.token).deleteMe();
-    } catch (e) {
-      // Already gone on the server: removing it here is still right.
-      if (!(e instanceof ApiError && e.kind === 'unauthorized')) throw e;
-    }
-    setState((s) => removeProfile(s, active.id));
-    setNotice({ kind: 'deleted', name: active.name });
-  }, [active, apiFactory]);
+  const deletePlayer = useCallback(
+    async (id: string) => {
+      const target = state.profiles.find((p) => p.id === id);
+      if (!target) return;
+      try {
+        await apiFactory(target.token).deleteMe();
+      } catch (e) {
+        // Already gone on the server: removing it here is still right.
+        if (!(e instanceof ApiError && e.kind === 'unauthorized')) throw e;
+      }
+      setState((s) => removeProfile(s, id));
+      setNotice({ kind: 'deleted', name: target.name });
+    },
+    [state.profiles, apiFactory],
+  );
 
   const value: PlayersContextValue = {
     status: error ? 'error' : active ? 'ready' : 'loading',
@@ -168,7 +176,7 @@ export function PlayersProvider({
     switchTo: (id) => setState((s) => switchProfile(s, id)),
     rename: (id, name) => setState((s) => renameProfile(s, id, name)),
     importPlayer,
-    deleteActive,
+    deletePlayer,
     retry: () => setError(null),
   };
 

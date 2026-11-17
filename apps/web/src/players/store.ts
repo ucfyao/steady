@@ -44,9 +44,10 @@ export function normaliseName(name: string, fallback: string): string {
   return trimmed || fallback;
 }
 
+/** Adds a profile without switching to it; only the first one on a device becomes active. */
 export const addProfile = (s: ProfilesState, p: Profile): ProfilesState => ({
   profiles: [...s.profiles, p],
-  activeId: p.id,
+  activeId: s.activeId ?? p.id,
 });
 
 export const switchProfile = (s: ProfilesState, id: string): ProfilesState =>
@@ -69,5 +70,5 @@ export const activeProfile = (s: ProfilesState): Profile | null =>
 /** Adds an imported player, or switches to it if this device already has its token. */
 export function importProfile(s: ProfilesState, p: Profile): ProfilesState {
   const existing = s.profiles.find((q) => q.token === p.token);
-  return existing ? { ...s, activeId: existing.id } : addProfile(s, p);
+  return existing ? { ...s, activeId: existing.id } : { ...addProfile(s, p), activeId: p.id };
 }

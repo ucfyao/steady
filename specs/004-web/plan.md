@@ -2,7 +2,7 @@
 
 ## Stack
 
-- Vite 8, React 19, TypeScript 5.9, React Router 8 (routes: `/`, `/play`, `/results/:id`, `/progress`, `/data`).
+- Vite 8, React 19, TypeScript 5.9, React Router 8 (routes: `/`, `/play`, `/results/:id`, `/progress`, `/players`).
 - Plain CSS with custom properties for colour tokens (light and dark). No component library: the app has a handful of screens.
 - Data: a small typed API client over `fetch`, using core's response types and Zod schemas. No query library; each screen loads what it needs.
 - Charts (part 3): Recharts.

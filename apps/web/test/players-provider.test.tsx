@@ -18,6 +18,7 @@ function Probe() {
       <p>notice: {ctx.notice ?? 'none'}</p>
       <button onClick={() => ctx.addPlayer('Sam')}>add</button>
       <button onClick={() => ctx.switchTo(ctx.profiles[0]!.id)}>first</button>
+      <button onClick={() => ctx.switchTo(ctx.profiles.at(-1)!.id)}>last</button>
       <button onClick={() => ctx.api!.listSessions().catch(() => {})}>list</button>
       <button
         onClick={() => {
@@ -28,7 +29,8 @@ function Probe() {
       >
         list2
       </button>
-      <button onClick={() => ctx.deleteActive()}>delete</button>
+      <button onClick={() => ctx.deletePlayer(ctx.active!.id)}>delete</button>
+      <button onClick={() => ctx.deletePlayer(ctx.profiles[0]!.id)}>delete first</button>
     </div>
   );
 }
@@ -65,13 +67,16 @@ describe('PlayersProvider', () => {
     expect(backend.created()).toBe(0);
   });
 
-  it('adds a player, makes it active, and switches back', async () => {
+  it('adds a player without switching to it, then switches there and back', async () => {
     const backend = fakeBackend();
     renderWith(backend);
     await screen.findByText('active: Player 1');
     await userEvent.click(screen.getByText('add'));
-    await screen.findByText('active: Sam');
-    expect(screen.getByText('players: Player 1, Sam')).toBeInTheDocument();
+    await screen.findByText('players: Player 1, Sam');
+    expect(screen.getByText('active: Player 1')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText('last'));
+    expect(screen.getByText('active: Sam')).toBeInTheDocument();
     expect(screen.getByText(`token: ${tokenN(2)}`)).toBeInTheDocument();
 
     await userEvent.click(screen.getByText('first'));
@@ -83,6 +88,8 @@ describe('PlayersProvider', () => {
     renderWith(backend);
     await screen.findByText('active: Player 1');
     await userEvent.click(screen.getByText('add'));
+    await screen.findByText('players: Player 1, Sam');
+    await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
     await userEvent.click(screen.getByText('list'));
     expect(backend.calls.at(-1)).toEqual({ token: tokenN(2), method: 'listSessions' });
@@ -93,6 +100,8 @@ describe('PlayersProvider', () => {
     renderWith(backend);
     await screen.findByText('active: Player 1');
     await userEvent.click(screen.getByText('add')); // Sam, token 2
+    await screen.findByText('players: Player 1, Sam');
+    await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
     backend.unauthorized.add(tokenN(2));
 
@@ -107,6 +116,8 @@ describe('PlayersProvider', () => {
     renderWith(backend);
     await screen.findByText('active: Player 1');
     await userEvent.click(screen.getByText('add')); // Sam, token 2
+    await screen.findByText('players: Player 1, Sam');
+    await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
     backend.unauthorized.add(tokenN(2));
 
@@ -153,6 +164,8 @@ describe('PlayersProvider', () => {
     renderWith(backend);
     await screen.findByText('active: Player 1');
     await userEvent.click(screen.getByText('add'));
+    await screen.findByText('players: Player 1, Sam');
+    await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
 
     await userEvent.click(screen.getByText('delete'));
@@ -161,6 +174,39 @@ describe('PlayersProvider', () => {
     await waitFor(() =>
       expect(loadProfiles(localStorage).profiles.map((p) => p.name)).toEqual(['Player 1']),
     );
+  });
+
+  it('deletes another player with their own token and keeps the active one', async () => {
+    const backend = fakeBackend();
+    renderWith(backend);
+    await screen.findByText('active: Player 1');
+    await userEvent.click(screen.getByText('add'));
+    await screen.findByText('players: Player 1, Sam');
+    await userEvent.click(screen.getByText('last'));
+    await screen.findByText('active: Sam');
+
+    await userEvent.click(screen.getByText('delete first'));
+    await screen.findByText('players: Sam');
+    expect(screen.getByText('active: Sam')).toBeInTheDocument();
+    expect(backend.calls).toContainEqual({ token: tokenN(1), method: 'deleteMe' });
+    expect(backend.calls).not.toContainEqual({ token: tokenN(2), method: 'deleteMe' });
+    expect(
+      screen.getByText("notice: Player 1's data was deleted from the server and from this device."),
+    ).toBeInTheDocument();
+  });
+
+  it('removes a player here even if the server no longer knows it', async () => {
+    const backend = fakeBackend();
+    renderWith(backend);
+    await screen.findByText('active: Player 1');
+    await userEvent.click(screen.getByText('add'));
+    await screen.findByText('players: Player 1, Sam');
+    await userEvent.click(screen.getByText('last'));
+    await screen.findByText('active: Sam');
+    backend.unauthorized.add(tokenN(1));
+
+    await userEvent.click(screen.getByText('delete first'));
+    await screen.findByText('players: Sam');
   });
 
   it('starts over as a new player after deleting the only one', async () => {

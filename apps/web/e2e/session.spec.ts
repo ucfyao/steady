@@ -42,19 +42,25 @@ test('a new player practises, plays a full session and sees results and progress
   await expect(page.getByText('Your starting point is set after 5 more sessions.')).toBeVisible();
 
   // A second player on the same device sees none of it.
-  // The native dialog: Escape closes it and focus returns to the avatar.
+  // Manage players: the native dialog closes on Escape and focus returns to Add a player.
   const avatar = page.getByRole('button', { name: /^Player: / });
   await avatar.click();
-  await page.getByRole('menuitem', { name: 'Add player' }).click();
+  await page.getByRole('menuitem', { name: 'Manage players' }).click();
+  const add = page.getByRole('button', { name: 'Add a player' });
+  await add.click();
   await expect(page.getByRole('dialog', { name: 'Add a player' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
-  await expect(avatar).toBeFocused();
-  await avatar.click();
-  await page.getByRole('menuitem', { name: 'Add player' }).click();
+  await expect(add).toBeFocused();
+  await add.click();
   await page.getByRole('textbox', { name: 'Name' }).fill('Sam');
   await page.getByRole('button', { name: 'Create' }).click();
+  await expect(page.getByRole('listitem').filter({ hasText: 'Sam' })).toBeVisible();
+  // Adding does not switch player; the menu does.
+  await avatar.click();
+  await page.getByRole('menuitemradio', { name: 'Sam' }).click();
   await expect(page.getByRole('button', { name: 'Player: Sam' })).toBeVisible();
+  await page.getByRole('link', { name: 'Progress' }).click();
   await expect(page.getByText(/no sessions yet/i)).toBeVisible();
   await page.goto(resultsUrl);
   await expect(page.getByRole('heading', { name: 'Session not found' })).toBeVisible();
