@@ -45,6 +45,9 @@ const ANSWERS: { answer: ProbeAnswer; label: string; key: string }[] = [
   { answer: 'elsewhere', label: 'Elsewhere', key: '3' },
 ];
 
+/** Why a block ended without a submission. */
+export type VoidReason = 'left' | 'stopped';
+
 type Ui =
   | { kind: 'countdown'; n: number }
   | { kind: 'trials' }
@@ -75,7 +78,8 @@ export function Block({
   env: PlayEnv;
   variant: Variant;
   onDone(submission: Submission): void;
-  onVoid(): void;
+  /** The block ended early: the page was left, or the player stopped it (Spec 009). */
+  onVoid(reason: VoidReason): void;
 }) {
   const stimulus = useRef<HTMLDivElement>(null);
   const frost = useRef<HTMLDivElement>(null);
@@ -87,6 +91,8 @@ export function Block({
   const runnerRef = useRef<TrialRunner | null>(null);
   /** Set by the effect: records a press and lights the lantern. */
   const pressRef = useRef<((time: number, repeat?: boolean) => void) | null>(null);
+  /** Set by the effect: ends the block without a submission. */
+  const endRef = useRef<((reason: VoidReason) => void) | null>(null);
   const [ui, setUi] = useState<Ui>({ kind: 'countdown', n: COUNTDOWN_S });
   const focusRoot = useRef<HTMLDivElement>(null);
   const done = useEffectEvent(onDone);
@@ -245,13 +251,16 @@ export function Block({
 
     frameId = env.requestFrame(tick);
 
-    // Leaving the page interrupts the timing, so the block is abandoned (design note §5).
-    const unsubscribe = env.onHidden(() => {
+    // Leaving the page interrupts the timing, so the block is abandoned (design note §5);
+    // stopping it on purpose ends it the same way (Spec 009).
+    const end = (reason: VoidReason) => {
       if (stopped) return;
       stopped = true;
       env.cancelFrame(frameId);
-      voided();
-    });
+      voided(reason);
+    };
+    endRef.current = end;
+    const unsubscribe = env.onHidden(() => end('left'));
 
     const press = (time: number, repeat?: boolean) => {
       const r = runner.press(time, { repeat });
@@ -261,6 +270,10 @@ export function Block({
     pressRef.current = press;
 
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        end('stopped');
+        return;
+      }
       if (e.code === 'Space') {
         e.preventDefault(); // no scrolling, no activating a focused button
         if (env.device === 'keyboard') press(env.pressTime(e), e.repeat);
@@ -375,6 +388,19 @@ export function Block({
       )}
 
       <p className={styles.hint}>{ui.kind === 'countdown' ? 'Starting…' : hint}</p>
+
+      {/* Spec 009: a quiet way out, outside the tap area, so a tap on it is never a press. */}
+      <button
+        type="button"
+        className={styles.stop}
+        aria-label="Stop"
+        aria-keyshortcuts="Escape"
+        // Out of the tab order: focus stays on the block, so Space can never reach it.
+        tabIndex={-1}
+        onClick={() => endRef.current?.('stopped')}
+      >
+        <span aria-hidden="true">×</span>
+      </button>
     </div>
   );
 }

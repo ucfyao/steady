@@ -9,7 +9,7 @@ import {
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { ApiError } from '../api/client.js';
-import { Block } from '../game/Block.js';
+import { Block, type VoidReason } from '../game/Block.js';
 import { HowToPlay } from '../game/HowToPlay.js';
 import { PracticeLine } from '../game/PracticeLine.js';
 import { Steps } from '../game/Steps.js';
@@ -40,7 +40,7 @@ type Step =
   | { k: 'running'; session: StartedSession }
   | { k: 'submitting'; session: StartedSession; submission: Submission }
   | { k: 'submit-error'; session: StartedSession; submission: Submission; error: ApiError }
-  | { k: 'voided'; during: 'practice' | 'session' }
+  | { k: 'voided'; during: 'practice' | 'session'; reason: VoidReason }
   | { k: 'error'; message: string };
 
 const LABELS: Record<string, string> = {
@@ -181,7 +181,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             setPracticed(summarisePractice(step.plan.trials, rts));
             setStep({ k: 'before' });
           }}
-          onVoid={() => setStep({ k: 'voided', during: 'practice' })}
+          onVoid={(reason) => setStep({ k: 'voided', during: 'practice', reason })}
         />
       );
 
@@ -214,7 +214,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           env={env}
           variant={step.session.variant}
           onDone={(submission) => submit(step.session, submission)}
-          onVoid={() => setStep({ k: 'voided', during: 'session' })}
+          onVoid={(reason) => setStep({ k: 'voided', during: 'session', reason })}
         />
       );
 
@@ -236,7 +236,13 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       return (
         <StatusPage
           tone="warning"
-          title={step.during === 'practice' ? 'Practice stopped' : 'Session voided'}
+          title={
+            step.during === 'practice'
+              ? 'Practice stopped'
+              : step.reason === 'stopped'
+                ? 'Session stopped'
+                : 'Session voided'
+          }
           primary={{
             label: 'Play again',
             // A first-time player who left the practice starts the steps again.
@@ -245,8 +251,18 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           }}
           secondary={{ label: 'Back to home', to: '/' }}
         >
-          You left the page while it was running. Leaving the page interrupts the timing, so{' '}
-          {step.during === 'practice' ? 'the practice stopped' : 'this session was not saved'}.
+          {step.reason === 'stopped' ? (
+            step.during === 'practice' ? (
+              'You stopped the practice.'
+            ) : (
+              'You stopped the session, so it was not saved.'
+            )
+          ) : (
+            <>
+              You left the page while it was running. Leaving the page interrupts the timing, so{' '}
+              {step.during === 'practice' ? 'the practice stopped' : 'this session was not saved'}.
+            </>
+          )}
         </StatusPage>
       );
 
