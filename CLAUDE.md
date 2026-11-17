@@ -6,7 +6,7 @@ Read `docs/design-note.md` for the product, and `specs/` for what is being built
 ## Commands
 
 - `pnpm install`: installs dependencies and builds `@steady/core`. Run it first in every new worktree.
-- `pnpm bootstrap`: `.env`, Postgres 17 in Docker (host port 5433), migrations, then the three demo players (`pnpm seed:demo`)
+- `pnpm bootstrap`: `.env`, Postgres 17 in Docker (host port 5433), migrations, then the six demo players (`pnpm seed:demo`: three with history, three new)
 - `pnpm dev`: web app on port 5173 (proxies `/api`) and API on port 4000, both in watch mode, with `@steady/core` rebuilt on change
 - `pnpm --filter @steady/api db:generate`: after changing `apps/api/src/db/schema.ts`; commit the generated SQL
 - `pnpm --filter @steady/core test`: core tests only

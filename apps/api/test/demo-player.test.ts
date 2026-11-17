@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 import { players, sessions } from '../src/db/schema.js';
 import { demoSessions, seedDemoPlayer } from '../src/demo/demo-player.js';
 import { startTestApp, type TestApp } from './support/app.js';
-import { auth, newPlayer } from './support/players.js';
+import { auth, newPlayer, playSession } from './support/players.js';
 
 const NOW = new Date(2026, 10, 16, 14, 0); // local time, so the day checks hold in any zone
 const DAY = 86_400_000;
@@ -98,16 +98,37 @@ describe('demo player (pnpm seed:demo)', () => {
     expect(new Date(list.at(-1)!.completedAt).getTime()).toBeGreaterThan(NOW.getTime());
   });
 
-  it('lists the demo players as Ava, Ben, Cleo, whatever their ids (Spec 014)', async () => {
+  it('seeds new demo players with no sessions, and a rerun empties them again (Spec 011 §2)', async () => {
+    for (const [variant, name] of [
+      ['plain', 'Dana'],
+      ['calm', 'Eli'],
+      ['game', 'Finn'],
+    ] as const) {
+      const { token } = await seedDemoPlayer(t.db, NOW, variant, 'new');
+      expect(token).not.toBe((await seedDemoPlayer(t.db, NOW, variant)).token);
+      const me = await request(t.http).get('/api/me').set(auth(token)).expect(200);
+      expect(me.body).toEqual({ name, variant });
+      expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toEqual([]);
+    }
+    // Played once, then seeded again: a new player once more, under the same token.
+    const { token } = await seedDemoPlayer(t.db, NOW, 'calm', 'new');
+    await playSession(t, token);
+    expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toHaveLength(1);
+    expect((await seedDemoPlayer(t.db, NOW, 'calm', 'new')).token).toBe(token);
+    expect((await request(t.http).get('/api/sessions').set(auth(token))).body).toEqual([]);
+  });
+
+  it('lists the demo players as Ava, Ben, Cleo, Dana, Eli, Finn, whatever their ids (Spec 014)', async () => {
     for (let run = 0; run < 3; run++)
       for (const variant of ['game', 'plain', 'calm'] as const)
-        await seedDemoPlayer(t.db, NOW, variant);
+        for (const kind of ['new', 'history'] as const)
+          await seedDemoPlayer(t.db, NOW, variant, kind);
     const names = (
       (await request(t.http).get('/api/players').expect(200)).body as { name: string }[]
     )
       .map((p) => p.name)
-      .filter((n) => ['Ava', 'Ben', 'Cleo'].includes(n));
-    expect(names).toEqual(['Ava', 'Ben', 'Cleo']);
+      .filter((n) => ['Ava', 'Ben', 'Cleo', 'Dana', 'Eli', 'Finn'].includes(n));
+    expect(names).toEqual(['Ava', 'Ben', 'Cleo', 'Dana', 'Eli', 'Finn']);
   });
 
   it('is the same history on every run', () => {
