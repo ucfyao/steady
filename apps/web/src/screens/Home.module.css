@@ -54,7 +54,6 @@
 }
 
 .hero .start {
-  width: 100%;
   background: var(--lantern);
   border-color: var(--lantern);
   color: var(--on-lantern);
@@ -73,7 +72,8 @@
 
 /*
  * The hero (Spec 007, Spec 013): the lantern's night scene, always dark, across the whole
- * window width and from the top of the page. Its content stays on the content column.
+ * window width and from the top of the page. The lantern is its centre, with the greeting,
+ * lead and button under it on the content column.
  */
 .hero {
   --header-height: calc(2 * var(--space-7) + 2.25rem);
@@ -82,19 +82,19 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   width: 100vw;
-  min-height: max(24rem, 60vh);
+  min-height: clamp(30rem, 64vh, 38rem);
   margin-inline: calc(50% - 50vw);
-  margin-bottom: var(--space-7);
-  padding: var(--space-6) 0 var(--space-7);
+  margin-bottom: var(--space-8);
+  padding: var(--space-6) 0 var(--space-8);
   color: var(--night-text);
   background: var(--night-bg);
 }
 
 /* The header lies on the scene: leave room for it above the lantern. */
 :global([data-over-hero]) .hero {
-  padding-top: calc(var(--header-height) + var(--space-4));
+  padding-top: var(--header-height);
 }
 
 /* A dark wash behind the header, so its light text stays readable at any dawn. */
@@ -108,39 +108,40 @@
   pointer-events: none;
 }
 
-@media (min-width: 640px) {
-  .hero {
-    min-height: max(26rem, 72vh);
-    padding-bottom: var(--space-9);
-  }
-}
-
-/* A dark wash under the text, so it stays readable however far the sky got to dawn. */
+/*
+ * A soft dark wash behind the text, as strong as the sky is light: none needed at night,
+ * enough at dawn for the light text to stay readable, and too wide to read as a patch.
+ */
 .hero::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 35%, rgb(20 22 40 / 0.72) 100%);
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 70%,
+    rgb(20 22 40 / calc(0.15 + var(--dawn, 0) * 0.35)),
+    transparent 80%
+  );
   pointer-events: none;
 }
 
-/* The content column inside the full-width scene. */
+/* The content column inside the full-width scene, centred. */
 .heroInner {
   position: relative;
   z-index: 1;
-  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  align-items: center;
   width: 100%;
   max-width: var(--content-width);
   margin: 0 auto;
   padding-inline: var(--gutter);
+  text-align: center;
 }
 
 .heroText {
-  position: relative;
-  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* The one title that stays large (Spec 010): the greeting on the scene. */
@@ -149,26 +150,41 @@
   color: var(--night-text);
 }
 
-@media (min-width: 640px) {
+.heroText h1,
+.heroText .lead,
+.heroText .sky {
+  text-shadow: 0 1px 14px rgb(20 22 40 / 0.55);
+}
+
+.heroText .lead {
+  max-width: 24rem;
+  text-wrap: balance;
+}
+
+.heroText .start {
+  min-width: 16rem;
+}
+
+@media (max-width: 639px) {
+  .heroText,
   .heroText .start {
-    width: auto;
-    min-width: 16rem;
+    width: 100%;
   }
 }
 
-/* A lit paper lantern on a cord (Spec 013 §2), hanging in the top right of the column. */
+/* A lit paper lantern on a cord (Spec 013 §2): the centre of the scene. */
 .heroLantern {
-  position: absolute;
-  top: 0;
-  right: calc(var(--gutter) + var(--space-2));
-  width: 4.5rem;
+  position: relative;
+  flex: none;
+  width: 6.5rem;
   aspect-ratio: 17 / 20;
-  filter: drop-shadow(0 0 28px rgb(255 200 120 / 0.55));
+  margin: var(--space-8) 0 var(--space-7);
+  filter: drop-shadow(0 0 36px rgb(255 200 120 / 0.55));
 }
 
 @media (min-width: 640px) {
   .heroLantern {
-    width: 6rem;
+    width: 8.5rem;
   }
 }
 
@@ -177,7 +193,7 @@
   bottom: 100%;
   left: 50%;
   width: 1px;
-  height: var(--space-9);
+  height: var(--space-8);
   /* Fades out upwards, so it never runs into the header. */
   background: linear-gradient(transparent, rgb(236 230 218 / 0.35));
 }
@@ -256,6 +272,11 @@
 }
 
 @media (min-width: 640px) {
+  /* Centred under the centred hero. */
+  .welcomeLead {
+    text-align: center;
+  }
+
   .welcomePoints {
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-5);

@@ -4,7 +4,6 @@
   min-height: 100vh;
   margin: 0 auto;
   padding: 0 var(--gutter) var(--space-9);
-  background: var(--color-surface);
 }
 
 .header {

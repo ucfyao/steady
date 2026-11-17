@@ -33,7 +33,7 @@
   position: absolute;
   border-radius: 50%;
   background: #fff;
-  opacity: calc(0.7 - var(--dawn) * 0.7);
+  opacity: calc((0.7 - var(--dawn) * 0.7) * var(--alpha, 1));
 }
 
 .hills {
@@ -47,6 +47,26 @@
 
 .far {
   fill: color-mix(in oklab, #232a3f calc(100% - var(--dawn) * 100%), #9fae95);
+}
+
+/* Home's richer scene (Spec 013 §2): taller hills, a third layer and a warm horizon. */
+.rich .hills {
+  height: 42%;
+}
+
+.distant {
+  fill: color-mix(in oklab, #2b3350 calc(100% - var(--dawn) * 100%), #c4c3a8);
+}
+
+.horizon {
+  position: absolute;
+  inset: auto 0 18% 0;
+  height: 40%;
+  background: radial-gradient(
+    ellipse 60% 70% at 50% 100%,
+    rgb(255 196 128 / calc(0.16 + var(--dawn) * 0.3)),
+    transparent 70%
+  );
 }
 
 .near {

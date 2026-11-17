@@ -118,8 +118,16 @@ export function Home() {
   return (
     <section className={styles.home}>
       {/* The lantern's scene (Spec 007 §1); a game player sees the last sky they reached. */}
-      <section aria-label="Today's check" className={styles.hero}>
-        <Scene ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))} />
+      {/* `--dawn` on the hero too, so the wash behind the text grows only as the sky lightens. */}
+      <section
+        aria-label="Today's check"
+        className={styles.hero}
+        ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
+      >
+        <Scene
+          rich
+          ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
+        />
         <div className={styles.heroInner}>
           {/* A lit paper lantern on a cord, drawn in CSS (Spec 013 §2). */}
           <span className={styles.heroLantern} aria-hidden="true" data-testid="hero-lantern">
