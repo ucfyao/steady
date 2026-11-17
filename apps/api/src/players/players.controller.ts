@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   Inject,
@@ -17,17 +16,13 @@ import { PlayerId } from '../auth/player-id.decorator.js';
 import { Public } from '../auth/public.decorator.js';
 import { hashToken, newToken } from '../auth/token.js';
 import { ZodValidationPipe } from '../common/zod.pipe.js';
-import { APP_CONFIG, type AppConfig } from '../config.js';
 import { DB, type Db } from '../db/db.module.js';
 import { players } from '../db/schema.js';
 import type { z } from 'zod';
 
 @Controller()
 export class PlayersController {
-  constructor(
-    @Inject(DB) private readonly db: Db,
-    @Inject(APP_CONFIG) private readonly config: AppConfig,
-  ) {}
+  constructor(@Inject(DB) private readonly db: Db) {}
 
   /** The token is returned once and never stored in plain text. */
   @Public()
@@ -36,11 +31,9 @@ export class PlayersController {
   async create(
     @Body(new ZodValidationPipe(CreatePlayerSchema)) body: z.infer<typeof CreatePlayerSchema>,
   ) {
-    // Spec 011 §3: choosing the group is a development tool; players never pick their own.
-    if (body.variant && !this.config.devTools)
-      throw new ForbiddenException('A variant can only be chosen with the development tools on.');
     const token = newToken();
     // [P] Spec 006 §5, Spec 008: a third each, kept for the player's whole history.
+    // Spec 011 §3: the development tools may choose it; the app never does for a player.
     const variant = body.variant ?? VARIANTS[randomInt(VARIANTS.length)]!;
     await this.db.insert(players).values({ tokenHash: hashToken(token), variant });
     return { token };

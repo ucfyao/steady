@@ -85,10 +85,19 @@ describe('A/B variant', () => {
     expect(row!.variant).toBe('plain');
   });
 
-  it('refuses a chosen variant for a new player with 403 when the development tools are off (Spec 011)', async () => {
-    const before = (await t.db.select().from(players)).length;
-    await request(t.http).post('/api/players').send({ variant: 'plain' }).expect(403);
-    expect((await t.db.select().from(players)).length).toBe(before);
+  it('creates a new player in a chosen variant (Spec 011 §3)', async () => {
+    // Five per variant: a random draw would match all 15 only once in 3^15 (about 14 million).
+    for (const variant of ['plain', 'calm', 'game'] as const)
+      for (let i = 0; i < 5; i++) {
+        const { token } = (await request(t.http).post('/api/players').send({ variant }).expect(201))
+          .body as { token: string };
+        expect(await variantOf(token)).toBe(variant);
+      }
+  });
+
+  it('rejects an unknown variant or extra fields for a new player with 400', async () => {
+    await request(t.http).post('/api/players').send({ variant: 'loud' }).expect(400);
+    await request(t.http).post('/api/players').send({ variant: 'plain', admin: true }).expect(400);
   });
 
   it('rejects an unknown variant with 400', async () => {

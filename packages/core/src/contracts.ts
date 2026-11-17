@@ -23,8 +23,8 @@ export const CheckInSchema = z.object({
 });
 
 /**
- * POST /api/players. A chosen variant is for development only (Spec 011 §3): the API refuses
- * it unless its development tools are on. Strict, so a typo is a 400 rather than ignored.
+ * POST /api/players. A variant is chosen only by the development tools (Spec 011 §3); without
+ * it the server draws one. Strict, so a typo is a 400 rather than ignored.
  */
 export const CreatePlayerSchema = z
   .object({

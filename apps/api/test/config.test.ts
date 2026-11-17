@@ -10,18 +10,7 @@ describe('loadConfig', () => {
       logLevel: 'info',
       prettyLogs: true,
       rateLimitPerMinute: 120,
-      devTools: false,
     });
-  });
-
-  it('turns the development tools on only with DEV_TOOLS=true outside production (Spec 011)', () => {
-    const base = { DATABASE_URL: 'postgres://localhost/db' };
-    expect(loadConfig(base).devTools).toBe(false);
-    expect(loadConfig({ ...base, DEV_TOOLS: 'true' }).devTools).toBe(true);
-    expect(loadConfig({ ...base, DEV_TOOLS: 'true', NODE_ENV: 'development' }).devTools).toBe(true);
-    expect(loadConfig({ ...base, DEV_TOOLS: 'true', NODE_ENV: 'production' }).devTools).toBe(false);
-    expect(loadConfig({ ...base, DEV_TOOLS: 'false' }).devTools).toBe(false);
-    expect(loadConfig({ ...base, DEV_TOOLS: '1' }).devTools).toBe(false);
   });
 
   it('refuses to start without a database URL, naming the variable', () => {
