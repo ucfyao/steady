@@ -46,7 +46,14 @@ const newSession = (playerId: string) =>
 
 describe('committed migrations (Spec 003 storage)', () => {
   it('create players with an id, a token hash, a timestamp, a group and a name', async () => {
-    expect(await columns('players')).toEqual(['created_at', 'id', 'name', 'token_hash', 'variant']);
+    expect(await columns('players')).toEqual([
+      'created_at',
+      'id',
+      'name',
+      'token?',
+      'token_hash',
+      'variant',
+    ]);
   });
 
   it('create sessions with trials, raw submission and score kept per row', async () => {

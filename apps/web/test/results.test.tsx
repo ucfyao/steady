@@ -11,7 +11,6 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
-import { saveProfiles } from '../src/players/store.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { storedSession } from './support/sessions.js';
 
@@ -139,20 +138,13 @@ describe('Results', () => {
   });
 
   it("does not show the previous player's session after switching player", async () => {
-    // Two players on this device; Ana has just finished s1 (Play hands it over in the state).
-    saveProfiles(localStorage, {
-      profiles: [
-        { id: 'ana', name: 'Ana', token: tokenN(1) },
-        { id: 'ben', name: 'Ben', token: tokenN(2) },
-      ],
-      activeId: 'ana',
-    });
+    // Two players on the server; Ana has just finished s1 (Play hands it over in the state).
     renderResults(
       { pathname: '/results/s1', state: { session: mixed, playerId: 'ana' } },
       undefined,
       (b) => {
-        b.names.set(tokenN(1), 'Ana'); // the names on the server (Spec 013)
-        b.names.set(tokenN(2), 'Ben');
+        b.addPlayer('Ana', { token: tokenN(1), id: 'ana' });
+        b.addPlayer('Ben', { token: tokenN(2), id: 'ben' });
       },
     );
     expect(await screen.findByRole('group', { name: '3s held back' })).toBeInTheDocument();

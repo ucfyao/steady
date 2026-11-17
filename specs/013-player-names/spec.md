@@ -1,6 +1,6 @@
 # Spec 013: Player names on the server
 
-Status: implemented
+Status: implemented; §3's browser cache and import link replaced by Spec 014 (the list of players is on the server)
 Depends on: Spec 003, Spec 004, Spec 011
 Changes: Spec 003 (players), Spec 004 (local profiles, Manage players, import link), design note §7
 

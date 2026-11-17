@@ -19,6 +19,16 @@ export interface Me {
   variant: Variant;
 }
 
+/** GET /api/players (Spec 014): every player, with the token a request uses to act as them. */
+export interface PlayerListItem {
+  id: string;
+  name: string;
+  variant: Variant;
+  token: string;
+  completedSessions: number;
+  createdAt: string;
+}
+
 export const SLEEP_LEVELS = ['poor', 'ok', 'good'] as const;
 export const STRESS_LEVELS = ['low', 'medium', 'high'] as const;
 

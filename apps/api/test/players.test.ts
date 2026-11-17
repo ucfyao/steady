@@ -23,15 +23,14 @@ const playerRow = async (token: string) =>
   )[0];
 
 describe('POST /api/players', () => {
-  it('returns a 256-bit base64url token and stores only its hash', async () => {
+  it('returns a 256-bit base64url token, looked up by its hash and kept for the list (Spec 014)', async () => {
     const res = await request(t.http).post('/api/players').send({ name: 'Ana' }).expect(201);
     const { token } = res.body as { token: string };
     expect(Object.keys(res.body)).toEqual(['token']);
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/); // 32 bytes → 43 base64url characters
 
-    expect(await playerRow(token)).toBeDefined();
-    const all = await t.db.select().from(players);
-    expect(JSON.stringify(all)).not.toContain(token);
+    // Found by its hash; the plain token is kept too, so GET /api/players can hand it out.
+    expect((await playerRow(token))!.token).toBe(token);
   });
 
   it('gives every player a different token', async () => {
@@ -101,6 +100,54 @@ describe('GET and PATCH /api/me (Spec 013)', () => {
   it('needs a valid token', async () => {
     await request(t.http).patch('/api/me').send({ name: 'Ana' }).expect(401);
     await rename('A'.repeat(43), { name: 'Ana' }).expect(401);
+  });
+});
+
+describe('GET /api/players (Spec 014)', () => {
+  type Item = {
+    id: string;
+    name: string;
+    variant: string;
+    token: string;
+    completedSessions: number;
+    createdAt: string;
+  };
+  const list = async () => (await request(t.http).get('/api/players').expect(200)).body as Item[];
+
+  it('lists every player, oldest first, with name, group, token and completed sessions', async () => {
+    t.clock.advance(1_000);
+    const ana = await newPlayer(t, 'Ana');
+    t.clock.advance(1_000);
+    const ben = await newPlayer(t, 'Ben');
+    await playSession(t, ben);
+
+    const items = await list();
+    const byToken = (tok: string) => items.find((i) => i.token === tok)!;
+    expect(byToken(ana)).toMatchObject({ name: 'Ana', completedSessions: 0 });
+    expect(byToken(ben)).toMatchObject({ name: 'Ben', completedSessions: 1 });
+    expect(byToken(ana).variant).toBe((await playerRow(ana))!.variant);
+    expect(byToken(ana).id).toBe((await playerRow(ana))!.id);
+    const times = items.map((i) => new Date(i.createdAt).getTime());
+    expect(times).toEqual([...times].sort((a, b) => a - b));
+    expect(items.indexOf(byToken(ana))).toBeLessThan(items.indexOf(byToken(ben)));
+  });
+
+  it('needs no token, and a listed token works for that player', async () => {
+    const token = await newPlayer(t, 'Cy');
+    const item = (await list()).find((i) => i.token === token)!;
+    const me = await request(t.http).get('/api/me').set(auth(item.token)).expect(200);
+    expect(me.body.name).toBe('Cy');
+  });
+
+  it('drops a deleted player, and leaves out players without a stored token', async () => {
+    const token = await newPlayer(t, 'Gone');
+    await request(t.http).delete('/api/me').set(auth(token)).expect(204);
+    await t.db
+      .insert(players)
+      .values({ tokenHash: sha256('legacy'), variant: 'calm', name: 'Old' });
+    const names = (await list()).map((i) => i.name);
+    expect(names).not.toContain('Gone');
+    expect(names).not.toContain('Old');
   });
 });
 

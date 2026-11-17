@@ -20,11 +20,11 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 
 ## 2. Three fixed demo players, set up with the database
 
-- `pnpm seed:demo` sets up three demo players, one per variant (named on the server by Spec 013: **Ava**, **Ben** and **Cleo**), each with the same two weeks of history played in its own variant, and prints an import link for each.
-- Each has a **fixed token** (derived from its variant), so its link never changes: a browser that has imported a demo player keeps it across database resets and reruns.
+- `pnpm seed:demo` sets up three demo players, one per variant (named on the server by Spec 013: **Ava**, **Ben** and **Cleo**), each with the same two weeks of history played in its own variant. With Spec 014 they are in everyone's player list; there is no link to open.
+- Each has a **fixed token** (derived from its variant), so a rerun refreshes the same player and a browser that selected one keeps it across reruns.
 - **Running it again refreshes them:** the same three players get their history rebuilt, so it stays "the past two weeks" and is scored by the current rules. It never adds copies.
 - `pnpm bootstrap` runs it last, so a new setup has the demo players with its database.
-- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged. The links point at `http://localhost:5173` unless `WEB_URL` says otherwise.
+- The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
 
 ## 3. Choosing the group of a new player (development only)
 

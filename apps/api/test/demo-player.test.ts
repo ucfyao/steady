@@ -98,6 +98,18 @@ describe('demo player (pnpm seed:demo)', () => {
     expect(new Date(list.at(-1)!.completedAt).getTime()).toBeGreaterThan(NOW.getTime());
   });
 
+  it('lists the demo players as Ava, Ben, Cleo, whatever their ids (Spec 014)', async () => {
+    for (let run = 0; run < 3; run++)
+      for (const variant of ['game', 'plain', 'calm'] as const)
+        await seedDemoPlayer(t.db, NOW, variant);
+    const names = (
+      (await request(t.http).get('/api/players').expect(200)).body as { name: string }[]
+    )
+      .map((p) => p.name)
+      .filter((n) => ['Ava', 'Ben', 'Cleo'].includes(n));
+    expect(names).toEqual(['Ava', 'Ben', 'Cleo']);
+  });
+
   it('is the same history on every run', () => {
     expect(demoSessions(NOW)).toEqual(demoSessions(NOW));
     const ids = demoSessions(NOW).map((s) => s.plan.seed);

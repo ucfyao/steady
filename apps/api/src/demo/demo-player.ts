@@ -1,4 +1,5 @@
 import {
+  VARIANTS,
   SART_CONFIG,
   TRIAL_MS,
   createSessionPlan,
@@ -124,7 +125,10 @@ export async function seedDemoPlayer(
       .insert(players)
       .values({
         tokenHash: hashToken(token),
-        createdAt: history[0]!.startedAt,
+        token,
+        // A millisecond apart in variant order, so the shared list (Spec 014, oldest first)
+        // shows Ava, Ben, Cleo rather than an order left to their random ids.
+        createdAt: new Date(history[0]!.startedAt.getTime() + VARIANTS.indexOf(variant)),
         variant,
         name: DEMO_NAMES[variant],
       })

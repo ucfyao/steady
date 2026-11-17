@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 /**
  * Plays the block on screen like a careful player: Space for every digit except 3,
@@ -61,12 +61,31 @@ export async function hidePage(page: Page) {
 }
 
 /** The active player's token, to ask the API directly what it stored. */
+/** The selected player's token: the browser keeps the id, the server's list the token (Spec 014). */
 export async function activeToken(page: Page): Promise<string> {
-  return page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem('steady.players.v1') ?? '{}') as {
-      profiles: { id: string; token: string }[];
-      activeId: string;
-    };
-    return state.profiles.find((p) => p.id === state.activeId)!.token;
+  return page.evaluate(async () => {
+    const id = localStorage.getItem('steady.activePlayer.v1');
+    const list = (await (await fetch('/api/players')).json()) as { id: string; token: string }[];
+    return list.find((p) => p.id === id)!.token;
   });
+}
+
+/**
+ * Starts a test as a brand-new player (Spec 014: every browser sees the shared list, so a fresh
+ * browser would otherwise select whoever is first). The name is unique, because the local
+ * database keeps players between runs. Returns the name.
+ */
+export async function asNewPlayer(page: Page, request: APIRequestContext, prefix: string) {
+  const name = `${prefix} ${Date.now() % 100_000}`;
+  const { token } = (await (await request.post('/api/players', { data: { name } })).json()) as {
+    token: string;
+  };
+  const list = (await (await request.get('/api/players')).json()) as {
+    id: string;
+    token: string;
+  }[];
+  const id = list.find((p) => p.token === token)!.id;
+  await page.goto('/');
+  await page.evaluate((selected) => localStorage.setItem('steady.activePlayer.v1', selected), id);
+  return name;
 }

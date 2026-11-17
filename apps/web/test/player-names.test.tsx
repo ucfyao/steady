@@ -1,13 +1,12 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
-import { loadProfiles, saveProfiles } from '../src/players/store.js';
-import { fakeBackend, tokenN } from './support/fake-api.js';
+import { fakeBackend } from './support/fake-api.js';
 
-// Spec 013: a player's name is stored on the server; the browser keeps only a cache of it.
+// Spec 013: a player's name is stored on the server; with Spec 014 the list itself is too.
 
 function renderApp(backend = fakeBackend(), path = '/') {
   render(
@@ -20,22 +19,20 @@ function renderApp(backend = fakeBackend(), path = '/') {
   return backend;
 }
 
-/** Two players on this device, with these names on the server. */
-function twoPlayers(server: { ana: string; ben: string }, cached = { ana: 'Ana', ben: 'Ben' }) {
-  saveProfiles(localStorage, {
-    profiles: [
-      { id: 'ana', name: cached.ana, token: tokenN(101) },
-      { id: 'ben', name: cached.ben, token: tokenN(102) },
-    ],
-    activeId: 'ana',
-  });
+function anaAndBen() {
   const backend = fakeBackend();
-  backend.names.set(tokenN(101), server.ana);
-  backend.names.set(tokenN(102), server.ben);
-  return backend;
+  const ana = backend.addPlayer('Ana');
+  const ben = backend.addPlayer('Ben');
+  return { backend, ana, ben };
 }
 
-const cachedNames = () => loadProfiles(localStorage).profiles.map((p) => p.name);
+async function renameBen(to: string) {
+  await userEvent.click(await screen.findByRole('button', { name: 'Rename Ben' }));
+  const field = screen.getByRole('textbox', { name: /name/i });
+  await userEvent.clear(field);
+  await userEvent.type(field, to);
+  await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+}
 
 describe('Player names on the server (Spec 013)', () => {
   it('sends the first player’s name when it is created', async () => {
@@ -63,46 +60,24 @@ describe('Player names on the server (Spec 013)', () => {
     ]);
   });
 
-  it('replaces the cached names with the server’s on load', async () => {
-    const backend = twoPlayers({ ana: 'Anna', ben: 'Benji' });
-    renderApp(backend);
-    expect(await screen.findByRole('button', { name: 'Player: Anna' })).toBeInTheDocument();
-    await waitFor(() => expect(cachedNames()).toEqual(['Anna', 'Benji']));
-  });
-
-  it('renames on the server with that player’s own token', async () => {
-    const backend = twoPlayers({ ana: 'Ana', ben: 'Ben' });
+  it('renames on the server with that player’s own token, and shows the server’s name', async () => {
+    const { backend, ben } = anaAndBen();
     renderApp(backend, '/players');
-    await userEvent.click(await screen.findByRole('button', { name: 'Rename Ben' }));
-    const field = screen.getByRole('textbox', { name: /name/i });
-    await userEvent.clear(field);
-    await userEvent.type(field, '  Benji ');
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await renameBen('  Benji ');
     expect(await screen.findByText('Benji')).toBeInTheDocument();
-    expect(backend.updated).toEqual([{ token: tokenN(102), name: '  Benji ' }]);
-    await waitFor(() => expect(cachedNames()).toEqual(['Ana', 'Benji']));
+    expect(backend.updated).toEqual([{ token: ben.token, name: '  Benji ' }]);
+    expect(screen.queryByText('Ben')).toBeNull();
   });
 
   it('keeps the old name and says so when a rename fails', async () => {
-    const backend = twoPlayers({ ana: 'Ana', ben: 'Ben' });
+    const { backend, ben } = anaAndBen();
     backend.control.failUpdateOnce = true;
     renderApp(backend, '/players');
-    await userEvent.click(await screen.findByRole('button', { name: 'Rename Ben' }));
-    const field = screen.getByRole('textbox', { name: /name/i });
-    await userEvent.clear(field);
-    await userEvent.type(field, 'Benji');
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await renameBen('Benji');
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not reach the server/i);
-    expect(cachedNames()).toEqual(['Ana', 'Ben']);
-    expect(backend.names.get(tokenN(102))).toBe('Ben');
-  });
-
-  it('takes an imported player’s name from the server, not from the link', async () => {
-    const backend = fakeBackend();
-    backend.names.set(tokenN(9), 'Ava');
-    renderApp(backend, `/import#token=${tokenN(9)}&name=Someone`);
-    expect(await screen.findByRole('button', { name: 'Player: Ava' })).toBeInTheDocument();
-    expect(cachedNames()).toContain('Ava');
-    expect(cachedNames()).not.toContain('Someone');
+    expect(backend.names.get(ben.token)).toBe('Ben');
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByText('Ben')).toBeInTheDocument();
+    expect(screen.queryByText('Benji')).toBeNull();
   });
 });

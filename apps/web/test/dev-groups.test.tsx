@@ -4,27 +4,16 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
-import { saveProfiles } from '../src/players/store.js';
-import { fakeBackend, tokenN } from './support/fake-api.js';
+import { fakeBackend } from './support/fake-api.js';
 
 // Spec 011: in development, each player's own group in the player menu and Manage players.
-// Pre-seeded players use tokens 101+, so they never clash with those the fake server hands out.
+// The groups come with the shared list of players (Spec 014).
 
 function renderApp(opts: { devTools?: boolean; path?: string } = {}) {
-  saveProfiles(localStorage, {
-    profiles: [
-      { id: 'ana', name: 'Ana', token: tokenN(101) },
-      { id: 'ben', name: 'Ben', token: tokenN(102) },
-      { id: 'cy', name: 'Cy', token: tokenN(103) },
-    ],
-    activeId: 'ana',
-  });
   const backend = fakeBackend();
-  backend.names.set(tokenN(101), 'Ana');
-  backend.names.set(tokenN(102), 'Ben');
-  backend.variants.set(tokenN(101), 'plain');
-  backend.variants.set(tokenN(102), 'game');
-  backend.meFails.add(tokenN(103)); // Cy's group cannot be read
+  backend.addPlayer('Ana', { variant: 'plain' });
+  backend.addPlayer('Ben', { variant: 'game' });
+  backend.addPlayer('Cy', { variant: 'calm' });
   render(
     <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
       <MemoryRouter initialEntries={[opts.path ?? '/']}>
@@ -55,8 +44,7 @@ describe('Player groups in development (Spec 011)', () => {
     const menu = await openMenu();
     expect(await within(item(menu, 'Ana')).findByText('plain')).toBeInTheDocument();
     expect(await within(item(menu, 'Ben')).findByText('game')).toBeInTheDocument();
-    // Cy's group could not be read: the name alone.
-    expect(item(menu, 'Cy')).toHaveTextContent(/^Cy$/);
+    expect(await within(item(menu, 'Cy')).findByText('calm')).toBeInTheDocument();
   });
 
   it("shows each player's own group on Manage players", async () => {
@@ -66,15 +54,17 @@ describe('Player groups in development (Spec 011)', () => {
       within(screen.getAllByRole('listitem').find((li) => li.textContent?.startsWith(name))!);
     expect(await row('Ana').findByText('plain')).toBeInTheDocument();
     expect(await row('Ben').findByText('game')).toBeInTheDocument();
-    expect(row('Cy').queryByText(/^(plain|calm|game)$/)).toBeNull();
+    expect(await row('Cy').findByText('calm')).toBeInTheDocument();
   });
 
-  it('asks each player with their own token', async () => {
+  it('reads the groups from the one list of players, with no call per player (Spec 014)', async () => {
     const backend = renderApp({ devTools: true });
     await openMenu();
     await screen.findByText('game');
-    const asked = backend.calls.filter((c) => c.method === 'getMe').map((c) => c.token);
-    expect(new Set(asked)).toEqual(new Set([tokenN(101), tokenN(102), tokenN(103)]));
+    // Only the selected player's own screens ask for it (Home); nothing per player.
+    const ana = backend.registry[0]!.token;
+    expect(backend.calls.filter((c) => c.method === 'getMe' && c.token !== ana)).toEqual([]);
+    expect(backend.calls.filter((c) => c.method === 'listPlayers').length).toBeGreaterThan(0);
   });
 
   it('has no bottom-left badge any more', async () => {

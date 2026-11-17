@@ -4,7 +4,7 @@ import { StrictMode, useContext } from 'react';
 import { describe, expect, it } from 'vitest';
 import { ApiError, type Api } from '../src/api/client.js';
 import { PlayersContext, PlayersProvider } from '../src/players/PlayersProvider.js';
-import { STORAGE_KEY, loadProfiles } from '../src/players/store.js';
+import { ACTIVE_KEY } from '../src/players/store.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 
 function Probe() {
@@ -52,15 +52,13 @@ describe('PlayersProvider', () => {
     expect(screen.getByText('active: Player 1')).toBeInTheDocument();
     expect(backend.created()).toBe(1);
     // Players are saved in an effect, which can run after the screen shows "ready".
-    await waitFor(() => expect(loadProfiles(localStorage).profiles).toHaveLength(1));
+    await waitFor(() => expect(localStorage.getItem(ACTIVE_KEY)).toBe(backend.registry[0]!.id));
+    expect(backend.registry).toHaveLength(1);
   });
 
-  it('reuses stored players without creating a new one', async () => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ profiles: [{ id: 'a', name: 'Alex', token: tokenN(9) }], activeId: 'a' }),
-    );
+  it('uses the players on the server without creating a new one (Spec 014)', async () => {
     const backend = fakeBackend();
+    backend.addPlayer('Alex', { token: tokenN(9) });
     backend.names.set(tokenN(9), 'Alex'); // the name on the server (Spec 013)
     renderWith(backend);
     await screen.findByText('status: ready');
@@ -96,7 +94,7 @@ describe('PlayersProvider', () => {
     expect(backend.calls.at(-1)).toEqual({ token: tokenN(2), method: 'listSessions' });
   });
 
-  it('removes a player the server no longer knows (401) and says so', async () => {
+  it('reads the list again when the selected player is gone (401), and says so', async () => {
     const backend = fakeBackend();
     renderWith(backend);
     await screen.findByText('active: Player 1');
@@ -104,7 +102,7 @@ describe('PlayersProvider', () => {
     await screen.findByText('players: Player 1, Sam');
     await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
-    backend.unauthorized.add(tokenN(2));
+    backend.deleteElsewhere(tokenN(2));
 
     await userEvent.click(screen.getByText('list'));
     await screen.findByText('active: Player 1');
@@ -120,48 +118,15 @@ describe('PlayersProvider', () => {
     await screen.findByText('players: Player 1, Sam');
     await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
-    backend.unauthorized.add(tokenN(2));
+    backend.deleteElsewhere(tokenN(2));
 
     // Home and Progress make two calls at once; both fail for the same player.
     await userEvent.click(screen.getByText('list2'));
     await screen.findByText('active: Player 1');
-    expect(
-      screen.getByText(
-        'notice: That player no longer exists on the server, so it was removed from this device.',
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText('notice: That player no longer exists.')).toBeInTheDocument();
   });
 
-  it('merges several removed players into one notice', async () => {
-    const backend = fakeBackend();
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        profiles: [
-          { id: 'a', name: 'Alex', token: tokenN(7) },
-          { id: 'b', name: 'Bo', token: tokenN(8) },
-          { id: 'c', name: 'Cy', token: tokenN(9) },
-        ],
-        activeId: 'a',
-      }),
-    );
-    backend.unauthorized.add(tokenN(7));
-    backend.unauthorized.add(tokenN(8));
-    backend.names.set(tokenN(9), 'Cy');
-    renderWith(backend);
-    await screen.findByText('active: Alex');
-    await userEvent.click(screen.getByText('list'));
-    await screen.findByText('active: Bo');
-    await userEvent.click(screen.getByText('list'));
-    await screen.findByText('active: Cy');
-    expect(
-      screen.getByText(
-        'notice: 2 players no longer exist on the server and were removed from this device.',
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it('deletes the active player on the server and on this device', async () => {
+  it('deletes the active player on the server, then selects the first one left', async () => {
     const backend = fakeBackend();
     renderWith(backend);
     await screen.findByText('active: Player 1');
@@ -173,9 +138,7 @@ describe('PlayersProvider', () => {
     await userEvent.click(screen.getByText('delete'));
     await screen.findByText('active: Player 1');
     expect(backend.calls).toContainEqual({ token: tokenN(2), method: 'deleteMe' });
-    await waitFor(() =>
-      expect(loadProfiles(localStorage).profiles.map((p) => p.name)).toEqual(['Player 1']),
-    );
+    expect(screen.getByText('players: Player 1')).toBeInTheDocument();
   });
 
   it('deletes another player with their own token and keeps the active one', async () => {
@@ -193,11 +156,11 @@ describe('PlayersProvider', () => {
     expect(backend.calls).toContainEqual({ token: tokenN(1), method: 'deleteMe' });
     expect(backend.calls).not.toContainEqual({ token: tokenN(2), method: 'deleteMe' });
     expect(
-      screen.getByText("notice: Player 1's data was deleted from the server and from this device."),
+      screen.getByText('notice: Player 1 and their sessions were deleted.'),
     ).toBeInTheDocument();
   });
 
-  it('removes a player here even if the server no longer knows it', async () => {
+  it('drops a player from the list even if the server no longer knows it', async () => {
     const backend = fakeBackend();
     renderWith(backend);
     await screen.findByText('active: Player 1');
@@ -205,7 +168,7 @@ describe('PlayersProvider', () => {
     await screen.findByText('players: Player 1, Sam');
     await userEvent.click(screen.getByText('last'));
     await screen.findByText('active: Sam');
-    backend.unauthorized.add(tokenN(1));
+    backend.deleteElsewhere(tokenN(1));
 
     await userEvent.click(screen.getByText('delete first'));
     await screen.findByText('players: Sam');

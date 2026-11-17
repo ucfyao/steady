@@ -4,7 +4,6 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
-import { loadProfiles } from '../src/players/store.js';
 import { storedSession } from './support/sessions.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 
@@ -145,10 +144,10 @@ describe('layout and player menu', () => {
     const backend = renderApp();
     await addPlayer('Sam');
     await goHome();
-    backend.unauthorized.add(tokenN(2));
+    backend.deleteElsewhere(tokenN(2));
     await switchTo('Sam');
     const bar = await screen.findByRole('status');
-    expect(bar).toHaveTextContent('That player no longer exists on the server');
+    expect(bar).toHaveTextContent('That player no longer exists.');
     expect(bar).not.toHaveClass('notice'); // not the old global class
     await userEvent.click(within(bar).getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByRole('status')).toBeNull();
@@ -156,14 +155,12 @@ describe('layout and player menu', () => {
 });
 
 describe('Manage players', () => {
-  it('explains that the server holds the sessions and this browser holds the keys', async () => {
+  it('explains that everyone sees every player here (Spec 014)', async () => {
     renderApp('/players');
     await avatar('Player 1');
     expect(screen.getByRole('heading', { level: 1, name: 'Players' })).toBeVisible();
-    // Spec 013: the names are on the server too; this browser holds only the keys.
-    expect(screen.getByText(/name and sessions are stored on the server/i)).toBeInTheDocument();
-    expect(screen.getByText(/browser holds the keys,/i)).toBeInTheDocument();
-    expect(screen.getByText(/loses access to every player/i)).toBeInTheDocument();
+    expect(screen.getByText(/everyone using steady sees every player here/i)).toBeInTheDocument();
+    expect(screen.getByText(/choose one in the avatar menu/i)).toBeInTheDocument();
   });
 
   it('lists every player here, marks the one playing now, and offers Rename and Delete on each', async () => {
@@ -221,7 +218,7 @@ describe('Manage players', () => {
     expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(1);
   });
 
-  it('renames any player on this device only, then returns focus to Rename', async () => {
+  it('renames any player through the API, then returns focus to Rename', async () => {
     const backend = renderApp('/players');
     await avatar('Player 1');
     await addPlayer('Sam');
@@ -240,8 +237,8 @@ describe('Manage players', () => {
 
     expect(screen.getByRole('button', { name: 'Rename Alex' })).toHaveFocus();
     expect(await avatar('Player 1')).toBeInTheDocument();
-    expect(loadProfiles(localStorage).profiles.map((p) => p.name)).toEqual(['Player 1', 'Alex']);
-    expect(backend.calls.map((c) => c.method)).not.toContain('rename');
+    expect(backend.updated).toEqual([{ token: tokenN(2), name: 'Alex' }]);
+    expect(row('Alex').getByRole('button', { name: 'Rename Alex' })).toBeInTheDocument();
   });
 
   it('renames the player playing now, which updates the avatar', async () => {
@@ -300,7 +297,9 @@ describe('Manage players', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Delete Sam' }));
     await userEvent.click(screen.getByRole('button', { name: 'Yes, delete everything for Sam' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent(/Sam's data was deleted/);
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Sam and their sessions were deleted.',
+    );
     expect(backend.calls).toContainEqual({ token: tokenN(2), method: 'deleteMe' });
     expect(backend.calls).not.toContainEqual({ token: tokenN(1), method: 'deleteMe' });
     expect(within(screen.getByRole('list')).getAllByRole('listitem')).toHaveLength(1);

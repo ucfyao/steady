@@ -4,7 +4,6 @@ import type { PlayEnv } from './game/env.js';
 import { Layout } from './Layout.js';
 import { PlayersProvider } from './players/PlayersProvider.js';
 import { Home } from './screens/Home.js';
-import { Import } from './screens/Import.js';
 import { NotFound } from './screens/NotFound.js';
 import { Play } from './screens/Play.js';
 import { Players } from './screens/Players.js';
@@ -25,7 +24,6 @@ export function AppRoutes({ playEnv, devTools }: { playEnv?: PlayEnv; devTools?:
           <Route path="results/:id" element={<Results />} />
           <Route path="progress" element={<Progress />} />
           <Route path="players" element={<Players />} />
-          <Route path="import" element={<Import />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
