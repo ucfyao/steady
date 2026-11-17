@@ -1,8 +1,0 @@
-.busy {
-  color: var(--color-text-muted);
-}
-
-.failed p {
-  margin-bottom: var(--space-6);
-  color: var(--color-text-muted);
-}

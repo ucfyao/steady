@@ -69,3 +69,8 @@
   margin-top: var(--space-4);
   font-size: var(--text-md);
 }
+
+/* Wraps evenly, so a narrow screen never leaves one word on a line (Spec 010). */
+.balanced {
+  text-wrap: balance;
+}

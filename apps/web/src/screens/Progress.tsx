@@ -9,6 +9,7 @@ import {
 } from '@steady/core';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { errorWords } from '../api/client.js';
 import {
   METRICS,
   METRIC_ORDER,
@@ -27,11 +28,13 @@ import { WeekDots } from '../progress/WeekDots.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
+import { Loading } from '../ui/Loading.js';
+import { StatusPage } from '../ui/StatusPage.js';
 import styles from './Progress.module.css';
 
 type State =
   | { k: 'loading' }
-  | { k: 'error'; message: string }
+  | { k: 'error'; error: unknown }
   | { k: 'ready'; sessions: CompletedSession[]; progress: ProgressResponse; variant: Variant };
 
 const SLEEP = { poor: 'Poor', ok: 'OK', good: 'Good' };
@@ -71,6 +74,9 @@ export function Progress() {
   const { api } = usePlayers();
   const [state, setState] = useState<State>({ k: 'loading' });
   const [metric, setMetric] = useState<ProgressMetric>('commissionRate');
+  const [exploring, setExploring] = useState(false);
+  // Bumped by "Try again" to load the screen once more.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!api) return;
@@ -80,30 +86,37 @@ export function Progress() {
         ([sessions, progress, me]) =>
           !cancelled && setState({ k: 'ready', sessions, progress, variant: me.variant }),
       )
-      .catch(
-        (e: unknown) =>
-          !cancelled &&
-          setState({ k: 'error', message: e instanceof Error ? e.message : String(e) }),
-      );
+      .catch((error: unknown) => !cancelled && setState({ k: 'error', error }));
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, attempt]);
 
-  if (state.k === 'loading') return <p>Loading…</p>;
+  if (state.k === 'loading') return <Loading label="Loading your progress…" />;
   if (state.k === 'error')
     return (
-      <div role="alert" className="error">
-        <p>{state.message}</p>
-      </div>
+      <StatusPage
+        title="Could not load your progress"
+        alert
+        primary={{
+          label: 'Try again',
+          onClick: () => {
+            setState({ k: 'loading' });
+            setAttempt((n) => n + 1);
+          },
+        }}
+        secondary={{ label: 'Back to home', to: '/' }}
+      >
+        {errorWords(state.error)}
+      </StatusPage>
     );
 
   const { sessions, progress } = state;
   if (sessions.length === 0)
     return (
       <section className={styles.progress}>
-        <h1>Progress</h1>
-        <p className={styles.lead}>
+        <h1 className="visually-hidden">Progress</h1>
+        <p className="headline">
           No sessions yet. Your progress appears here after your first check.
         </p>
         <Button to="/play" size="lg">
@@ -118,8 +131,9 @@ export function Progress() {
 
   return (
     <section className={styles.progress}>
-      <h1>Progress</h1>
-      <p className={styles.lead} data-testid="summary">
+      {/* The header names the screen; the summary is the first visible line (Spec 010). */}
+      <h1 className="visually-hidden">Progress</h1>
+      <p className="headline" data-testid="summary">
         {progressHeadline(summary)}
       </p>
 
@@ -145,7 +159,7 @@ export function Progress() {
         )}
       </Card>
 
-      <section aria-labelledby="time-title" className={styles.block}>
+      <Card as="section" aria-labelledby="time-title">
         <h2 id="time-title">Over time</h2>
         <p className={styles.note}>Speed and accuracy side by side, one point per session.</p>
         {points.length >= MIN_POINTS && (
@@ -195,92 +209,95 @@ export function Progress() {
           })}
         </div>
         <SessionNotes points={points} sessions={sessions} />
-      </section>
+      </Card>
 
-      <section aria-labelledby="sessions-title" className={styles.block}>
+      <Card as="section" aria-labelledby="sessions-title">
         <h2 id="sessions-title">Your sessions</h2>
         <p className={styles.note}>Open a session to see its full results.</p>
         <SessionList sessions={sessions} />
-      </section>
+      </Card>
 
-      <details className={styles.explore}>
-        <summary>
-          <h2>Exploring patterns</h2>
-          <span className={styles.note}>
-            How your check-in answers line up with your numbers. Exploratory: it describes, never
-            explains.
-          </span>
-        </summary>
+      {/* The heading stays out of the summary: a summary is a button, and some screen readers
+          drop a heading inside it (Spec 010). */}
+      <Card as="section" aria-labelledby="explore-title">
+        <h2 id="explore-title">Exploring patterns</h2>
+        <p className={styles.note}>
+          How your check-in answers line up with your numbers. Exploratory: it describes, never
+          explains.
+        </p>
+        <details className={styles.explore} onToggle={(e) => setExploring(e.currentTarget.open)}>
+          <summary>{exploring ? 'Hide the patterns' : 'Show the patterns'}</summary>
 
-        <section aria-labelledby="checkin-title" className={styles.part}>
-          <h3 id="checkin-title">After a check-in</h3>
-          <p className={styles.note}>
-            Each dot is one session, grouped by how you answered the check-in before it. Your first
-            check is left out.
-          </p>
-          <ChipGroup<ProgressMetric>
-            legend="Compare"
-            name="compare"
-            options={METRIC_ORDER.map((k) => ({ value: k, label: METRICS[k].name }))}
-            value={metric}
-            onChange={setMetric}
-          />
-          {(['sleep', 'stress'] as const).map((dimension) => (
+          <section aria-labelledby="checkin-title" className={styles.part}>
+            <h3 id="checkin-title">After a check-in</h3>
+            <p className={styles.note}>
+              Each dot is one session, grouped by how you answered the check-in before it. Your
+              first check is left out.
+            </p>
+            <ChipGroup<ProgressMetric>
+              legend="Compare"
+              name="compare"
+              options={METRIC_ORDER.map((k) => ({ value: k, label: METRICS[k].name }))}
+              value={metric}
+              onChange={setMetric}
+            />
+            {(['sleep', 'stress'] as const).map((dimension) => (
+              <GroupDots
+                key={dimension}
+                title={dimension === 'sleep' ? 'Sleep' : 'Stress'}
+                comparison={progress.checkIn[dimension][metric]}
+                labels={dimension === 'sleep' ? SLEEP : STRESS}
+                show={def.show}
+                axisFormat={AXIS_FORMAT[metric]}
+                format={def.format}
+                axisTitle={`${def.name} · ${directionText(metric)}`}
+                unit="sessions"
+                needMore={(n) => `Needs at least ${plural(n, 'more session')} with a check-in.`}
+                sentence={(parts) =>
+                  `So far, “${def.name}” had a median of ${list(
+                    parts.map((p) =>
+                      dimension === 'sleep'
+                        ? `${p.value} after ${IN_SENTENCE[p.key]} sleep`
+                        : `${p.value} on ${IN_SENTENCE[p.key]} stress days`,
+                    ),
+                  )}.`
+                }
+              />
+            ))}
+          </section>
+
+          <div className={styles.part}>
             <GroupDots
-              key={dimension}
-              title={dimension === 'sleep' ? 'Sleep' : 'Stress'}
-              comparison={progress.checkIn[dimension][metric]}
-              labels={dimension === 'sleep' ? SLEEP : STRESS}
-              show={def.show}
-              axisFormat={AXIS_FORMAT[metric]}
-              format={def.format}
-              axisTitle={`${def.name} · ${directionText(metric)}`}
-              unit="sessions"
-              needMore={(n) => `Needs at least ${plural(n, 'more session')} with a check-in.`}
-              sentence={(parts) =>
-                `So far, “${def.name}” had a median of ${list(
-                  parts.map((p) =>
-                    dimension === 'sleep'
-                      ? `${p.value} after ${IN_SENTENCE[p.key]} sleep`
-                      : `${p.value} on ${IN_SENTENCE[p.key]} stress days`,
-                  ),
+              heading="h3"
+              title={PRE_PROBE_TITLE}
+              comparison={progress.preProbe}
+              labels={ANSWERS}
+              show={METRICS.rtCv.show}
+              axisFormat={AXIS_FORMAT.rtCv}
+              format={METRICS.rtCv.format}
+              axisTitle={`${METRICS.rtCv.name} · ${directionText('rtCv')}`}
+              unit="answers"
+              needMore={(n) =>
+                `Needs at least ${plural(
+                  Math.ceil(n / SART_CONFIG.probesPerSession),
+                  'more session',
                 )}.`
               }
-            />
-          ))}
-        </section>
-
-        <div className={styles.part}>
-          <GroupDots
-            heading="h3"
-            title={PRE_PROBE_TITLE}
-            comparison={progress.preProbe}
-            labels={ANSWERS}
-            show={METRICS.rtCv.show}
-            axisFormat={AXIS_FORMAT.rtCv}
-            format={METRICS.rtCv.format}
-            axisTitle={`${METRICS.rtCv.name} · ${directionText('rtCv')}`}
-            unit="answers"
-            needMore={(n) =>
-              `Needs at least ${plural(
-                Math.ceil(n / SART_CONFIG.probesPerSession),
-                'more session',
-              )}.`
-            }
-            sentence={(parts) =>
-              `So far, how much your timing varied just before a question had a median of ${list(
-                parts.map((p) => `${p.value} when you answered ${IN_SENTENCE[p.key]}`),
-              )}.`
-            }
-          >
-            <p className={styles.note}>
-              Always the same measure, whatever you compare above: how much your timing varied over
-              the {SART_CONFIG.preProbeWindow} digits just before each question, grouped by your
-              answer. Lower means a more even rhythm.
-            </p>
-          </GroupDots>
-        </div>
-      </details>
+              sentence={(parts) =>
+                `So far, how much your timing varied just before a question had a median of ${list(
+                  parts.map((p) => `${p.value} when you answered ${IN_SENTENCE[p.key]}`),
+                )}.`
+              }
+            >
+              <p className={styles.note}>
+                Always the same measure, whatever you compare above: how much your timing varied
+                over the {SART_CONFIG.preProbeWindow} digits just before each question, grouped by
+                your answer. Lower means a more even rhythm.
+              </p>
+            </GroupDots>
+          </div>
+        </details>
+      </Card>
     </section>
   );
 }
@@ -354,10 +371,15 @@ function RecentTable({ baseline, recent }: { baseline: MetricSet; recent: Metric
         <tbody>
           {METRIC_ORDER.map((k) => {
             const m = METRICS[k];
+            // The count is text, not a title only a mouse can show (Spec 010).
             const cell = (s: { median: number | null; n: number }, area: string) => (
-              <td className={styles[area]} title={`Median of ${plural(s.n, 'session')}`}>
-                <span className={styles.number}>
+              <td className={styles[area]}>
+                <span className={styles.number} data-testid="median">
                   {s.median === null ? '–' : m.format(m.show(s.median))}
+                </span>
+                <span className={styles.count}>
+                  of {s.n}
+                  <span className="visually-hidden"> sessions</span>
                 </span>
               </td>
             );

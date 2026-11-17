@@ -1,20 +1,6 @@
-.progress h1 {
-  margin-bottom: var(--space-6);
-}
-
-.lead {
-  color: var(--color-text-muted);
-}
-
 .note {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
-}
-
-.block {
-  padding-top: var(--space-6);
-  margin-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
 }
 
 /* Recent vs. where you started */
@@ -57,6 +43,14 @@
   font-family: var(--font-serif);
   font-size: var(--text-xl);
   line-height: 1;
+}
+
+/* How many sessions the median is of, under it (Spec 010). */
+.count {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
 }
 
 /* The change: arrow and words, coloured only as a second cue (as on Results). */
@@ -201,20 +195,27 @@
   margin-bottom: var(--space-6);
 }
 
-/* Your sessions, and the collapsed Exploring patterns. */
+/* Inside the panel, its padding is the space after the last part. */
+.charts:last-child,
+.notes:last-child {
+  margin-bottom: 0;
+}
+
+/* Exploring patterns: collapsed under its heading and note (Spec 010). */
 .explore {
-  padding-top: var(--space-6);
-  margin-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-3);
 }
 
 .explore > summary {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0 var(--space-3);
-  align-items: baseline;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  /* A tap target of at least 44 px on a phone. */
+  min-height: 2.75rem;
   list-style: none;
   cursor: pointer;
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-medium);
 }
 
 .explore > summary::-webkit-details-marker {
@@ -224,7 +225,6 @@
 /* A chevron that turns when open; shape, not colour, says it can be opened. */
 .explore > summary::before {
   content: '›';
-  grid-row: 1;
   font-size: var(--text-xl);
   line-height: 1;
   color: var(--color-text-muted);
@@ -241,27 +241,17 @@
   }
 }
 
-.explore > summary h2 {
-  grid-row: 1;
-  margin: 0;
-}
-
-.explore > summary .note {
-  grid-column: 2;
-  margin: var(--space-1) 0 0;
-}
-
 .explore > summary:focus-visible {
   outline: 2px solid var(--color-focus);
-  outline-offset: 4px;
+  outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
+/* The two parts inside the panel, separated by a rule rather than a box of their own. */
 .part {
-  margin-top: var(--space-6);
-  padding: var(--space-5);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
 }
 
 .part > h3 {
@@ -274,12 +264,6 @@
 
 .part > :last-child {
   margin-bottom: 0;
-}
-
-@media (max-width: 539px) {
-  .part {
-    padding: var(--space-4) var(--space-3);
-  }
 }
 
 /* Sessions with a note: the diamonds' notes in words, under the charts. */

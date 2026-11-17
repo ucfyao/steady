@@ -49,7 +49,7 @@ export async function playBlock(page: Page): Promise<{ presses: number; probes: 
 /** Skips the optional check-in. */
 export async function skipCheckIn(page: Page) {
   await expect(page.getByRole('heading', { name: 'How are you today?' })).toBeVisible();
-  await page.getByRole('button', { name: 'Skip', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip and start' }).click();
 }
 
 /** Simulates switching tabs: the page becomes hidden. */

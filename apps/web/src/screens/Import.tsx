@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from 'react-router';
 import { ApiError } from '../api/client.js';
 import { parseImportHash } from '../players/importLink.js';
 import { usePlayers } from '../players/usePlayers.js';
-import { Button } from '../ui/Button.js';
-import styles from './Import.module.css';
+import { Loading } from '../ui/Loading.js';
+import { StatusPage } from '../ui/StatusPage.js';
 
 function errorText(e: unknown): string {
   if (e instanceof ApiError && e.kind === 'unauthorized')
@@ -41,15 +41,16 @@ export function Import() {
       .catch((e: unknown) => setError(errorText(e)));
   }, [link, importPlayer, navigate]);
 
-  if (!error) return <p className={styles.busy}>Checking the link…</p>;
+  if (!error) return <Loading label="Checking the link…" />;
 
+  // The link cannot be retried from here, so the only way on is home (Spec 010).
   return (
-    <section className={styles.failed}>
-      <h1>Couldn&apos;t import this player</h1>
-      <p role="alert">{error}</p>
-      <Button to="/" variant="secondary">
-        Back to home
-      </Button>
-    </section>
+    <StatusPage
+      title="Couldn't import this player"
+      alert
+      primary={{ label: 'Back to home', to: '/' }}
+    >
+      {error}
+    </StatusPage>
   );
 }

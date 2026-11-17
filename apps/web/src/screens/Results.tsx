@@ -15,12 +15,14 @@ import {
   type Comparison,
   type Reference,
 } from '../metrics/metrics.js';
-import { Link, useLocation, useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
+import { errorWords } from '../api/client.js';
 import { dawnPercent, personalBest, sessionPoints } from '../game/dawn.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
+import { Loading } from '../ui/Loading.js';
 import { StatusPage } from '../ui/StatusPage.js';
 import styles from './Results.module.css';
 
@@ -39,7 +41,7 @@ const NOT_ENOUGH = 'Not enough presses to measure';
 type History =
   | { k: 'loading' }
   | { k: 'ready'; sessions: CompletedSession[]; summary: ProgressSummary }
-  | { k: 'error'; message: string };
+  | { k: 'error'; error: unknown };
 
 export function Results() {
   const { id } = useParams();
@@ -49,6 +51,8 @@ export function Results() {
   const state = useLocation().state as { session?: CompletedSession; playerId?: string } | null;
   const passed = state?.playerId === active?.id ? state?.session : undefined;
   const [history, setHistory] = useState<History>({ k: 'loading' });
+  // Bumped by "Try again" to load the history once more.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!api) return;
@@ -57,14 +61,13 @@ export function Results() {
       .then(([sessions, progress]) => {
         if (!cancelled) setHistory({ k: 'ready', sessions, summary: progress.summary });
       })
-      .catch((e: unknown) => {
-        if (!cancelled)
-          setHistory({ k: 'error', message: e instanceof Error ? e.message : String(e) });
+      .catch((error: unknown) => {
+        if (!cancelled) setHistory({ k: 'error', error });
       });
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, attempt]);
 
   const session =
     passed?.id === id && passed
@@ -74,13 +77,23 @@ export function Results() {
         : undefined;
 
   if (!session) {
-    if (history.k === 'loading') return <p>Loading…</p>;
+    if (history.k === 'loading') return <Loading label="Loading your results…" />;
     if (history.k === 'error')
       return (
-        <div role="alert" className="error">
-          <p>{history.message}</p>
-          <Link to="/">Back to home</Link>
-        </div>
+        <StatusPage
+          title="Could not load this session"
+          alert
+          primary={{
+            label: 'Try again',
+            onClick: () => {
+              setHistory({ k: 'loading' });
+              setAttempt((n) => n + 1);
+            },
+          }}
+          secondary={{ label: 'Back to home', to: '/' }}
+        >
+          {errorWords(history.error)}
+        </StatusPage>
       );
     return (
       <StatusPage
@@ -118,9 +131,10 @@ export function Results() {
 
   return (
     <section className={styles.results}>
-      <h1>Session complete</h1>
-      <p className={styles.lead} data-testid="conclusion" aria-live="polite">
-        {reference ? headline(reference, comparisons) : '\u00a0'}
+      {/* The name is for screen readers; the conclusion is the first visible line (Spec 010). */}
+      <h1 className="visually-hidden">Session complete</h1>
+      <p className="headline" data-testid="conclusion" aria-live="polite">
+        {reference ? headline(reference, comparisons) : 'Session complete.'}
       </p>
 
       {session.variant === 'game' && (

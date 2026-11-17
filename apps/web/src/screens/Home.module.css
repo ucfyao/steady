@@ -59,13 +59,20 @@
 
 .hero .start {
   width: 100%;
-  background: #ffd696;
-  border-color: #ffd696;
-  color: #2b2925;
+  background: var(--lantern);
+  border-color: var(--lantern);
+  color: var(--on-lantern);
 }
 
 .hero .start:hover {
-  background: #ffe2a0;
+  background: var(--lantern-hover);
+}
+
+/* The height of the "Last 7 days" panel, empty while the history loads. */
+.reserved {
+  min-height: 11rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .points {
@@ -89,8 +96,8 @@
   margin-bottom: var(--space-6);
   padding: var(--space-6) var(--space-5) var(--space-5);
   border-radius: var(--radius-md);
-  color: #ece6da;
-  background: #1b2340;
+  color: var(--night-text);
+  background: var(--night-bg);
 }
 
 /* A dark wash under the text, so it stays readable however far the sky got to dawn. */
@@ -107,8 +114,10 @@
   z-index: 1;
 }
 
+/* The one title that stays large (Spec 010): the greeting on the scene. */
 .heroText h1 {
-  color: #ece6da;
+  font-size: var(--text-4xl);
+  color: var(--night-text);
 }
 
 /* A small unlit lantern, drawn in CSS (the shapes of the focus-mode lantern). */
@@ -145,5 +154,5 @@
 .sky {
   margin: calc(-1 * var(--space-3)) 0 var(--space-5);
   font-size: var(--text-sm);
-  color: #ffd696;
+  color: var(--lantern);
 }

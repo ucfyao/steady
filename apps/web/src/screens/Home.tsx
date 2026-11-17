@@ -135,6 +135,15 @@ export function Home() {
           </Button>
         </div>
       )}
+      {/* Keeps the space of the panels while the history loads, so nothing jumps (Spec 010). */}
+      {!data && !failed && (
+        <div
+          role="status"
+          aria-label="Loading your history"
+          aria-busy="true"
+          className={styles.reserved}
+        />
+      )}
       {data && data.sessions.length === 0 && <Welcome />}
       {data && data.sessions.length > 0 && (
         <>

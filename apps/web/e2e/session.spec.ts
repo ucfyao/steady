@@ -30,7 +30,8 @@ test('a new player practises, plays a full session and sees results and progress
   expect(probes).toBe(3);
 
   // Scored by the server, which also checked that the session took real time.
-  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
+  // For screen readers only (Spec 010): attached, not visible.
+  await expect(page.getByRole('heading', { level: 1, name: 'Session complete' })).toBeAttached();
   const ribbon = page.getByRole('img', { name: /session journey/i });
   await expect(ribbon.getByTestId('trial')).toHaveCount(81);
   await expect(ribbon.getByTestId('probe')).toHaveCount(3);
@@ -68,7 +69,8 @@ test('a new player practises, plays a full session and sees results and progress
   // Switching back shows the first player's session again.
   await page.getByRole('button', { name: 'Player: Sam' }).click();
   await page.getByRole('menuitemradio').first().click();
-  await expect(page.getByRole('heading', { name: 'Session complete' })).toBeVisible();
+  // For screen readers only (Spec 010): attached, not visible.
+  await expect(page.getByRole('heading', { level: 1, name: 'Session complete' })).toBeAttached();
 
   // Now a returning player: one check-in screen, then straight to the countdown.
   await page.goto('/play');

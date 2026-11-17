@@ -92,7 +92,7 @@ const oneLarge = [
 
 /** Opens the collapsed Exploring patterns block. */
 async function openExploring() {
-  const toggle = await screen.findByText('Exploring patterns');
+  const toggle = await screen.findByText('Show the patterns');
   fireEvent.click(toggle);
   return toggle.closest('details')!;
 }
@@ -144,10 +144,11 @@ describe('Progress screen', () => {
     renderAt('/progress', improving);
     const card = await screen.findByRole('region', { name: 'Recent vs. where you started' });
     const row = (name: RegExp) => within(card).getByRole('row', { name });
+    // The median alone; its count is checked below.
     const cells = (name: RegExp) =>
       within(row(name))
         .getAllByRole('cell')
-        .map((c) => c.textContent);
+        .map((c) => (within(c).queryByTestId('median') ?? c).textContent);
     expect(within(row(/3s held back/)).getByRole('rowheader')).toHaveTextContent(
       '3s held backHigher is better',
     );
@@ -165,15 +166,11 @@ describe('Progress screen', () => {
       'data-verdict',
       'worse',
     );
-    // n is in the tooltip and the footnote, not next to each number.
-    expect(within(row(/Typical response time/)).getAllByRole('cell')[1]).toHaveAttribute(
-      'title',
-      'Median of 4 sessions',
-    );
-    expect(within(row(/3s held back/)).getAllByRole('cell')[0]).toHaveAttribute(
-      'title',
-      'Median of 5 sessions',
-    );
+    // Spec 010: each median's count is text under it, not a title only a mouse can show.
+    const median = (name: RegExp, i: number) => within(row(name)).getAllByRole('cell')[i]!;
+    expect(median(/Typical response time/, 1)).toHaveTextContent('of 4');
+    expect(median(/3s held back/, 0)).toHaveTextContent('of 5');
+    expect(median(/3s held back/, 0)).not.toHaveAttribute('title');
     expect(card).not.toHaveTextContent('n =');
     expect(card).toHaveTextContent(
       'Where you started: the middle of sessions 2–6. Recent: the middle of your last 5 checks. Typical response time, recent: 4 sessions (the others had too few presses).',
@@ -283,11 +280,19 @@ describe('Progress screen', () => {
 
   it('keeps Exploring patterns collapsed until opened', async () => {
     renderAt('/progress', withCheckIns);
-    const toggle = await screen.findByText('Exploring patterns');
+    const toggle = await screen.findByText('Show the patterns');
     const details = toggle.closest('details')!;
     expect(details).not.toHaveAttribute('open');
     fireEvent.click(toggle);
     expect(details).toHaveAttribute('open');
+    expect(await within(details).findByText('Hide the patterns')).toBeInTheDocument();
+  });
+
+  it('keeps the Exploring patterns heading out of the summary (Spec 010)', async () => {
+    renderAt('/progress', withCheckIns);
+    const heading = await screen.findByRole('heading', { level: 2, name: 'Exploring patterns' });
+    expect(heading.closest('summary')).toBeNull();
+    expect(region('Exploring patterns')).toContainElement(screen.getByText('Show the patterns'));
   });
 
   it('draws only answers with a median, with an axis, and the pattern sentence', async () => {

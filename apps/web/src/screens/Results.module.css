@@ -1,9 +1,3 @@
-.lead {
-  font-size: var(--text-lg);
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-7);
-}
-
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -174,8 +168,8 @@
   padding: var(--space-5);
   border: 0;
   border-radius: var(--radius-md);
-  background: linear-gradient(160deg, #1b2340, #3c3b52);
-  color: #ece6da;
+  background: linear-gradient(160deg, var(--night-bg), #3c3b52);
+  color: var(--night-text);
 }
 
 .game h2 {
@@ -191,7 +185,7 @@
   font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: var(--font-weight-regular);
-  color: #ffd696;
+  color: var(--lantern);
   margin-right: var(--space-2);
 }
 
@@ -206,8 +200,8 @@
   margin: 0 0 var(--space-3);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  background: #ffd696;
-  color: #2b2925;
+  background: var(--lantern);
+  color: var(--on-lantern);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
 }

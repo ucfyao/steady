@@ -96,3 +96,13 @@ export function createApi(token: string | null, fetchFn: typeof fetch = fetch): 
     deleteMe: () => request('DELETE', '/me'),
   };
 }
+
+/**
+ * The plain sentence for an error (Spec 010), chosen by its kind, never the raw message,
+ * which can be a browser's "Failed to fetch" or a status line.
+ */
+export function errorWords(e: unknown): string {
+  if (e instanceof ApiError && e.kind === 'network')
+    return 'Could not reach Steady. Check your connection and try again.';
+  return 'Something went wrong on our side. Try again in a moment.';
+}
