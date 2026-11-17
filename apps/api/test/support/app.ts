@@ -54,6 +54,7 @@ export function testConfig(databaseUrl: string, overrides: Partial<AppConfig> = 
     logLevel: 'silent',
     prettyLogs: false,
     rateLimitPerMinute: false,
+    devTools: false,
     ...overrides,
   };
 }

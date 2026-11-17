@@ -18,15 +18,15 @@ A NestJS API over PostgreSQL that lets anonymous players start sessions, submit 
 
 ## Endpoints
 
-| Method and path                 | Body                            | Success                                |
-| ------------------------------- | ------------------------------- | -------------------------------------- |
-| `POST /api/players`             | —                               | `201 { token }`                        |
-| `POST /api/sessions`            | `{ checkIn?: CheckIn, device }` | `201 { id, startedAt, plan }`          |
-| `POST /api/sessions/:id/submit` | `Submission`                    | `200 CompletedSession`                 |
-| `GET /api/sessions`             | —                               | `200 CompletedSession[]`, oldest first |
-| `GET /api/progress`             | —                               | `200 ProgressResponse`                 |
-| `DELETE /api/me`                | —                               | `204`                                  |
-| `GET /api/health`               | —                               | `200 { status: 'ok' }` (checks the DB) |
+| Method and path                 | Body                                              | Success                                |
+| ------------------------------- | ------------------------------------------------- | -------------------------------------- |
+| `POST /api/players`             | — (development: optional `{ variant }`, Spec 011) | `201 { token }`                        |
+| `POST /api/sessions`            | `{ checkIn?: CheckIn, device }`                   | `201 { id, startedAt, plan }`          |
+| `POST /api/sessions/:id/submit` | `Submission`                                      | `200 CompletedSession`                 |
+| `GET /api/sessions`             | —                                                 | `200 CompletedSession[]`, oldest first |
+| `GET /api/progress`             | —                                                 | `200 ProgressResponse`                 |
+| `DELETE /api/me`                | —                                                 | `204`                                  |
+| `GET /api/health`               | —                                                 | `200 { status: 'ok' }` (checks the DB) |
 
 - `device` is `keyboard` or `touch`: the one input method the client uses for the whole session (Space, or tapping). It is required, stored with the session and returned with it, so keyboard and touch RTs are never mixed within a session.
 - `plan` is `{ trials, probeAfter }`. The seed is chosen by the server (`crypto.randomInt`) and not returned.

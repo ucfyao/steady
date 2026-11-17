@@ -24,7 +24,16 @@ A first version put a badge in the bottom-left corner with links to the `?varian
 - The group is set by the seed script, which writes to the database directly; the API's random assignment is unchanged.
 - The links point at `http://localhost:5173` unless `WEB_URL` says otherwise (for a second dev server on another port).
 
-## 3. Tests
+## 3. Choosing the group of a new player (development only)
+
+- In development, **Add a player** has a **Group** choice: **Random** (the default, as in production), plain, calm or game. Choosing one creates the player in that group, to try a new player's first visit in a given variant.
+- `POST /api/players` takes an optional `{ "variant": … }`. The API accepts it only when it runs with **`DEV_TOOLS=true` and not `NODE_ENV=production`**. Otherwise a chosen variant is refused with `403` and nothing is created, so players can never pick their group where the experiment runs (Spec 006 §5). Without a variant the group is drawn at random, as before.
+- `DEV_TOOLS` is an explicit opt-in, off unless set: `.env.example` (local development) sets it; a deployment does not. `NODE_ENV` alone is not enough, because the API treats a missing `NODE_ENV` as development.
+- An existing player's group cannot be changed, here or anywhere: a player's sessions, starting point and comparisons all come from one variant. To try another variant, add another player.
+
+## 4. Tests
 
 - Web: without the development flag no group is shown; with it, the menu and Manage players show each player's own group, and a player whose group cannot be read shows none.
 - API: a demo player seeded in a variant has that group (`GET /api/me`) and its sessions are recorded in it.
+- API: a chosen variant is stored only with the development tools on; with them off, or with `NODE_ENV=production`, it is refused with 403 and no player is created; an unknown variant is a 400; no body is still a random group. Config: `DEV_TOOLS` on only when it is `true` and `NODE_ENV` is not `production`.
+- Web: the Group choice shows only with the development flag; Random sends no variant, a chosen group is sent and then shown in the menu.

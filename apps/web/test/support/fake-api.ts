@@ -54,6 +54,8 @@ export function fakeBackend() {
   const variants = new Map<string, Variant>();
   /** Tokens whose GET /api/me fails. */
   const meFails = new Set<string>();
+  /** The body of each POST /api/players, in order. */
+  const createdWith: Parameters<Api['createPlayer']>[0][] = [];
 
   const factory = vi.fn((token: string | null): Api => {
     const call = (method: string) => {
@@ -61,10 +63,13 @@ export function fakeBackend() {
       if (token && unauthorized.has(token)) throw new ApiError('unauthorized', 'Unauthorized', 401);
     };
     return {
-      createPlayer: async () => {
+      createPlayer: async (body) => {
         call('createPlayer');
         if (control.failCreate) throw new ApiError('network', 'Could not reach the server.');
-        return { token: tokenN(++issued) };
+        createdWith.push(body);
+        const t = tokenN(++issued);
+        if (body?.variant) variants.set(t, body.variant);
+        return { token: t };
       },
       startSession: async (body) => {
         call('startSession');
@@ -137,6 +142,7 @@ export function fakeBackend() {
     plans,
     variants,
     meFails,
+    createdWith,
     created: () => issued,
   };
 }

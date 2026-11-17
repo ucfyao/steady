@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import type { Variant } from '@steady/core';
 import { ApiError, createApi, type Api } from '../api/client.js';
 import {
   activeProfile,
@@ -31,7 +32,8 @@ export interface PlayersContextValue {
   api: Api | null;
   notice: string | null;
   dismissNotice(): void;
-  addPlayer(name?: string): Promise<void>;
+  /** `variant`: development only (Spec 011 §3); without it the server draws the group. */
+  addPlayer(name?: string, variant?: Variant): Promise<void>;
   switchTo(id: string): void;
   rename(id: string, name: string): void;
   /**
@@ -84,8 +86,8 @@ export function PlayersProvider({
   useEffect(() => saveProfiles(storage, state), [storage, state]);
 
   const createProfile = useCallback(
-    async (name?: string) => {
-      const { token } = await apiFactory(null).createPlayer();
+    async (name?: string, variant?: Variant) => {
+      const { token } = await apiFactory(null).createPlayer(variant ? { variant } : undefined);
       const id = crypto.randomUUID();
       setState((s) =>
         addProfile(s, {

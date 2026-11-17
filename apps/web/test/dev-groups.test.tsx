@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -78,5 +78,38 @@ describe('Player groups in development (Spec 011)', () => {
     renderApp({ devTools: true });
     await screen.findByRole('button', { name: 'Player: Ana' });
     expect(screen.queryByRole('complementary', { name: 'Dev: version' })).toBeNull();
+  });
+
+  it('lets a new player be created in a chosen group (Spec 011 §3)', async () => {
+    const backend = renderApp({ devTools: true, path: '/players' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Add a player' }));
+    const dialog = within(screen.getByRole('dialog', { name: 'Add a player' }));
+    const group = dialog.getByRole('combobox', { name: 'Group' });
+    expect(
+      within(group)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Random', 'plain', 'calm', 'game']);
+    expect(group).toHaveValue('');
+    await userEvent.type(dialog.getByRole('textbox', { name: 'Name' }), 'Sam');
+    await userEvent.selectOptions(group, 'calm');
+    await userEvent.click(dialog.getByRole('button', { name: 'Create' }));
+    expect(backend.createdWith.at(-1)).toEqual({ variant: 'calm' });
+    const menu = await openMenu();
+    expect(await within(item(menu, 'Sam')).findByText('calm')).toBeInTheDocument();
+  });
+
+  it('sends no group for Random, and has no Group choice without the flag', async () => {
+    const backend = renderApp({ devTools: true, path: '/players' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Add a player' }));
+    let dialog = within(screen.getByRole('dialog', { name: 'Add a player' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Create' }));
+    expect(backend.createdWith.at(-1)).toBeUndefined();
+    cleanup();
+
+    renderApp({ path: '/players' });
+    await userEvent.click(await screen.findByRole('button', { name: 'Add a player' }));
+    dialog = within(screen.getByRole('dialog', { name: 'Add a player' }));
+    expect(dialog.queryByRole('combobox', { name: 'Group' })).toBeNull();
   });
 });

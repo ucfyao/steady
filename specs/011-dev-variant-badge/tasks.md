@@ -5,3 +5,4 @@
 - [x] T3 Failing tests (web: flag off, groups in menu and page, unreadable group; API: seeded variant), then the code
 - [x] T4 Deliberate break (every player asked with the active player's token); production bundle shows nothing and asks nothing; real browser on a worktree server
 - [x] T5 README; `pnpm check`
+- [x] T6 Group choice for a new player: failing tests (API 403/200/400, config, web select), then API, core contract and dialog; deliberate break (variant accepted with the tools off)

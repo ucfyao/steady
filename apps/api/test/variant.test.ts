@@ -85,6 +85,12 @@ describe('A/B variant', () => {
     expect(row!.variant).toBe('plain');
   });
 
+  it('refuses a chosen variant for a new player with 403 when the development tools are off (Spec 011)', async () => {
+    const before = (await t.db.select().from(players)).length;
+    await request(t.http).post('/api/players').send({ variant: 'plain' }).expect(403);
+    expect((await t.db.select().from(players)).length).toBe(before);
+  });
+
   it('rejects an unknown variant with 400', async () => {
     const token = await newPlayer(t);
     const res = await start(token, { variant: 'loud' }).expect(400);

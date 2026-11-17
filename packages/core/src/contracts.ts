@@ -22,6 +22,16 @@ export const CheckInSchema = z.object({
   stress: z.enum(STRESS_LEVELS).optional(),
 });
 
+/**
+ * POST /api/players. A chosen variant is for development only (Spec 011 §3): the API refuses
+ * it unless its development tools are on. Strict, so a typo is a 400 rather than ignored.
+ */
+export const CreatePlayerSchema = z
+  .object({
+    variant: z.enum(VARIANTS).optional(),
+  })
+  .strict();
+
 /** POST /api/sessions */
 export const StartSessionSchema = z.object({
   checkIn: CheckInSchema.nullish(),

@@ -31,7 +31,8 @@ export class ApiError extends Error {
 }
 
 export interface Api {
-  createPlayer(): Promise<{ token: string }>;
+  /** `variant`: development only (Spec 011 §3); the API refuses it otherwise. */
+  createPlayer(body?: { variant?: Variant }): Promise<{ token: string }>;
   startSession(body: {
     checkIn?: CheckIn | null;
     device: InputDevice;
@@ -86,7 +87,7 @@ export function createApi(token: string | null, fetchFn: typeof fetch = fetch): 
   }
 
   return {
-    createPlayer: () => request('POST', '/players'),
+    createPlayer: (body) => request('POST', '/players', body),
     startSession: (body) => request('POST', '/sessions', body),
     submitSession: (id, submission) =>
       request('POST', `/sessions/${encodeURIComponent(id)}/submit`, submission),

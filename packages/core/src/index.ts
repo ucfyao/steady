@@ -4,6 +4,7 @@ export { coefficientOfVariation, mean, median, probit, sampleSd } from './stats.
 export { createSessionPlan, mulberry32 } from './plan.js';
 export {
   CheckInSchema,
+  CreatePlayerSchema,
   ProbeAnswerSchema,
   RtSchema,
   StartSessionSchema,

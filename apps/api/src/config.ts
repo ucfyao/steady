@@ -7,6 +7,8 @@ const EnvSchema = z.object({
   DB_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  // Spec 011: an explicit opt-in, never implied by NODE_ENV (which defaults to development).
+  DEV_TOOLS: z.string().optional(),
 });
 
 export interface AppConfig {
@@ -17,6 +19,11 @@ export interface AppConfig {
   prettyLogs: boolean;
   /** Requests per minute per client; `false` turns rate limiting off (tests only). */
   rateLimitPerMinute: number | false;
+  /**
+   * Development tools (Spec 011): a new player's group may be chosen. On only with
+   * `DEV_TOOLS=true` and not `NODE_ENV=production`.
+   */
+  devTools: boolean;
 }
 
 export const APP_CONFIG = Symbol('APP_CONFIG');
@@ -36,5 +43,6 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
     logLevel: e.LOG_LEVEL,
     prettyLogs: e.NODE_ENV === 'development',
     rateLimitPerMinute: 120, // [P]
+    devTools: e.DEV_TOOLS === 'true' && e.NODE_ENV !== 'production',
   };
 }
