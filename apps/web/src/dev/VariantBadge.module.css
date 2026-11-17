@@ -1,4 +1,4 @@
-/* Development only (Spec 010): small, out of the way, above the page. */
+/* Development only (Spec 011): small, out of the way, above the page. */
 .badge {
   position: fixed;
   left: var(--space-3);

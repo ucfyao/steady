@@ -1,4 +1,4 @@
-# Tasks: Spec 010
+# Tasks: Spec 011
 
 - [x] T1 Write spec, plan and tasks
 - [x] T2 Failing tests (off by default, group and links, override, focus mode, player switch), then the badge

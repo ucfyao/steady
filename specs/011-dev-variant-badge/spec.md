@@ -1,4 +1,4 @@
-# Spec 010: A development badge for the variants
+# Spec 011: A development badge for the variants
 
 Status: implemented
 Depends on: Spec 006 §5, Spec 008

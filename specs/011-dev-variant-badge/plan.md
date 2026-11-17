@@ -1,4 +1,4 @@
-# Plan: Spec 010
+# Plan: Spec 011
 
 - `apps/web/src/dev/VariantBadge.tsx` (+ CSS module): reads `getMe()` through `usePlayers`, takes the override as a prop, renders the panel and plain `<a>` links.
 - `Layout` takes `devTools?: { override?: Variant }` and renders the badge, keyed by the active player, when set and not in focus mode.

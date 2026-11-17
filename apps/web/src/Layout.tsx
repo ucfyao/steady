@@ -24,7 +24,7 @@ export function useFocusMode() {
   }, [setFocusMode]);
 }
 
-/** `devTools`: the development version badge (Spec 010), never in a production build. */
+/** `devTools`: the development version badge (Spec 011), never in a production build. */
 export function Layout({ devTools }: { devTools?: { override?: Variant } } = {}) {
   const { status, error, retry, notice, dismissNotice, active } = usePlayers();
   const [focusMode, setFocusMode] = useState(false);

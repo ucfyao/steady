@@ -4,7 +4,7 @@ import { usePlayers } from '../players/usePlayers.js';
 import styles from './VariantBadge.module.css';
 
 /**
- * Development only (Spec 010): the active player's group, the variant this browser plays,
+ * Development only (Spec 011): the active player's group, the variant this browser plays,
  * and a link to play each variant. The links are full page loads, because the override is
  * read once when the app opens (Spec 006 §5).
  */

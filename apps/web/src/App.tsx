@@ -12,7 +12,7 @@ import { Results } from './screens/Results.js';
 
 /**
  * `playEnv` lets tests drive the game with a fake clock. `devTools` shows the development
- * version badge (Spec 010) with the override this app plays.
+ * version badge (Spec 011) with the override this app plays.
  */
 export function AppRoutes({ playEnv, devTools }: { playEnv?: PlayEnv; devTools?: boolean } = {}) {
   const override = playEnv ? playEnv.variantOverride : STARTUP_OVERRIDE;

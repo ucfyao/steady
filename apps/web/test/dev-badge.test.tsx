@@ -8,7 +8,7 @@ import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { fakeEnv } from './support/fake-env.js';
 
-// Spec 010: a development-only badge with the player's group, what is played, and links.
+// Spec 011: a development-only badge with the player's group, what is played, and links.
 
 function renderApp(opts: {
   devTools?: boolean;
@@ -33,7 +33,7 @@ function renderApp(opts: {
 
 const badge = () => screen.findByRole('complementary', { name: 'Dev: version' });
 
-describe('Dev version badge (Spec 010)', () => {
+describe('Dev version badge (Spec 011)', () => {
   it('is not there without the development flag', async () => {
     renderApp({});
     await screen.findByRole('heading', { name: /^Hi, / });
