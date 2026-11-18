@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { StartSessionSchema } from '@steady/core';
 import type { z } from 'zod';
 import { PlayerId } from '../auth/player-id.decorator.js';
@@ -7,7 +16,7 @@ import { SessionsService } from './sessions.service.js';
 
 @Controller('sessions')
 export class SessionsController {
-  constructor(private readonly sessions: SessionsService) {}
+  constructor(@Inject(SessionsService) private readonly sessions: SessionsService) {}
 
   @Post()
   start(

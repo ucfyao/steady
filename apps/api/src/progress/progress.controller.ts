@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject } from '@nestjs/common';
 import {
   compareByCheckIn,
   comparePreProbe,
@@ -15,7 +15,7 @@ const METRICS: ProgressMetric[] = ['commissionRate', 'omissionRate', 'medianGoRt
 /** All statistics come from @steady/core (Spec 002); this only loads the player's sessions. */
 @Controller('progress')
 export class ProgressController {
-  constructor(private readonly sessions: SessionsService) {}
+  constructor(@Inject(SessionsService) private readonly sessions: SessionsService) {}
 
   @Get()
   async get(@PlayerId() playerId: string): Promise<ProgressResponse> {

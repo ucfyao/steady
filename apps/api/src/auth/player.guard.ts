@@ -24,7 +24,7 @@ export interface PlayerRequest extends Request {
 @Injectable()
 export class PlayerGuard implements CanActivate {
   constructor(
-    private readonly reflector: Reflector,
+    @Inject(Reflector) private readonly reflector: Reflector,
     @Inject(DB) private readonly db: Db,
   ) {}
 

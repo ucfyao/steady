@@ -27,7 +27,7 @@ Do the steps in this order: each one needs something from the one before.
 
 ### 1. Supabase
 
-1. Create a project. Region: the one closest to your players (e.g. Sydney, `ap-southeast-2`). Save the database password; Supabase does not show it again. A password of letters and digits avoids URL-encoding it.
+1. Create a project. Region: the one closest to your players (this deployment uses Tokyo, `ap-northeast-1`). Save the database password; Supabase does not show it again. A password of letters and digits avoids URL-encoding it.
 2. Under **Connect**, copy two connection strings and put the password in:
    - **Session pooler** (port 5432): for migrations
    - **Transaction pooler** (port 6543): for the API
@@ -43,27 +43,31 @@ Do the steps in this order: each one needs something from the one before.
 
 Import the repository in Vercel with:
 
-| Setting          | Value                                                                      |
-| ---------------- | -------------------------------------------------------------------------- |
-| Project name     | `steady-api` (the web project's rewrite points to `steady-api.vercel.app`) |
-| Root directory   | `apps/api`                                                                 |
-| Framework preset | Other (build and output come from `vercel.json`)                           |
-| Node.js version  | 24.x (Settings → Build and Deployment)                                     |
-| Function region  | Same region as the database (Settings → Functions)                         |
+| Setting          | Value                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Project name     | `steady-api`; Vercel adds a suffix when the `.vercel.app` name is taken (here `steady-api-bay.vercel.app`) |
+| Root directory   | `apps/api`                                                                                                 |
+| Framework preset | Other (build and output come from `vercel.json`)                                                           |
+| Node.js version  | 24.x (Settings → Build and Deployment)                                                                     |
+| Function region  | Same region as the database (Settings → Functions; Tokyo is `hnd1`)                                        |
 
-Environment variables, for the **Production** environment only (see [Preview deployments](#preview-deployments)):
+Environment variables, for Production and Preview (see [Preview deployments](#preview-deployments)):
 
-| Variable       | Value                                            |
-| -------------- | ------------------------------------------------ |
-| `DATABASE_URL` | Transaction pooler URL with `?sslmode=no-verify` |
-| `DB_POOL_MAX`  | `2` (each function instance has its own pool)    |
-| `NODE_ENV`     | `production`                                     |
+| Variable       | Value                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `DATABASE_URL` | Transaction pooler URL with `?sslmode=no-verify`                                        |
+| `DB_POOL_MAX`  | `2` (each function instance has its own pool)                                           |
+| `NODE_ENV`     | `production` (otherwise logs load `pino-pretty`, a dev dependency)                      |
+| `NODE_OPTIONS` | `--experimental-require-module` (see below)                                             |
+| `LOG_LEVEL`    | Optional; one of `fatal`, `error`, `warn`, `info` (default), `debug`, `trace`, `silent` |
 
-Redeploy after changing settings. Check: `https://steady-api.vercel.app/api/health` returns `{"status":"ok"}`.
+`NODE_OPTIONS` is required. Nest 12's packages are ES modules only, and `@nestjs/throttler` (CommonJS) loads `@nestjs/common` with `require()`. Node 24 allows that by default, but Vercel's function runtime does not, so without the flag every request fails with `ERR_REQUIRE_ESM`.
+
+Redeploy after changing settings. Check: `https://<api domain>/api/health` returns `{"status":"ok"}`. The domain is under the project's **Domains**.
 
 ### 3. Web project
 
-Import the same repository again with root directory `apps/web`, framework preset Vite and Node.js 24.x. It needs no environment variables. If the API project has a different name, change the URL in `apps/web/vercel.json` first.
+Import the same repository again with root directory `apps/web`, framework preset Vite and Node.js 24.x. It needs no environment variables. `apps/web/vercel.json` forwards `/api` to the API's production domain (`steady-api-bay.vercel.app`); if that domain changes, change the URL there.
 
 Check: open the site and play a full session through to results and progress.
 
@@ -89,8 +93,8 @@ Between those two steps the old code runs against the new schema, so a migration
 
 Previews use production data:
 
-- A web preview forwards `/api` to `steady-api.vercel.app`, the production API.
-- An API preview has no `DATABASE_URL` if the variable is set for Production only, so it fails to start instead of writing to the production database.
+- A web preview forwards `/api` to the production API.
+- An API preview uses the same `DATABASE_URL` as production.
 
 Treat anything done in a preview as real data.
 
