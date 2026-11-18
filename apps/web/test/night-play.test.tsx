@@ -84,3 +84,29 @@ describe("the check in each group's look (Spec 015)", () => {
     expect(nightScene()).toBeNull();
   });
 });
+
+describe('no light/dark button in the night look (Spec 019)', () => {
+  const themeButton = () => screen.queryByRole('button', { name: /^Switch to (light|dark)$/ });
+
+  for (const variant of ['calm', 'game'] as const) {
+    it(`${variant}: no button on How it works`, async () => {
+      renderPlay(variant);
+      await howItWorks();
+      expect(themeButton()).toBeNull();
+    });
+  }
+
+  it('plain: the button stays', async () => {
+    renderPlay('plain');
+    await howItWorks();
+    expect(themeButton()).not.toBeNull();
+  });
+
+  it('the button is back after leaving the check', async () => {
+    renderPlay('calm');
+    await howItWorks();
+    await userEvent.click(screen.getByRole('link', { name: 'Steady' }));
+    await screen.findByRole('region', { name: "Today's check" });
+    expect(themeButton()).not.toBeNull();
+  });
+});

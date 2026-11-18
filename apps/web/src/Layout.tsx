@@ -90,7 +90,8 @@ export function Layout() {
                 Progress
               </NavLink>
             </nav>
-            <ThemeToggle />
+            {/* The night look ignores the light/dark choice (Spec 015), so no button there (Spec 019). */}
+            {!night && <ThemeToggle />}
             {status === 'ready' && <PlayerMenu />}
           </div>
         </header>
