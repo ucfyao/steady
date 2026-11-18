@@ -14,7 +14,7 @@ Press for every digit, hold back on 3. Steady measures how accurate, fast and ev
 
 [**Live demo**](https://steady-sand-ten.vercel.app) · [Design note](docs/design-note.md) · [Architecture](docs/architecture.md) · [Development log](docs/ai-log.md)
 
-<img src="docs/images/home.png" alt="Steady home screen: a glowing lantern in a dawn sky above a Start today&#39;s check button" width="800">
+<img src="docs/images/home.png" alt="Steady home screen: a glowing lantern in a starry night sky above a Start today&#39;s check button" width="800">
 
 </div>
 
