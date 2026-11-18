@@ -7,11 +7,19 @@ import {
   type TrialOutcome,
   type Variant,
 } from '@steady/core';
-import { useEffect, useEffectEvent, useRef, useState, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import { useFocusMode } from '../Layout.js';
 import { Button } from '../ui/Button.js';
 import styles from './Block.module.css';
 import type { PlayEnv } from './env.js';
+import { Key } from './Key.js';
 import { TrialRunner, type Outcome, type RunnerOptions, type RunnerPlan } from './runner.js';
 import { Scene } from './Scene.js';
 
@@ -74,7 +82,7 @@ export function Block({
   plan: RunnerPlan;
   options?: RunnerOptions;
   /** The rule, in one quiet line under the lantern. */
-  hint: string;
+  hint: ReactNode;
   env: PlayEnv;
   variant: Variant;
   onDone(submission: Submission): void;
@@ -337,8 +345,10 @@ export function Block({
             <div className={styles.glass}>
               {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
               <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
-              {/* The mask (Spec 006): the glass mists over the digit's place. */}
-              <div ref={frost} className={styles.frost} data-testid="frost" data-on="false" />
+              {/* The mask (Spec 006): the glass mists over the digit's place. It starts misted,
+                  so the glass is never bare during the countdown (Spec 021); the first digit
+                  clears it, as every digit does. */}
+              <div ref={frost} className={styles.frost} data-testid="frost" data-on="true" />
             </div>
             <span className={styles.base} />
           </div>
@@ -352,7 +362,9 @@ export function Block({
             </div>
             <p className={styles.word}>{COUNTDOWN_WORDS[left - 1]}</p>
             <p className={styles.ready}>
-              {env.device === 'touch' ? 'Finger on the screen' : 'Finger on Space'}
+              {/* Spec 020: the key moves on Ready and Set, and is still from Go on. */}
+              Finger on{' '}
+              <Key moving={left > 1}>{env.device === 'touch' ? 'the screen' : 'Space'}</Key>
             </p>
           </div>
         )}
@@ -387,7 +399,9 @@ export function Block({
         </div>
       )}
 
-      <p className={styles.hint}>{ui.kind === 'countdown' ? 'Starting…' : hint}</p>
+      <p className={styles.hint} data-testid="hint">
+        {ui.kind === 'countdown' ? 'Starting…' : hint}
+      </p>
 
       {/* Spec 009: a quiet way out, outside the tap area, so a tap on it is never a press. */}
       <button

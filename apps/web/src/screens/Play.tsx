@@ -11,6 +11,7 @@ import { Link, useNavigate } from 'react-router';
 import { ApiError, errorWords } from '../api/client.js';
 import { Block, type VoidReason } from '../game/Block.js';
 import { HowToPlay } from '../game/HowToPlay.js';
+import { Key } from '../game/Key.js';
 import { PracticeLine } from '../game/PracticeLine.js';
 import { Steps } from '../game/Steps.js';
 import { browserEnv, type PlayEnv } from '../game/env.js';
@@ -137,8 +138,12 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   }
 
   // The one line shown under the digit in focus mode.
-  const rule =
-    env.device === 'touch' ? 'Tap for every digit except 3' : 'Space for every digit except 3';
+  // Spec 020: the key is still here, because the line stays on screen while trials run.
+  const rule = (
+    <>
+      <Key>{env.device === 'touch' ? 'Tap' : 'Space'}</Key> for every digit except 3
+    </>
+  );
 
   switch (step.k) {
     case 'loading':
@@ -179,7 +184,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         <Block
           plan={step.plan}
           options={PRACTICE_OPTIONS}
-          hint={`Practice · ${rule}`}
+          hint={<>Practice · {rule}</>}
           env={env}
           variant={variant}
           onDone={({ rts }) => {
