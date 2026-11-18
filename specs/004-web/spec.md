@@ -1,6 +1,6 @@
 # Spec 004 — Web app (`apps/web`)
 
-Status: implemented (`apps/web`); session length, the start flow and Home for a new player changed in Spec 005; focus mode (the lantern scene, frost mask, Ready/Set/Go countdown, the glow after a press, and the game variant's points) in Spec 006; Home's hero and lantern week, the personal best and the skies gallery in Spec 007; the press hint (Space or Tap as a key, moving only before the first digit) in Spec 020; the Progress page is named Trends in Spec 022
+Status: implemented (`apps/web`); session length, the start flow and Home for a new player changed in Spec 005; focus mode (the lantern scene, frost mask, Ready/Set/Go countdown, the glow after a press, and the game variant's points) in Spec 006; Home's hero and lantern week, the personal best and the skies gallery in Spec 007; the press hint (Space or Tap as a key, moving only before the first digit) in Spec 020; the Progress page is named Trends in Spec 022; a practice track and a result card in Spec 023; the points rules on How it works in Spec 024
 Design note: `docs/design-note.md` §3, §6, §7
 
 ## Goal

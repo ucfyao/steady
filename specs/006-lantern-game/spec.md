@@ -1,6 +1,6 @@
 # Spec 006: The lantern, points, and a calm/game A/B split
 
-Status: implemented; Spec 020 draws the countdown's "Space" (touch: "the screen") as a key; Spec 021 mists the glass during the countdown
+Status: implemented; Spec 020 draws the countdown's "Space" (touch: "the screen") as a key; Spec 021 mists the glass during the countdown; Spec 024 enlarges the "+N" award and writes the points rules on How it works
 Design note: `docs/design-note.md` §3
 Depends on: Spec 005
 Changes: Spec 001 (`trialOutcome`, one rule for every outcome), Spec 003 (`variant` on players and sessions), Spec 004 (focus mode, mask, countdown, feedback during the block)

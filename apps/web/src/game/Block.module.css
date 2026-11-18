@@ -225,7 +225,10 @@
   left: 50%;
   top: 22%;
   transform: translateX(-50%);
-  font-weight: var(--font-weight-bold);
+  /* Spec 024: the points' face and size, so the award can be read against the sky. */
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-medium);
   color: var(--lantern);
   animation: up 0.7s ease-out forwards;
 }
@@ -306,6 +309,15 @@
   text-align: center;
   font-size: var(--text-sm);
   color: var(--night-muted);
+  pointer-events: none;
+}
+
+/* Spec 023: the practice track, above the rule line, outside the tap area's centre. */
+.track {
+  position: absolute;
+  bottom: calc(max(var(--space-7), env(safe-area-inset-bottom)) + var(--space-7));
+  left: var(--space-4);
+  right: var(--space-4);
   pointer-events: none;
 }
 
