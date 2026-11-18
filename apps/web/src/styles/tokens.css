@@ -47,6 +47,7 @@
   --lantern: #ffd696;
   --lantern-hover: #ffe2a0;
   --on-lantern: #2b2925;
+  --night-chip: rgb(29 27 24 / 0.45); /* the multiplier pill and Stop's circle (Spec 025) */
 
   /* Type */
   --font-serif: 'Fraunces', ui-serif, Georgia, 'Times New Roman', serif;
