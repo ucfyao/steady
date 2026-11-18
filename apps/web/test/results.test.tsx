@@ -125,7 +125,7 @@ describe('Results', () => {
     await screen.findByRole('group', { name: '3s held back' });
     const main = screen.getByRole('main');
     expect(within(main).getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
-    expect(within(main).getByRole('link', { name: 'See your progress' })).toHaveAttribute(
+    expect(within(main).getByRole('link', { name: 'See your trends' })).toHaveAttribute(
       'href',
       '/progress',
     );
@@ -165,7 +165,7 @@ describe('Results', () => {
     const page = screen.getByRole('region', { name: 'Session not found' });
     expect(page).toHaveTextContent(/does not belong to the current player/i);
     expect(within(page).getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
-    expect(within(page).getByRole('link', { name: 'See your progress' })).toHaveAttribute(
+    expect(within(page).getByRole('link', { name: 'See your trends' })).toHaveAttribute(
       'href',
       '/progress',
     );
@@ -381,7 +381,7 @@ describe("Results: the session's sky (Spec 018)", () => {
   it('gives the header back when leaving Results', async () => {
     renderResults({ pathname: '/results/s1', state: { session: mixed } });
     await screen.findByRole('region', { name: 'Your sky' });
-    await userEvent.click(screen.getByRole('link', { name: 'See your progress' }));
+    await userEvent.click(screen.getByRole('link', { name: 'See your trends' }));
     await screen.findByRole('heading', { level: 1 });
     expect(overHero()).toBeNull();
   });

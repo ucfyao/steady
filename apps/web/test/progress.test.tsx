@@ -386,3 +386,12 @@ describe('chart points', () => {
     expect(drawn(normal!)).toHaveAttribute('data-kind', 'normal');
   });
 });
+
+describe('The name (Spec 022)', () => {
+  it('is Trends everywhere a player sees it, and the route stays /progress', async () => {
+    renderAt('/progress', seven);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Trends' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Trends' })).toHaveAttribute('href', '/progress');
+    expect(document.body.textContent).not.toMatch(/progress/i);
+  });
+});

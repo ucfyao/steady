@@ -6,7 +6,7 @@ export function NotFound() {
     <StatusPage
       title="Page not found"
       primary={{ label: 'Back to home', to: '/' }}
-      secondary={{ label: 'See your progress', to: '/progress' }}
+      secondary={{ label: 'See your trends', to: '/progress' }}
     >
       There is nothing at this address. It may have been typed wrong, or the link is out of date.
     </StatusPage>

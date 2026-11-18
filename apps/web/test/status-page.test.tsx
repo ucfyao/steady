@@ -40,7 +40,7 @@ describe('Unknown address', () => {
     const page = await screen.findByRole('region', { name: 'Page not found' });
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(within(page).getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
-    expect(within(page).getByRole('link', { name: 'See your progress' })).toHaveAttribute(
+    expect(within(page).getByRole('link', { name: 'See your trends' })).toHaveAttribute(
       'href',
       '/progress',
     );

@@ -40,7 +40,7 @@ test('a new player practises, plays a full session and sees results and progress
   await expect(page.getByRole('group', { name: 'Digits missed' })).toContainText('0');
   const resultsUrl = page.url();
 
-  await page.getByRole('link', { name: 'See your progress' }).click();
+  await page.getByRole('link', { name: 'See your trends' }).click();
   await expect(page.getByRole('region', { name: 'Last 7 days' })).toContainText('1 of 4 days');
   await expect(page.getByText('Your starting point is set after 5 more sessions.')).toBeVisible();
 
@@ -64,7 +64,7 @@ test('a new player practises, plays a full session and sees results and progress
   await avatar.click();
   await page.getByRole('menuitemradio', { name: sam }).click();
   await expect(page.getByRole('button', { name: `Player: ${sam}` })).toBeVisible();
-  await page.getByRole('link', { name: 'Progress' }).click();
+  await page.getByRole('link', { name: 'Trends' }).click();
   await expect(page.getByText(/no sessions yet/i)).toBeVisible();
   await page.goto(resultsUrl);
   await expect(page.getByRole('heading', { name: 'Session not found' })).toBeVisible();

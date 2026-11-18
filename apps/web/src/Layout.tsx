@@ -87,7 +87,7 @@ export function Layout() {
           <div className={styles.headerEnd}>
             <nav aria-label="Main">
               <NavLink to="/progress" className={styles.navLink}>
-                Progress
+                Trends
               </NavLink>
             </nav>
             {/* The night look ignores the light/dark choice (Spec 015), so no button there (Spec 019). */}

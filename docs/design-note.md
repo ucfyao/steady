@@ -64,9 +64,9 @@ All scoring runs **on the server, from the raw trial data**, which is stored unc
 - **Behaviour is only flagged [P]:** many omissions, many anticipations (the 100 ms cut-off is borrowed from the PVT's false-start rule, Basner & Dinges 2011), or machine-like regular timing (RT CV < 0.05). Flagged sessions **stay in trends** with a marker: excluding them would hide exactly the players who are struggling.
 - The server never labels a session as cheating. The checks make faking costly, but browser input can't be fully trusted.
 
-## 6. Progress
+## 6. Trends
 
-- **Starting point [P]:** the median of sessions 2–6, fixed once set (session 1 is practice). **Recent [P]:** the median of the last 5 sessions. Progress reads "recent vs. where you started", with an arrow and words per metric, and one summary sentence in the same words as Results.
+- **Starting point [P]:** the median of sessions 2–6, fixed once set (session 1 is practice). **Recent [P]:** the median of the last 5 sessions. The Trends page (named neutrally, because a trend can also stay flat or fall: Spec 022) reads "recent vs. where you started", with an arrow and words per metric, and one summary sentence in the same words as Results.
 - **Noise band [P]:** a change within ordinary session-to-session noise reads "Similar" (≈), not better or worse: for example, one extra caught 3 is not progress.
 - **Charts:** catch rate, omissions, median RT and RT variability side by side, so speed and accuracy are always seen together.
 - **Exploratory patterns** are collapsed below the charts. A sleep or stress split is drawn only once two groups have **at least 10 sessions**, as raw dots with `n` and a median, and is worded "a pattern so far, not a cause". Variability before probes is shown in the same descriptive way.

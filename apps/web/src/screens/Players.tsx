@@ -47,7 +47,7 @@ export function Players() {
       </div>
       <p className={styles.lead}>
         Everyone using Steady sees every player here. Choose one in the avatar menu to see their
-        sessions and progress.
+        sessions and trends.
       </p>
 
       <ul className={styles.list}>

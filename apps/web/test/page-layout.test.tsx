@@ -47,7 +47,7 @@ describe('Spec 010 §1: screen titles', () => {
   it('Progress keeps its name for screen readers only and leads with the summary', async () => {
     open('/progress', [storedSession(1)]);
     const summary = await screen.findByTestId('summary');
-    expect(screen.getByRole('heading', { level: 1, name: 'Progress' })).toHaveClass(
+    expect(screen.getByRole('heading', { level: 1, name: 'Trends' })).toHaveClass(
       'visually-hidden',
     );
     expect(summary).toHaveClass('headline');
@@ -56,7 +56,7 @@ describe('Spec 010 §1: screen titles', () => {
   it('Progress with no sessions leads with the invitation', async () => {
     open('/progress', []);
     expect(await screen.findByText(/no sessions yet/i)).toHaveClass('headline');
-    expect(screen.getByRole('heading', { level: 1, name: 'Progress' })).toHaveClass(
+    expect(screen.getByRole('heading', { level: 1, name: 'Trends' })).toHaveClass(
       'visually-hidden',
     );
   });
@@ -101,7 +101,7 @@ describe('Spec 010 §3: waiting', () => {
 
   it('Progress waits with the shared status', async () => {
     open('/progress', [storedSession(1)], { wrap: () => ({ listSessions: never }) });
-    expect(await screen.findByRole('status')).toHaveTextContent('Loading your progress…');
+    expect(await screen.findByRole('status')).toHaveTextContent('Loading your trends…');
   });
 
   it('Home keeps the space of its panels while the history loads', async () => {
@@ -140,7 +140,7 @@ describe('Spec 010 §3: errors in plain words', () => {
       },
     });
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Could not load your progress' }),
+      await screen.findByRole('heading', { level: 1, name: 'Could not load your trends' }),
     ).toBeVisible();
     expect(screen.getByRole('alert')).toHaveTextContent(SERVER);
     expect(screen.queryByText(/request failed/i)).toBeNull();

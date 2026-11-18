@@ -167,7 +167,7 @@ describe('Progress: your skies (Spec 007 §3)', () => {
 
   it('has no skies for a calm player', async () => {
     renderAt('/progress', [storedSession(1), storedSession(2)], 'calm');
-    await screen.findByRole('heading', { name: 'Progress' });
+    await screen.findByRole('heading', { name: 'Trends' });
     expect(screen.queryByRole('region', { name: 'Your skies' })).toBeNull();
   });
 });

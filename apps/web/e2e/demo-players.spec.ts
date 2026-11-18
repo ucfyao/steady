@@ -16,7 +16,7 @@ test('the demo players from pnpm seed:demo are in everyone’s list, with their 
   await page.getByRole('menuitemradio', { name: /^O-Ava\b/ }).click();
   await expect(page.getByRole('button', { name: 'Player: O-Ava' })).toBeVisible();
   // For screen readers only (Spec 010): attached, not visible.
-  await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeAttached();
+  await expect(page.getByRole('heading', { level: 1, name: 'Trends' })).toBeAttached();
   await expect(page.getByRole('region', { name: 'Last 7 days' })).toBeVisible();
 
   // The demo's 10 sessions are joined by straight lines: an SVG path of only M and L
