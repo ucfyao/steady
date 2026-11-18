@@ -1,6 +1,6 @@
 # Spec 019: No light/dark button in the night look
 
-Status: implemented
+Status: replaced by Spec 026 (the button is always shown)
 Design note: `docs/design-note.md` §3
 Depends on: Spec 012, Spec 015
 Changes: Spec 012 §1 (where the button is)
