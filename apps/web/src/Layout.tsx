@@ -2,7 +2,6 @@ import { useLayoutEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useMatch, useOutletContext } from 'react-router';
 import { Scene } from './game/Scene.js';
 import { PlayerMenu } from './PlayerMenu.js';
-import { ThemeToggle } from './theme/ThemeToggle.js';
 import { usePlayers } from './players/usePlayers.js';
 import { Button } from './ui/Button.js';
 import { Notice } from './ui/Notice.js';
@@ -90,7 +89,6 @@ export function Layout() {
                 Progress
               </NavLink>
             </nav>
-            <ThemeToggle />
             {status === 'ready' && <PlayerMenu />}
           </div>
         </header>

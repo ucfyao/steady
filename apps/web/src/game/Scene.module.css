@@ -1,5 +1,5 @@
 /*
- * The lantern's night scene (Spec 006). Always dark, whatever the system theme. `--dawn`
+ * The lantern's night scene (Spec 006). Always dark. `--dawn`
  * (0 → 1, set by the game variant) blends night into dawn.
  */
 .scene {

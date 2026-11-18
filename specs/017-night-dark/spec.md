@@ -1,6 +1,6 @@
 # Spec 017: The dark theme in the night's colours
 
-Status: implemented
+Status: implemented; since Spec 019 its set is the app's only set of colours
 Design note: `docs/design-note.md` §3
 Depends on: Spec 012, Spec 014, Spec 015
 Changes: Spec 012 §2 (the dark set's values)

@@ -1,5 +1,5 @@
 /*
- * Focus mode on the lantern scene (Spec 006): always dark, whatever the system theme.
+ * Focus mode on the lantern scene (Spec 006): always dark.
  * Its colours are the night tokens (tokens.css, Spec 010); the rest of the app is paper.
  */
 .focus {
@@ -340,8 +340,9 @@
 
 /*
  * ---- The plain variant (Spec 008) ----
- * The original focus screen: the paper surface in the system theme, the digit alone in the
- * sans face, the ⊗ mask as text. Countdown, feedback and probe in the paper colours.
+ * The original focus screen: the plain surface (the night blue without the scene, Spec 019),
+ * the digit alone in the sans face, the ⊗ mask as text. Countdown, feedback and probe in the
+ * page colours.
  */
 .plain {
   --digit-max: clamp(7.5rem, min(56vw, 42vh), 15rem); /* about 240 px on a desktop */
@@ -349,7 +350,6 @@
 
   background: var(--color-surface);
   color: var(--color-text);
-  color-scheme: normal;
 }
 
 .plain .stimulus {

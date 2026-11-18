@@ -1,6 +1,6 @@
 # Spec 012: Choosing light or dark
 
-Status: implemented
+Status: replaced by Spec 019 (one look, the night): the button, the stored choice and the light set are gone
 Design note: `docs/design-note.md` §3
 Depends on: Spec 004, Spec 008, Spec 010
 Changes: Spec 004 (the app follows the system colour scheme only; the header)

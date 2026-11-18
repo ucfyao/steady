@@ -1,18 +1,8 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
-import { bootScript } from './src/theme/boot.js';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // Spec 012: apply the stored light or dark choice before the first paint.
-    {
-      name: 'steady-theme-boot',
-      transformIndexHtml: () => [
-        { tag: 'script', children: bootScript(), injectTo: 'head-prepend' },
-      ],
-    },
-  ],
+  plugins: [react()],
   server: {
     port: 5173,
     strictPort: true,
