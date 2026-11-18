@@ -48,7 +48,7 @@ Import the repository in Vercel with:
 | Project name     | `steady-api`; Vercel adds a suffix when the `.vercel.app` name is taken (here `steady-api-bay.vercel.app`) |
 | Root directory   | `apps/api`                                                                                                 |
 | Framework preset | Other (build and output come from `vercel.json`)                                                           |
-| Node.js version  | 24.x (Settings → Build and Deployment)                                                                     |
+| Node.js version  | 26.x (Settings → Build and Deployment)                                                                     |
 | Function region  | Same region as the database (Settings → Functions; Tokyo is `hnd1`)                                        |
 
 Environment variables, for Production and Preview (see [Preview deployments](#preview-deployments)):
@@ -61,13 +61,13 @@ Environment variables, for Production and Preview (see [Preview deployments](#pr
 | `NODE_OPTIONS` | `--experimental-require-module` (see below)                                             |
 | `LOG_LEVEL`    | Optional; one of `fatal`, `error`, `warn`, `info` (default), `debug`, `trace`, `silent` |
 
-`NODE_OPTIONS` is required. Nest 12's packages are ES modules only, and `@nestjs/throttler` (CommonJS) loads `@nestjs/common` with `require()`. Node 24 allows that by default, but Vercel's function runtime does not, so without the flag every request fails with `ERR_REQUIRE_ESM`.
+`NODE_OPTIONS` is required. Nest 12's packages are ES modules only, and `@nestjs/throttler` (CommonJS) loads `@nestjs/common` with `require()`. Node 26 allows that by default, but Vercel's function runtime does not, so without the flag every request fails with `ERR_REQUIRE_ESM`.
 
 Redeploy after changing settings. Check: `https://<api domain>/api/health` returns `{"status":"ok"}`. The domain is under the project's **Domains**.
 
 ### 3. Web project
 
-Import the same repository again with root directory `apps/web`, framework preset Vite and Node.js 24.x. It needs no environment variables. `apps/web/vercel.json` forwards `/api` to the API's production domain (`steady-api-bay.vercel.app`); if that domain changes, change the URL there.
+Import the same repository again with root directory `apps/web`, framework preset Vite and Node.js 26.x. It needs no environment variables. `apps/web/vercel.json` forwards `/api` to the API's production domain (`steady-api-bay.vercel.app`); if that domain changes, change the URL there.
 
 Check: open the site and play a full session through to results and progress.
 
