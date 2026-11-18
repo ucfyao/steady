@@ -74,7 +74,7 @@ function expectHowItWorks(action: RegExp) {
   const how = screen.getByRole('region', { name: 'How to play' });
   expect(how).toHaveTextContent(action);
   expect(how).toHaveTextContent(/3s are rare/i);
-  expect(within(how).getAllByText(/^(Press|Tap)$/)).toHaveLength(2);
+  expect(within(how).getAllByText(/^(Press|Tap)$/, { selector: 'figcaption' })).toHaveLength(2);
   expect(within(how).getByText('Hold back')).toBeInTheDocument();
 }
 
@@ -108,7 +108,10 @@ describe('First time: how it works, practice, before you start', () => {
     const player = simulatedPlayer(clock, space);
     clock.advance(PRACTICE_MS, 50, () => {
       player();
-      if (screen.queryByTestId('stimulus') && !screen.queryByText(PRACTICE_HINT)) {
+      if (
+        screen.queryByTestId('stimulus') &&
+        screen.queryByTestId('hint')?.textContent !== PRACTICE_HINT
+      ) {
         if (!screen.queryByTestId('countdown')) hintMissing++;
       }
       if (screen.queryByTestId('stimulus') && screen.queryByText(STEP)) stepShown++;
@@ -303,7 +306,7 @@ describe('Focus mode', () => {
     expect(screen.queryByRole('button', { name: /^Player: / })).toBeNull();
     expect(screen.getByText('Starting…')).toBeInTheDocument();
     clock.advance(3100);
-    expect(screen.getByText(KEYBOARD_HINT)).toBeInTheDocument();
+    expect(screen.getByTestId('hint')).toHaveTextContent(KEYBOARD_HINT);
 
     const player = simulatedPlayer(clock, space);
     let progressShown = 0;
@@ -438,7 +441,7 @@ describe('Play', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Start' }));
     expect(await countdown()).toHaveTextContent('Finger on the screen');
     clock.advance(3100);
-    expect(screen.getByText('Tap for every digit except 3')).toBeInTheDocument();
+    expect(screen.getByTestId('hint')).toHaveTextContent('Tap for every digit except 3');
     expect(backend.started[0]!.body.device).toBe('touch');
 
     const tap = () => fireEvent.pointerDown(screen.getByTestId('tap-area'));

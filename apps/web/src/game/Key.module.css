@@ -1,0 +1,43 @@
+/*
+ * The keycap (Spec 020). The border and the bottom edge are --color-text-muted: at least 3:1
+ * against the surface and the page in the light, dark and night looks. Colours come only from
+ * tokens. The bottom edge is a shadow, so the press moves nothing around the key.
+ */
+.key {
+  display: inline-block;
+  margin-bottom: 2px;
+  padding: 0 var(--space-2);
+  font-family: var(--font-sans);
+  font-size: 0.9em;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 0 var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Pressed down twice, then at rest, in a 2.4 s cycle. Off with reduced motion (tokens.css). */
+.key[data-moving='true'] {
+  animation: press 2.4s ease-in-out infinite;
+}
+
+@keyframes press {
+  0%,
+  4%,
+  14%,
+  18%,
+  28%,
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 2px 0 var(--color-text-muted);
+  }
+
+  8%,
+  22% {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 var(--color-text-muted);
+  }
+}
