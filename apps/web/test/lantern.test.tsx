@@ -4,18 +4,17 @@ import { Profiler } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
-import { parseVariant } from '../src/game/env.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { fakeEnv } from './support/fake-env.js';
 
 // Spec 006: the lantern scene, the frost mask, the glow, and the game variant's points.
 
-function renderPlay(variant: Variant, override?: Variant) {
+function renderPlay(variant: Variant) {
   const backend = fakeBackend();
   backend.control.variant = variant;
   backend.sessions.set(tokenN(1), [{ id: 'old' }] as CompletedSession[]); // returning player
-  const clock = fakeEnv('keyboard', override);
+  const clock = fakeEnv('keyboard');
   const renders = { count: 0 };
   render(
     <Profiler id="app" onRender={() => renders.count++}>
@@ -263,23 +262,8 @@ describe('Stop in every variant (Spec 009)', () => {
     });
 });
 
-describe('variant override (?variant=)', () => {
-  it('reads plain, calm or game from the address, and nothing else', () => {
-    expect(parseVariant('?variant=game')).toBe('game');
-    expect(parseVariant('?x=1&variant=calm')).toBe('calm');
-    expect(parseVariant('?variant=plain')).toBe('plain');
-    expect(parseVariant('?variant=loud')).toBeUndefined();
-    expect(parseVariant('')).toBeUndefined();
-  });
-
-  it('sends the override with the session and shows it', async () => {
-    const { backend } = renderPlay('calm', 'game');
-    await start();
-    expect(backend.started[0]!.body.variant).toBe('game');
-    expect(screen.getByTestId('points')).toBeInTheDocument();
-  });
-
-  it('sends no variant without an override', async () => {
+describe("the player's group (Spec 027)", () => {
+  it("sends no variant: the server uses the player's group", async () => {
     const { backend } = renderPlay('game');
     await start();
     expect(backend.started[0]!.body).not.toHaveProperty('variant');

@@ -1,6 +1,6 @@
 # Spec 008: A plain control group
 
-Status: implemented
+Status: implemented; Spec 027 removes the `?variant=` override (§2)
 Design note: `docs/design-note.md` §3
 Depends on: Spec 006
 Changes: Spec 006 §1 (the scene is for calm and game only) and §5 (three groups instead of two)

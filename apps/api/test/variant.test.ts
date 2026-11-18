@@ -66,23 +66,15 @@ describe('A/B variant', () => {
     expect(list[0]!.variant).toBe(variant);
   });
 
-  it('lets a play-test override the variant for one session, and stores what was shown', async () => {
+  it('records the player’s group even when a variant is sent (Spec 027)', async () => {
     const token = await newPlayer(t);
-    const other = (await variantOf(token)) === 'calm' ? 'game' : 'calm';
-    const s = (await start(token, { variant: other }).expect(201)).body;
-    expect(s.variant).toBe(other);
-    const [row] = await t.db.select().from(sessions).where(eq(sessions.id, s.id));
-    expect(row!.variant).toBe(other);
-    // The player's own variant is unchanged.
-    expect(await variantOf(token)).not.toBe(other);
-  });
-
-  it('accepts plain as a play-test override (Spec 008)', async () => {
-    const token = await newPlayer(t);
-    const s = (await start(token, { variant: 'plain' }).expect(201)).body;
-    expect(s.variant).toBe('plain');
-    const [row] = await t.db.select().from(sessions).where(eq(sessions.id, s.id));
-    expect(row!.variant).toBe('plain');
+    const own = await variantOf(token);
+    for (const sent of ['plain', 'calm', 'game'] as const) {
+      const s = (await start(token, { variant: sent }).expect(201)).body;
+      expect(s.variant).toBe(own);
+      const [row] = await t.db.select().from(sessions).where(eq(sessions.id, s.id));
+      expect(row!.variant).toBe(own);
+    }
   });
 
   it('creates a new player in a chosen variant (Spec 011 §3)', async () => {
@@ -102,12 +94,6 @@ describe('A/B variant', () => {
       .post('/api/players')
       .send({ name: 'P', variant: 'plain', admin: true })
       .expect(400);
-  });
-
-  it('rejects an unknown variant with 400', async () => {
-    const token = await newPlayer(t);
-    const res = await start(token, { variant: 'loud' }).expect(400);
-    expect(res.body.errors).toEqual([expect.stringContaining('variant')]);
   });
 
   it('stores no points: they are always derived from the trial outcomes (Spec 006 §3)', async () => {

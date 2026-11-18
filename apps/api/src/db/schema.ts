@@ -38,7 +38,7 @@ export const sessions = pgTable(
     checkIn: jsonb('check_in').$type<CheckIn>(),
     // One input method per session, so keyboard and touch RTs are never mixed.
     device: text('device').$type<InputDevice>().notNull(),
-    // What the session showed: the player's variant, or a play-test override (Spec 006).
+    // What the session showed: always the player's variant (Spec 006, Spec 027).
     variant: text('variant').$type<Variant>().notNull(),
     startedAt: ts('started_at').notNull(),
     completedAt: ts('completed_at'),

@@ -66,6 +66,10 @@ describe('StartSessionSchema', () => {
     });
   });
 
+  it("drops a variant: a session is always in its player's group (Spec 027)", () => {
+    expect(StartSessionSchema.parse({ device, variant: 'game' })).toEqual({ device });
+  });
+
   it('rejects an unknown check-in level', () => {
     expect(StartSessionSchema.safeParse({ checkIn: { stress: 'extreme' }, device }).success).toBe(
       false,
