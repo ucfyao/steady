@@ -50,7 +50,7 @@ Steady trains sustained attention with the **Sustained Attention to Response Tas
 
 <table>
   <tr>
-    <td width="30%"><img src="docs/images/home-phone.png" alt="Home on a phone: the lantern in a dawn sky, the week and the last check, hills below"></td>
+    <td width="30%"><img src="docs/images/home-phone.png" alt="Home on a phone for a calm player: the lantern in a starry night sky, the week and the last check, hills below"></td>
     <td width="70%">
       <img src="docs/images/results.png" alt="Results: the session from start to end, one square per digit">
       <br><br>
@@ -58,7 +58,7 @@ Steady trains sustained attention with the **Sustained Attention to Response Tas
     </td>
   </tr>
   <tr>
-    <td align="center"><sub>Home on a phone</sub></td>
+    <td align="center"><sub>Home on a phone (calm group)</sub></td>
     <td align="center"><sub>Results (each square is a digit) and Trends</sub></td>
   </tr>
 </table>
