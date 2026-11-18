@@ -156,7 +156,9 @@
 /* ---- Game layer (game variant) ---- */
 .hud {
   position: absolute;
-  top: max(var(--space-5), env(safe-area-inset-top));
+  /* Spec 025: Stop's top and height, so the points, the multiplier and Stop share a centre. */
+  top: max(var(--space-3), env(safe-area-inset-top));
+  height: 2.75rem;
   left: var(--space-5);
   /* Leaves the top-right corner to Stop (Spec 009). */
   right: calc(var(--space-3) + 2.75rem + var(--space-2));
@@ -181,7 +183,7 @@
 .mult {
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  background: rgb(29 27 24 / 0.45);
+  background: var(--night-chip);
   color: var(--lantern);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-semibold);
@@ -358,6 +360,7 @@
 .plain {
   --digit-max: clamp(7.5rem, min(56vw, 42vh), 15rem); /* about 240 px on a desktop */
   --night-muted: var(--color-text-muted);
+  --night-chip: var(--color-surface-sunken); /* Stop's circle on paper (Spec 025) */
 
   background: var(--color-surface);
   color: var(--color-text);
@@ -410,17 +413,31 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
+  /* [P] findable, but never competing with the digit: muted, never the lantern yellow. */
   color: var(--night-muted);
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
   line-height: 1;
-  opacity: 0.4; /* [P] findable, but never competing with the digit */
   cursor: pointer;
 }
 
+/* Spec 025: the visible part, a circle as tall as the multiplier pill, in its fill. */
+.stop span {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--night-chip);
+}
+
 .stop:hover {
-  opacity: 1;
+  color: var(--night-text);
 }
 
 .plain .stop {
   color: var(--color-text-muted);
+}
+
+.plain .stop:hover {
+  color: var(--color-text);
 }
