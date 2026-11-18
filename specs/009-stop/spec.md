@@ -1,6 +1,6 @@
 # Spec 009: Stopping a session
 
-Status: implemented
+Status: implemented; Spec 025 draws Stop as a circle on the multiplier's line
 Design note: `docs/design-note.md` §5
 Depends on: Spec 004, Spec 006, Spec 008
 Changes: Spec 004 (focus mode, "Leaving voids the session")

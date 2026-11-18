@@ -1,8 +1,12 @@
-import type { InputDevice } from '@steady/core';
+import type { InputDevice, TrialOutcome } from '@steady/core';
 import { useId } from 'react';
 import { Button } from '../ui/Button.js';
+import { Card } from '../ui/Card.js';
 import { practiceTip, type PracticeSummary } from './practice.js';
 import styles from './PracticeLine.module.css';
+import { OUTCOME_LABELS } from '../results/JourneyRibbon.js';
+import ribbon from '../results/JourneyRibbon.module.css';
+import { TrialCells } from './TrialCells.js';
 
 function tipText(s: PracticeSummary, device: InputDevice): string {
   const press = device === 'touch' ? 'Tap' : 'Press';
@@ -34,24 +38,61 @@ export function practiceLine(s: PracticeSummary): string {
 }
 
 /**
- * How the practice went, at the top of "Before you start" (Spec 005): one line, one tip and
- * Practice again. Counted in the browser for this screen only; never sent or stored.
+ * How the practice went, at the top of "Before you start" (Specs 005, 023): a card with the
+ * practice's cells, two numbers, one tip and Practice again. Counted in the browser for this
+ * screen only; never sent or stored. Screen readers get the one sentence.
  */
 export function PracticeLine({
   summary,
+  outcomes,
   device,
   onAgain,
 }: {
   summary: PracticeSummary;
+  outcomes: TrialOutcome[];
   device: InputDevice;
   onAgain(): void;
 }) {
   const tipId = useId();
   return (
-    <section className={styles.practice} aria-label="How the practice went">
-      <p data-testid="practice-line" className={styles.line}>
+    <Card as="section" className={styles.practice} aria-label="How the practice went">
+      <p data-testid="practice-line" className="visually-hidden">
         {practiceLine(summary)}
       </p>
+      <div aria-hidden="true">
+        <TrialCells outcomes={outcomes} className={styles.cells} />
+        {/* What the colours mean: only what happened, as on Results. */}
+        <ul className={styles.legend} data-testid="legend">
+          {(Object.keys(OUTCOME_LABELS) as TrialOutcome[])
+            .filter((o) => outcomes.includes(o))
+            .map((o) => (
+              <li key={o}>
+                <span className={`${ribbon.swatch} ${ribbon[o]}`} />
+                {OUTCOME_LABELS[o]}
+              </li>
+            ))}
+        </ul>
+        <dl className={styles.numbers}>
+          <div data-testid="held-back">
+            <dt>3s held back</dt>
+            <dd>
+              {summary.heldBack} <span>of {summary.targets}</span>
+            </dd>
+          </div>
+          <div data-testid="caught">
+            <dt>Digits caught</dt>
+            <dd>
+              {summary.caught} <span>of {summary.digits}</span>
+            </dd>
+          </div>
+          {summary.tooEarly > 0 && (
+            <div data-testid="too-early">
+              <dt>Too early</dt>
+              <dd>{summary.tooEarly}</dd>
+            </div>
+          )}
+        </dl>
+      </div>
       <aside role="note" aria-labelledby={tipId} className={styles.tip}>
         <b id={tipId}>One tip</b>
         <p>{tipText(summary, device)}</p>
@@ -59,6 +100,6 @@ export function PracticeLine({
       <Button variant="link" onClick={onAgain} className={styles.again}>
         Practice again
       </Button>
-    </section>
+    </Card>
   );
 }

@@ -1,0 +1,18 @@
+/* Practice cells (Spec 023): the journey's cells (results/JourneyRibbon.module.css), in a row. */
+.cells {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+}
+
+.cell {
+  flex: 0 0 12px;
+  height: 1.375rem;
+  border-radius: 2px;
+}
+
+/* A trial still to come: a faint fill, so it differs from a missed digit (an outline). */
+.pending {
+  background: var(--color-border);
+  opacity: 0.45;
+}

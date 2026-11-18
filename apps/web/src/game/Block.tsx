@@ -22,6 +22,7 @@ import type { PlayEnv } from './env.js';
 import { Key } from './Key.js';
 import { TrialRunner, type Outcome, type RunnerOptions, type RunnerPlan } from './runner.js';
 import { Scene } from './Scene.js';
+import { markCell, TrialCells } from './TrialCells.js';
 
 const COUNTDOWN_S = 3;
 /** Spec 006: three words, one a second. No number, so no 3 appears before the trials. */
@@ -78,11 +79,14 @@ export function Block({
   onDone,
   onVoid,
   hint,
+  practice = false,
 }: {
   plan: RunnerPlan;
   options?: RunnerOptions;
   /** The rule, in one quiet line under the lantern. */
   hint: ReactNode;
+  /** Practice shows its trials as cells as it goes (Spec 023); the real session never does. */
+  practice?: boolean;
   env: PlayEnv;
   variant: Variant;
   onDone(submission: Submission): void;
@@ -103,6 +107,7 @@ export function Block({
   const endRef = useRef<((reason: VoidReason) => void) | null>(null);
   const [ui, setUi] = useState<Ui>({ kind: 'countdown', n: COUNTDOWN_S });
   const focusRoot = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const done = useEffectEvent(onDone);
   const game = variant === 'game';
   const plain = variant === 'plain';
@@ -169,6 +174,10 @@ export function Block({
       // A press stamped inside a window that closed a frame earlier replaces that trial's
       // "missed", exactly as the runner (and so the server) counts it.
       outcomes[index] = outcome;
+      markCell(
+        track.current?.firstElementChild?.children[index] as HTMLElement | undefined,
+        outcome,
+      );
       if (!game) return;
       const step = pointsSoFar(outcomes.filter((o) => o !== undefined));
       if (pointsEl.current) pointsEl.current.textContent = String(step.total);
@@ -399,6 +408,13 @@ export function Block({
         </div>
       )}
 
+      {practice && (
+        // Spec 023: one cell per practice trial, filled outside React as outcomes arrive.
+        <div ref={track} className={styles.track} aria-hidden="true">
+          <TrialCells outcomes={plan.trials.map(() => undefined)} testId="practice-track" />
+        </div>
+      )}
+
       <p className={styles.hint} data-testid="hint">
         {ui.kind === 'countdown' ? 'Starting…' : hint}
       </p>
@@ -413,7 +429,17 @@ export function Block({
         tabIndex={-1}
         onClick={() => endRef.current?.('stopped')}
       >
-        <span aria-hidden="true">×</span>
+        {/* Spec 025: a drawn ×, so its weight matches the multiplier on any font. */}
+        <span aria-hidden="true">
+          <svg viewBox="0 0 12 12" width="12" height="12">
+            <path
+              d="M2 2l8 8M10 2l-8 8"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
       </button>
     </div>
   );

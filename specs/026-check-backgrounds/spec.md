@@ -1,4 +1,4 @@
-# Spec 023: One background per group, and the light/dark choice on every screen
+# Spec 026: One background per group, and the light/dark choice on every screen
 
 Status: implemented
 Design note: `docs/design-note.md` §3

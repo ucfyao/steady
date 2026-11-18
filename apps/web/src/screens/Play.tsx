@@ -4,7 +4,9 @@ import {
   type CheckIn,
   type StartedSession,
   type Submission,
+  type TrialOutcome,
   type Variant,
+  trialOutcome,
 } from '@steady/core';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
@@ -70,12 +72,15 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   const [guided, setGuided] = useState(false);
   const [checkIn, setCheckIn] = useState<CheckIn>({});
   /** The last practice's counts, shown on "Before you start" while on the guided path. */
-  const [practiced, setPracticed] = useState<PracticeSummary | null>(null);
+  const [practiced, setPracticed] = useState<{
+    summary: PracticeSummary;
+    outcomes: TrialOutcome[];
+  } | null>(null);
   /** The A/B variant for practice (Spec 006); the real session uses what the server says. */
   const [variant, setVariant] = useState<Variant>('calm');
-  /** Whether `variant` has arrived; until then there is no scene (Spec 023 §2). */
+  /** Whether `variant` has arrived; until then there is no scene (Spec 026 §2). */
   const [variantKnown, setVariantKnown] = useState(false);
-  /** The dawn of the player's last game session, 0–100, as on Home (Spec 023 §2). */
+  /** The dawn of the player's last game session, 0–100, as on Home (Spec 026 §2). */
   const [lastSky, setLastSky] = useState(0);
   // Bumped by "Try again" to get the check ready once more.
   const [attempt, setAttempt] = useState(0);
@@ -101,7 +106,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     };
   }, [api, env, attempt]);
 
-  // Spec 023: calm and game see Home's scene behind the check (game at its last sky); plain
+  // Spec 026: calm and game see Home's scene behind the check (game at its last sky); plain
   // has no scene. The content follows the light/dark choice.
   const onScene = variantKnown && variant !== 'plain';
   useCheckScene(onScene ? (variant === 'game' ? lastSky : 0) : null);
@@ -154,7 +159,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
 
   const inFocusMode = step.k === 'practice' || step.k === 'running';
   const content = screenFor();
-  // Spec 023: on the scene, the content of every screen outside focus mode sits in one panel.
+  // Spec 026: on the scene, the content of every screen outside focus mode sits in one panel.
   return onScene && !inFocusMode ? (
     <div className={styles.panel} data-testid="check-panel">
       {content}
@@ -178,7 +183,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             <Steps step={1} label="How it works" />
             <h1 className={styles.balanced}>Catch every digit. Hold back on 3.</h1>
             <p className={styles.lead}>Digits flash one at a time. React to each one, except 3.</p>
-            <HowToPlay device={env.device} />
+            <HowToPlay device={env.device} variant={variant} />
             <Button size="lg" onClick={practice}>
               Try a short practice
             </Button>
@@ -203,11 +208,16 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
           <Block
             plan={step.plan}
             options={PRACTICE_OPTIONS}
+            practice
             hint={<>Practice · {rule}</>}
             env={env}
             variant={variant}
             onDone={({ rts }) => {
-              setPracticed(summarisePractice(step.plan.trials, rts));
+              setPracticed({
+                summary: summarisePractice(step.plan.trials, rts),
+                // Core's rule, as the server scores (Spec 023); for this screen only.
+                outcomes: step.plan.trials.map((t, i) => trialOutcome(t.isTarget, rts[i] ?? null)),
+              });
               setStep({ k: 'before' });
             }}
             onVoid={(reason) => setStep({ k: 'voided', during: 'practice', reason })}
@@ -220,7 +230,12 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
             guided={guided}
             practice={
               guided && practiced ? (
-                <PracticeLine summary={practiced} device={env.device} onAgain={practice} />
+                <PracticeLine
+                  summary={practiced.summary}
+                  outcomes={practiced.outcomes}
+                  device={env.device}
+                  onAgain={practice}
+                />
               ) : null
             }
             value={checkIn}

@@ -29,7 +29,7 @@ export function useFocusMode() {
 }
 
 /**
- * The check's scene (Spec 023): while a screen calls this with a dawn (0–100), the layout
+ * The check's scene (Spec 026): while a screen calls this with a dawn (0–100), the layout
  * draws Home's scene behind the whole window at that dawn, and the header lies on it. `null`
  * draws nothing. A layout effect, so it is set before the first paint; it ends when the
  * caller unmounts or passes null.
@@ -70,7 +70,7 @@ export function Layout() {
   // for it, unless a notice sits between them.
   const onHome = useMatch('/') !== null;
   const overHero = (onHome || sceneOnTop) && status === 'ready' && !notice;
-  // Spec 023: the check's scene for calm and game, behind the page outside focus mode.
+  // Spec 026: the check's scene for calm and game, behind the page outside focus mode.
   const onScene = checkDawn !== null && !focusMode;
 
   return (

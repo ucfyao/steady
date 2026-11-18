@@ -4,7 +4,7 @@
 }
 
 /*
- * Spec 023: on calm's and game's scene, the content sits in one panel on the theme's surface,
+ * Spec 026: on calm's and game's scene, the content sits in one panel on the theme's surface,
  * so it follows the light/dark choice while the scene stays night.
  */
 .panel {

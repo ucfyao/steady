@@ -7,7 +7,7 @@
 }
 
 /*
- * The check's scene (Spec 023): Home's scene fixed behind the whole window, for calm and game.
+ * The check's scene (Spec 026): Home's scene fixed behind the whole window, for calm and game.
  * Below the page's own stacking (z-index -1), so the header, its menu and the content keep
  * their order. A dark wash at the top keeps the header's light text readable at any dawn,
  * as on Home (Spec 014).
@@ -84,7 +84,7 @@
   margin-bottom: 0;
 }
 
-/* On the check's scene (Spec 023) the header stays in the flow and takes the same colours. */
+/* On the check's scene (Spec 026) the header stays in the flow and takes the same colours. */
 .overHero .brand,
 .overHero .navLink,
 .overHero .avatar,

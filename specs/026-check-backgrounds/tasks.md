@@ -1,4 +1,4 @@
-# Tasks: Spec 023
+# Tasks: Spec 026
 
 - [x] T1 Write spec, plan and tasks
 - [x] T2 Failing tests (header for every group, scene per group with game's dawn, panel follows the theme, no scene while loading, switching players), confirmed failing for the right reason

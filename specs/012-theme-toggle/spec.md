@@ -1,6 +1,6 @@
 # Spec 012: Choosing light or dark
 
-Status: implemented; the button is in the header on every screen outside focus mode (Spec 023)
+Status: implemented; the button is in the header on every screen outside focus mode (Spec 026)
 Design note: `docs/design-note.md` §3
 Depends on: Spec 004, Spec 008, Spec 010
 Changes: Spec 004 (the app follows the system colour scheme only; the header)

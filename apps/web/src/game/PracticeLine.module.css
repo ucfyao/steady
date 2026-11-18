@@ -1,16 +1,62 @@
+/* How the practice went (Spec 023): a card at the top of Before you start. */
 .practice {
   display: flex;
   flex-direction: column;
   margin-bottom: var(--space-7);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.line {
-  margin-bottom: var(--space-3);
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-medium);
+.cells {
+  justify-content: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-8);
+  margin: 0 0 var(--space-4);
+}
+
+/* Label under the number, as on Results. */
+.numbers div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.numbers dt {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.numbers dd {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
   font-variant-numeric: tabular-nums;
+}
+
+.numbers dd span {
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
 }
 
 .tip {

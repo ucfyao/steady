@@ -9,7 +9,7 @@ import { fakeBackend, tokenN } from './support/fake-api.js';
 import { fakeEnv } from './support/fake-env.js';
 import { storedSession } from './support/sessions.js';
 
-// Spec 023: one background per group, and the light/dark choice on every screen.
+// Spec 026: one background per group, and the light/dark choice on every screen.
 
 afterEach(() => document.documentElement.removeAttribute('data-theme'));
 
@@ -45,7 +45,7 @@ const howItWorks = () =>
 const beforeYouStart = () => screen.findByRole('list', { name: 'Before you start' });
 const returning = [storedSession(1, {}, { variant: 'calm' })];
 
-describe('the header on the check (Spec 023 §1)', () => {
+describe('the header on the check (Spec 026 §1)', () => {
   for (const variant of ['plain', 'calm', 'game'] as const) {
     it(`${variant}: Trends, the light/dark button and the avatar on How it works`, async () => {
       renderPlay(variant);
@@ -68,7 +68,7 @@ describe('the header on the check (Spec 023 §1)', () => {
   }
 });
 
-describe("the check's background per group (Spec 023 §2)", () => {
+describe("the check's background per group (Spec 026 §2)", () => {
   it('plain: no scene and no panel', async () => {
     renderPlay('plain');
     await howItWorks();
