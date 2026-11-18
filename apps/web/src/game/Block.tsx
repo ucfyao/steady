@@ -345,8 +345,10 @@ export function Block({
             <div className={styles.glass}>
               {/* Always mounted, so the first digit can be drawn in the frame that starts it. */}
               <div ref={stimulus} className={styles.stimulus} data-testid="stimulus" />
-              {/* The mask (Spec 006): the glass mists over the digit's place. */}
-              <div ref={frost} className={styles.frost} data-testid="frost" data-on="false" />
+              {/* The mask (Spec 006): the glass mists over the digit's place. It starts misted,
+                  so the glass is never bare during the countdown (Spec 021); the first digit
+                  clears it, as every digit does. */}
+              <div ref={frost} className={styles.frost} data-testid="frost" data-on="true" />
             </div>
             <span className={styles.base} />
           </div>

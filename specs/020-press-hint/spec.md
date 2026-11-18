@@ -26,7 +26,7 @@ On a touch device the words are "Tap the screen", "Finger on the screen" and "Ta
 
 ## 2. The key [P]
 
-- **One key style** in all three places: a keycap (surface fill, a border and a 2 px bottom edge of `--color-text-muted`, semibold). The bottom edge is a shadow, so a press changes nothing around the key (the line keeps its height). The border is ≥ 3:1 against the surface and the page in every look (non-text contrast, WCAG 1.4.11):
+- **One key style** in all three places: a keycap (surface fill, a border and a 2 px bottom edge of `--color-text-muted`, semibold). Its padding and side margins are in em (0.4em inside, a space plus 0.2em outside), so the room inside and outside the key stays about equal at every text size. The bottom edge is a shadow, so a press changes nothing around the key (the line keeps its height). The border is ≥ 3:1 against the surface and the page in every look (non-text contrast, WCAG 1.4.11):
   - light paper: `#6e695e` on `#f6f2ea` 4.9:1, on `#ece6da` 4.4:1;
   - dark paper: `#a9a7b6` on `#1b2135` 6.8:1, on `#141a2b` 7.3:1;
   - night: `#b8b2c4` on `#232b4c` 6.7:1, on `--night-bg` `#1b2340` 7.5:1.

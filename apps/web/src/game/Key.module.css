@@ -5,8 +5,10 @@
  */
 .key {
   display: inline-block;
-  margin-bottom: 2px;
-  padding: 0 var(--space-2);
+  /* In em, so the key keeps its proportions at every text size: about as much room outside
+     (a space plus 0.2em) as inside (0.4em). */
+  margin: 0 0.2em 2px;
+  padding: 0 0.4em;
   font-family: var(--font-sans);
   font-size: 0.9em;
   font-weight: var(--font-weight-semibold);

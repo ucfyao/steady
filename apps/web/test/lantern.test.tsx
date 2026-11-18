@@ -94,6 +94,22 @@ describe('the lantern (both variants)', () => {
     expect(digits).toBeGreaterThan(0);
   });
 
+  it.each(['calm', 'game'] as const)(
+    'keeps the glass misted through the countdown, until the first digit (Spec 021, %s)',
+    async (variant) => {
+      const { clock } = renderPlay(variant);
+      await start();
+      clock.advance(2950, 50, () => {
+        expect(screen.getByTestId('frost').dataset.on).toBe('true');
+        expect(screen.getByTestId('stimulus')).toHaveTextContent('');
+      });
+      // The first digit replaces the mist, as every digit does.
+      clock.advance(150);
+      expect(screen.getByTestId('stimulus').textContent).toMatch(/^\d$/);
+      expect(screen.getByTestId('frost').dataset.on).toBe('false');
+    },
+  );
+
   it('glows after a press on a digit and flickers after a press on a 3', async () => {
     const { clock } = renderPlay('calm');
     await start();
