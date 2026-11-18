@@ -40,7 +40,7 @@ apps/api         @steady/api: NestJS 12 + Drizzle + PostgreSQL 17
 apps/web         @steady/web: React 19 + Vite 8
 packages/core    @steady/core: pure TypeScript session plan, validation, scoring and progress
 specs/           one folder per feature (GitHub Spec Kit layout: spec.md, plan.md, tasks.md)
-docs/            design note and AI-assisted development log
+docs/            design note, deployment guide and AI-assisted development log
 ```
 
 ## Data model and API
@@ -82,6 +82,10 @@ See [docs/design-note.md](docs/design-note.md): which task and which apps I look
 - **TypeScript is pinned to 5.9.** typescript-eslint does not support TypeScript 7 (the native compiler) yet.
 - **One test convention: Vitest with `*.test.ts`,** instead of NestJS's default Jest. Cost: tests compile with SWC, because esbuild cannot emit the decorator metadata Nest's dependency injection needs.
 - **The API is built with plain `tsc` and run with `node`, without the Nest CLI.** `tsc` emits the decorator metadata; dev mode is `tsc --watch` next to `node --watch`.
+- **Every Nest dependency is named with `@Inject()`,** so the API does not rely on the compiler emitting decorator metadata; a test checks every injectable. tsx and esbuild (used by Vercel's NestJS preset) do not emit it, and Nest then injects `undefined`.
+- **Node 26 everywhere.** It is the Active LTS; `.nvmrc` (read by CI), `engines`, `@types/node`, the `volta` field and both Vercel projects name the same version, so tests run on what production runs.
+- **Two Vercel projects, not Vercel Services.** The web app is static files; the API is our own `tsc` build behind one serverless function (`src/serverless.ts`), and the web project forwards `/api` to it, so the browser stays on one origin. Services would deploy both as one project, but its NestJS preset compiles without decorator metadata and the API did not start. Cost: the web project names the API's domain in `apps/web/vercel.json`, and previews of the web app call the production API.
+- **Supabase is used only as PostgreSQL.** The API talks to it with `pg` and Drizzle like any Postgres, so local development (Docker) and production differ only in `DATABASE_URL`. Cost on Vercel: `@nestjs/throttler` is CommonJS and `require()`s ES-module-only Nest 12, which Vercel's runtime refuses unless `NODE_OPTIONS=--experimental-require-module` is set.
 - **Deny by default.** `PlayerGuard` is global, so a new route needs a token unless it is explicitly marked `@Public()` (only "create player" and health are).
 - **Players by token, one shared list.** A player is a random 256-bit token, looked up by its SHA-256 hash. The player id always comes from the token. Everyone sees every player and can pick any of them (Spec 016): the server keeps the tokens and `GET /api/players` lists them, a deliberate trade-off for this test project that a protected list would undo. Every session query filters on `player_id`, and another player's session returns `404`, the same as a missing one. Cost: a lost token means lost history.
 - **The server owns time and scoring.** The seed is chosen by the server and never returned, the exact trials are stored and scored, and a submission is rejected (`422`) if it arrives faster than the trials could have run or after 30 minutes. An identical retry returns the stored result; a different second submission returns `409`. The final write is conditional (`completed_at IS NULL`), so two concurrent submits cannot both win.
