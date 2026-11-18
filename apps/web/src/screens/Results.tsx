@@ -103,7 +103,7 @@ export function Results() {
       <StatusPage
         title="Session not found"
         primary={{ label: 'Back to home', to: '/' }}
-        secondary={{ label: 'See your progress', to: '/progress' }}
+        secondary={{ label: 'See your trends', to: '/progress' }}
       >
         This session does not belong to the current player, or it no longer exists.
       </StatusPage>
@@ -237,7 +237,7 @@ export function Results() {
           Back to home
         </Button>
         <Button to="/progress" variant="secondary" size="lg">
-          See your progress
+          See your trends
         </Button>
       </div>
     </section>

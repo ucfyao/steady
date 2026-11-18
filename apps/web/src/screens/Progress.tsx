@@ -92,11 +92,11 @@ export function Progress() {
     };
   }, [api, attempt]);
 
-  if (state.k === 'loading') return <Loading label="Loading your progress…" />;
+  if (state.k === 'loading') return <Loading label="Loading your trends…" />;
   if (state.k === 'error')
     return (
       <StatusPage
-        title="Could not load your progress"
+        title="Could not load your trends"
         alert
         primary={{
           label: 'Try again',
@@ -115,10 +115,8 @@ export function Progress() {
   if (sessions.length === 0)
     return (
       <section className={styles.progress}>
-        <h1 className="visually-hidden">Progress</h1>
-        <p className="headline">
-          No sessions yet. Your progress appears here after your first check.
-        </p>
+        <h1 className="visually-hidden">Trends</h1>
+        <p className="headline">No sessions yet. Your trends appear here after your first check.</p>
         <Button to="/play" size="lg">
           Start today&apos;s check
         </Button>
@@ -132,7 +130,7 @@ export function Progress() {
   return (
     <section className={styles.progress}>
       {/* The header names the screen; the summary is the first visible line (Spec 010). */}
-      <h1 className="visually-hidden">Progress</h1>
+      <h1 className="visually-hidden">Trends</h1>
       <p className="headline" data-testid="summary">
         {progressHeadline(summary)}
       </p>

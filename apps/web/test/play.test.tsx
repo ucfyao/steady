@@ -302,7 +302,7 @@ describe('Focus mode', () => {
     await startFromCheckIn();
     await countdown();
     expect(screen.queryByRole('banner')).toBeNull();
-    expect(screen.queryByRole('link', { name: 'Progress' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Trends' })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Player: / })).toBeNull();
     expect(screen.getByText('Starting…')).toBeInTheDocument();
     clock.advance(3100);

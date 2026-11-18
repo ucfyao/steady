@@ -125,7 +125,7 @@ describe('Shared player list (Spec 016)', () => {
     await screen.findByRole('button', { name: 'Player: Ben' });
     backend.registry.splice(1, 1);
     backend.unauthorized.add(ben.token);
-    await userEvent.click(screen.getByRole('link', { name: 'Progress' }));
+    await userEvent.click(screen.getByRole('link', { name: 'Trends' }));
     expect(await screen.findByText('That player no longer exists.')).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Player: Ava' })).toBeInTheDocument();
   });
