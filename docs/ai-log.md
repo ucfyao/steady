@@ -4,11 +4,11 @@ Steady is built with Claude Code as a pair programmer, under the workflow in [CL
 
 ## Summary
 
-69 entries, grouped by the kind of mistake.
+70 entries, grouped by the kind of mistake.
 
 | Kind of mistake                                                    | Entries | Caught by                                    |
 | ------------------------------------------------------------------ | ------- | -------------------------------------------- |
-| [Tests that could not fail](#tests-that-could-not-fail)            | 10      | Running each new test before the code exists |
+| [Tests that could not fail](#tests-that-could-not-fail)            | 11      | Running each new test before the code exists |
 | [Rules with no test](#rules-with-no-test)                          | 6       | Mutation checks                              |
 | [Races and flaky tests](#races-and-flaky-tests)                    | 5       | Full-suite runs, CI, injected delays         |
 | [Only visible in a real browser](#only-visible-in-a-real-browser)  | 12      | Screenshots and keyboard walkthroughs        |
@@ -113,6 +113,15 @@ The agent's deliberate break of the legend (listing every outcome) made the test
 
 - **Caught by:** The failure message on the restored code ("Unable to find … listitem")
 - **Fix:** The test reads the legend's items from the DOM; the break then failed on the list's contents and the real code passed
+
+### 70. One sky
+
+<sub>Spec 028, <a href="https://github.com/ucfyao/steady/pull/51">PR #51</a></sub>
+
+The agent's first test for "the header lies on the scene while a notice is shown" put a second player on the fake server before the app started. The fake gives tokens in order, so that player took the first token and became the only player; the switch never happened and the test failed waiting for the notice, not for the missing scene.
+
+- **Caught by:** The failure message ("Unable to find … That player no longer exists.") while confirming the new tests failed for the right reason
+- **Fix:** The test adds the second player through Manage players, as the Spec 014 test did; it then failed on the missing scene and passed with the change
 
 ## Rules with no test
 

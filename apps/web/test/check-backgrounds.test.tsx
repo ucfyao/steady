@@ -33,9 +33,9 @@ function renderPlay(variant: Variant, opts: { sessions?: CompletedSession[] } = 
 }
 
 const header = () => within(screen.getByRole('banner'));
-const checkScene = () => screen.queryByTestId('check-scene');
+const checkScene = () => screen.queryByTestId('page-scene');
 const sceneDawn = () =>
-  within(screen.getByTestId('check-scene')).getByTestId('scene').style.getPropertyValue('--dawn');
+  within(screen.getByTestId('page-scene')).getByTestId('scene').style.getPropertyValue('--dawn');
 const panel = () => screen.queryByTestId('check-panel');
 const howItWorks = () =>
   screen.findByRole('heading', { name: 'Catch every digit. Hold back on 3.' });
@@ -107,7 +107,7 @@ describe("the check's background per group (Spec 026 §2)", () => {
     expect(sceneDawn()).toBe('0.000');
   });
 
-  it('no scene while the check loads', async () => {
+  it('the scene while the check loads, with the waiting state in the panel (Spec 028 §1)', async () => {
     const backend = fakeBackend();
     backend.control.variant = 'calm';
     // Hold the check's own requests, so the screen is up but the group has not arrived.
@@ -131,8 +131,9 @@ describe("the check's background per group (Spec 026 §2)", () => {
         </MemoryRouter>
       </PlayersProvider>,
     );
-    await screen.findByText('Loading…');
-    expect(checkScene()).toBeNull();
+    const waiting = await screen.findByText('Loading…');
+    expect(checkScene()).not.toBeNull();
+    expect(panel()).toContainElement(waiting);
     release();
     await howItWorks();
     expect(checkScene()).not.toBeNull();
@@ -158,8 +159,9 @@ describe("the check's background per group (Spec 026 §2)", () => {
   it('leaving the check removes the scene', async () => {
     renderPlay('calm');
     await howItWorks();
-    await userEvent.click(screen.getByRole('link', { name: 'Steady' }));
-    await screen.findByRole('region', { name: "Today's check" });
+    // Trends has no scene (Spec 028 §1); Home now has one for calm too.
+    await userEvent.click(screen.getByRole('link', { name: 'Trends' }));
+    await screen.findByRole('heading', { level: 1, name: 'Trends' });
     expect(checkScene()).toBeNull();
   });
 });

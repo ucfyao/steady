@@ -73,13 +73,14 @@ Two choices in that table carry the most weight:
 
 ### Three groups: testing that fun does not change the measure
 
-The lantern design is a bet that the theme can live around the stimulus without moving the results, and the points add a second risk: a visible streak may make people slow down to keep it. Rather than assume, every new player is assigned one of three groups at random, for good (Specs 006, 008, 027):
+The lantern design is a bet that the theme can live around the stimulus without moving the results, and the points add a second risk: a visible streak may make people slow down to keep it. Rather than assume, every new player is assigned one of three groups at random, for good (Specs 006, 008, 027, 028):
 
-| Screen                | Plain (control)                    | Calm                                      | Game                                                                    |
-| --------------------- | ---------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| During the trials     | The original: bare digit, `⊗` mask | Lantern in a night scene, glow on a press | As calm, plus points, a multiplier, fireflies and a sky turning to dawn |
-| The rest of the check | No scene                           | The night scene                           | The scene at the last session's dawn                                    |
-| Home, Results, Trends | Same for all                       | Same for all                              | Also a personal best and a gallery of skies                             |
+| Screen                   | Plain (control)                    | Calm                                                         | Game                                                                      |
+| ------------------------ | ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| During the trials        | The original: bare digit, `⊗` mask | Lantern in a night scene, glow on a press                    | As calm, plus points, a multiplier, fireflies and a sky turning to dawn   |
+| Home, the check, Results | The page, no scene and no lantern  | The night scene behind the whole window, the lantern on Home | The same scene at the last session's dawn (on Results, the session's own) |
+| Trends, Manage players   | No scene                           | No scene                                                     | No scene; Trends adds a gallery of every session's sky                    |
+| Game extras              | None                               | None                                                         | A personal best on Home and a game summary on Results                     |
 
 The digit sequence, timing, probes and scoring never differ, so plain against calm measures the effect of the scene and calm against game the effect of the game layer. Points are game progress, not a measurement: they are derived from the scored trials and never stored, and the personal best is the highest dawn (the share of a session's maximum), not the most points, because an all-correct session's points depend on where the 3s fall.
 

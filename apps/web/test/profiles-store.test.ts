@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ACTIVE_KEY, loadActiveId, normaliseName, saveActiveId } from '../src/players/store.js';
+import {
+  ACTIVE_KEY,
+  GROUP_KEY,
+  loadActiveId,
+  loadGroup,
+  normaliseName,
+  saveActiveId,
+  saveGroup,
+} from '../src/players/store.js';
 
 // Spec 016: the players are on the server; this browser keeps only the selected id.
 describe('selected player', () => {
@@ -26,6 +34,39 @@ describe('selected player', () => {
     } as unknown as Storage;
     expect(loadActiveId(blocked)).toBeNull();
     expect(() => saveActiveId(blocked, 'p1')).not.toThrow();
+  });
+});
+
+// Spec 028: the selected player's group, for the scene while the list loads.
+describe('remembered group', () => {
+  it('saves, loads and clears the group', () => {
+    expect(loadGroup(localStorage)).toBeNull();
+    saveGroup(localStorage, 'game');
+    expect(localStorage.getItem(GROUP_KEY)).toBe('game');
+    expect(loadGroup(localStorage)).toBe('game');
+    saveGroup(localStorage, null);
+    expect(loadGroup(localStorage)).toBeNull();
+  });
+
+  it('ignores a value that is not a group', () => {
+    localStorage.setItem(GROUP_KEY, 'purple');
+    expect(loadGroup(localStorage)).toBeNull();
+  });
+
+  it('copes with storage that throws', () => {
+    const blocked = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    } as unknown as Storage;
+    expect(loadGroup(blocked)).toBeNull();
+    expect(() => saveGroup(blocked, 'calm')).not.toThrow();
   });
 });
 

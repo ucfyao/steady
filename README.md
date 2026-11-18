@@ -14,7 +14,7 @@ Press for every digit, hold back on 3. Steady measures how accurate, fast and ev
 
 [**Live demo**](https://steady-sand-ten.vercel.app) · [Design note](docs/design-note.md) · [Architecture](docs/architecture.md) · [Development log](docs/ai-log.md)
 
-<img src="docs/images/home.png" alt="Steady home screen: a glowing lantern in a night sky above a Start today's check button" width="800">
+<img src="docs/images/home.png" alt="Steady home screen: a glowing lantern in a dawn sky above a Start today&#39;s check button" width="800">
 
 </div>
 
@@ -54,7 +54,7 @@ Steady trains sustained attention with the **Sustained Attention to Response Tas
     <td width="70%">
       <img src="docs/images/results.png" alt="Results: the session from start to end, one square per digit">
       <br><br>
-      <img src="docs/images/trends.png" alt="Trends: four charts of the measures over twelve sessions">
+      <img src="docs/images/trends.png" alt="Trends: four charts of the measures over every session">
     </td>
   </tr>
   <tr>
@@ -247,7 +247,7 @@ Yes, throughout, as I would on the job. AI wrote much of the code; I set the wor
 - **Deliberate breakage:** after each change, every new rule is broken on purpose to confirm a test fails.
 - **Real use:** headless-browser runs against the real stack and my own play-tests, which found, for example, that the first game was too fast to learn.
 
-**Learning from mistakes.** Every time the AI's output was wrong or weak, it is recorded in the **[development log](docs/ai-log.md)** with how it was caught and the fix: 69 entries, grouped by kind, from tests that could not fail to layout faults only a browser shows. The log is not only a record: recurring lessons are turned into standing instructions so they do not happen again, as rules in [CLAUDE.md](CLAUDE.md) (for example "run `pnpm install` first in every new worktree" and "screens are remounted per player"), as the agent's persistent memory (check which dev servers are running before an end-to-end run, so tests never reach the production database), and as reusable skills, such as `worktree-workflow` for branches, worktrees and pull requests.
+**Learning from mistakes.** Every time the AI's output was wrong or weak, it is recorded in the **[development log](docs/ai-log.md)** with how it was caught and the fix: 70 entries, grouped by kind, from tests that could not fail to layout faults only a browser shows. The log is not only a record: recurring lessons are turned into standing instructions so they do not happen again, as rules in [CLAUDE.md](CLAUDE.md) (for example "run `pnpm install` first in every new worktree" and "screens are remounted per player"), as the agent's persistent memory (check which dev servers are running before an end-to-end run, so tests never reach the production database), and as reusable skills, such as `worktree-workflow` for branches, worktrees and pull requests.
 
 ## Deployment
 

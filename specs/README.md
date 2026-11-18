@@ -31,17 +31,18 @@ Later specs often refine earlier ones. The **Changed by** column points to where
 | [023](023-practice-track/spec.md)    | Practice shows its trials as it goes, and a result card  | Implemented |                         |
 | [024](024-points-explained/spec.md)  | Points that can be read and rules that are written down  | Implemented |                         |
 | [025](025-top-corner/spec.md)        | The multiplier and Stop on one line, in one style        | Implemented |                         |
-| [026](026-check-backgrounds/spec.md) | One background per group, and light/dark on every screen | Implemented | 027                     |
+| [026](026-check-backgrounds/spec.md) | One background per group, and light/dark on every screen | Implemented | 027, 028                |
 | [027](027-one-group/spec.md)         | One group per player, on every screen                    | Implemented |                         |
+| [028](028-one-sky/spec.md)           | One sky behind the page, on every screen of a group      | Implemented |                         |
 
 ## Home, Results and Trends
 
 | Spec                               | Title                                         | Status      | Changed by |
 | ---------------------------------- | --------------------------------------------- | ----------- | ---------- |
 | [007](007-home-redesign/spec.md)   | Home, Results and Progress around the lantern | Implemented |            |
-| [010](010-page-layout/spec.md)     | Page layout, panels and consistent states     | Implemented |            |
-| [014](014-full-bleed-hero/spec.md) | Home's night scene across the whole width     | Implemented |            |
-| [018](018-results-sky/spec.md)     | Results open on the session's sky             | Implemented |            |
+| [010](010-page-layout/spec.md)     | Page layout, panels and consistent states     | Implemented | 028        |
+| [014](014-full-bleed-hero/spec.md) | Home's night scene across the whole width     | Implemented | 028        |
+| [018](018-results-sky/spec.md)     | Results open on the session's sky             | Implemented | 028        |
 | [022](022-trends-name/spec.md)     | The Progress page is called Trends            | Implemented |            |
 
 ## Players and appearance

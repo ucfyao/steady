@@ -164,50 +164,33 @@
 }
 
 /*
- * The session's sky (Spec 018): the scene across the whole window width, from the top of the
- * page, as Home's hero (Spec 014). The conclusion and the game sit on it, on the content column.
+ * The session's sky (Spec 018, Spec 028): the conclusion and the game at the top of the page.
+ * For a calm or game session they sit on the scene behind the page, in the night colours, with
+ * room for the sky above them; a plain session has a headline on the page.
  */
 .sky {
-  --header-height: calc(2 * var(--space-7) + 2.25rem);
-
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  width: 100vw;
-  min-height: clamp(18rem, 40vh, 24rem);
-  margin-inline: calc(50% - 50vw);
   margin-bottom: var(--space-6);
-  padding: var(--space-6) 0 var(--space-8);
+}
+
+.onScene .sky {
+  min-height: clamp(12rem, 30vh, 18rem);
+  padding-bottom: var(--space-4);
   color: var(--night-text);
-  background: var(--night-bg);
 }
 
-/* The header lies on the sky: leave room for it, with a dark wash behind it. */
-:global([data-over-hero]) .sky {
-  padding-top: calc(var(--header-height) + var(--space-6));
-}
-
-:global([data-over-hero]) .sky::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 1;
-  height: calc(var(--header-height) * 1.6);
-  background: linear-gradient(180deg, rgb(20 22 40 / 0.6), transparent);
-  pointer-events: none;
-}
-
-/* A soft dark wash behind the text, as strong as the sky is light (as on Home). */
-.sky::after {
+/* A soft dark wash behind the text, as strong as the sky is light; it fades out inside the band. */
+.onScene .sky::after {
   content: '';
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse 80% 70% at 30% 75%,
+    closest-side at 35% 70%,
     rgb(20 22 40 / calc(0.15 + var(--dawn, 0) * 0.35)),
-    transparent 80%
+    transparent
   );
   pointer-events: none;
 }
@@ -215,16 +198,38 @@
 .skyInner {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding-inline: var(--gutter);
 }
 
-.sky .conclusion {
+.onScene .conclusion {
   max-width: 36rem;
   color: var(--night-text);
   text-shadow: 0 1px 14px rgb(20 22 40 / 0.55);
+}
+
+/* On the scene (Spec 028): the waiting, error and not-found states on a panel, as on the check. */
+.panel {
+  padding: var(--space-7);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-on-scene);
+  color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: var(--space-5);
+  }
+}
+
+/* On the scene, the secondary button takes the header's night colours. */
+.onScene .onSky {
+  color: var(--night-text);
+  border-color: rgb(236 230 218 / 0.4);
+}
+
+.onScene .onSky:hover:not(:disabled) {
+  border-color: var(--night-text);
 }
 
 /* The game first (Spec 006): points large, then the streak and the dawn. No card of its own. */
