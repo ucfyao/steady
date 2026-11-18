@@ -1,6 +1,6 @@
 # CLAUDE.md — instructions for AI coding agents
 
-Steady: a SART-based focus check. pnpm monorepo, TypeScript 5.9, Node 24, ESM everywhere.
+Steady: a SART-based focus check. pnpm monorepo, TypeScript 5.9, Node 26, ESM everywhere.
 Read `docs/design-note.md` for the product, and `specs/` for what is being built.
 
 ## Commands
