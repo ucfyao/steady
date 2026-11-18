@@ -1,86 +1,134 @@
-# Design Note — Steady: a three-minute daily focus check
+# Design note: Steady, a two-minute brain-training game for sustained attention
 
-## 1. The idea
+## 1. The problem, and three rules
 
-Steady is a calm attention game built on the **Sustained Attention to Response Task (SART)**, with brief **thought probes** that ask "where was your mind just now?". It shows how accurate, fast and steady your attention was today, compared with your own history, next to an optional sleep and stress check-in. It does not promise to make you smarter.
+**Who it is for.** Steady is built for people at work, offered by their employer as part of a wellbeing programme. Their scarcest resource is not time to train but attention that survives a day of meetings, messages and context switches. So the game has to fit between two meetings, train something they would recognise in their own day, and be safe to offer through an employer: nobody at the company should ever see one person's results.
 
-**[R]** marks claims from published research; **[P]** marks my own product decisions. The exact rules are in `specs/` and `packages/core/src/config.ts`.
+**What progress may claim.** Players reliably get better at a task they practise, but evidence that brain training carries over to general ability is weak [R] (Simons et al. 2016), and the FTC fined Lumosity $2M in 2016 for claiming otherwise. Popular apps also rank players against each other, while attention moves with sleep, stress and the time of day. So Steady trains one skill, **sustained attention**, shows real improvement at its own task, and compares each player only with their own starting point.
 
-## 2. What I looked at
+Three rules follow, and every choice below comes back to them:
 
-| Task              | Why considered                                                     | Decision                                                       |
-| ----------------- | ------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Stroop            | Inhibitory control; simple interaction                             | Measures conflict between word and colour, not focus over time |
-| N-back            | Working memory                                                     | Hard to learn; transfer claims contested                       |
-| Task switching    | Cognitive flexibility; fits a workday full of interruptions        | Strong alternative                                             |
-| PVT               | Vigilance; very sensitive to sleep loss [R] (Basner & Dinges 2011) | Little to engage players                                       |
-| Breath counting   | Validated measure of mindfulness [R] (Levinson et al. 2014)        | A browser cannot verify people's own counts                    |
-| **SART + probes** | **Sustained attention plus self-reflection**                       | **Selected**                                                   |
+1. **Measure one thing well, and claim only what the measure supports.**
+2. **Compare a player only with themselves.**
+3. **Make coming back worthwhile without changing what is measured.**
 
-| App      | What it does                                                                                                                  | What I took or avoided                                                          |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Lumosity | Many short games; a performance index (LPI); premium members see their LPI as a percentile against members of their age group | Took short daily sessions. Avoided a single index, percentiles and overclaiming |
-| Elevate  | Skill games with performance tracking that shows "how you compare with others"                                                | Avoided comparing players: you are compared only with your own history          |
+Rules 1 and 3 pull against each other, and that tension drives most of this note: whatever makes a game more fun can change the measurement. §3 resolves it in the design and then tests the resolution instead of assuming it.
 
-**Why SART**
+| The brief's question           | What I chose                                                                                                                                     | §      |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| Which game?                    | The SART with thought probes, over Stroop, N-back, task switching, PVT and breath counting                                                       | §2     |
+| How does it play?              | A digit on a lantern's glass in a night scene: the lantern-riddle idea, with the theme around the digit, never in it                             | §3     |
+| What keeps people coming back? | A loop at three time scales (seconds, minutes, weeks), every reward tied to the player's own play, and a team rewards economy designed for later | §3, §8 |
+| How is it scored fairly?       | Four measures computed on the server from raw presses; odd behaviour flagged, never rejected                                                     | §4, §5 |
+| How is progress shown?         | "Recent vs. where you started", in words, with ordinary noise shown as "Similar"                                                                 | §6     |
 
-- **It measures something linked to wellbeing.** Minds wandered in 46.9% of experience samples, and wandering was associated with lower happiness [R] (Killingsworth & Gilbert 2010).
-- **It connects to mindfulness.** 8 minutes of mindful breathing reduced SART markers of mind-wandering [R] (Mrazek et al. 2012).
-- **Its markers are well studied.** RT variability, anticipations and omissions are associated with disengagement [R] (Cheyne et al. 2009), and higher variability just before a probe with off-task reports [R] (Bastian & Sackur 2013; Seli et al. 2013b). This is a group-level association, so Steady shows it as a reflection prompt, not a detector.
-- **It doesn't overclaim.** Evidence for broad transfer from brain training is weak [R] (Simons et al. 2016), and the FTC fined Lumosity $2M in 2016 for unsubstantiated claims.
+**[R]** marks published research, **[P]** my own product decisions. Exact rules: [`specs/`](../specs/README.md) and `packages/core/src/config.ts`.
+
+## 2. Which game
+
+Beyond rule 1, the task had to be learnable in a minute and timeable in a browser.
+
+| Task              | Measures                                                           | Decision                                              |
+| ----------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
+| Stroop            | Inhibitory control                                                 | Conflict between word and colour, not focus over time |
+| N-back            | Working memory                                                     | Hard to learn; transfer claims contested              |
+| Task switching    | Cognitive flexibility                                              | Strong alternative, left for later (§9)               |
+| PVT               | Vigilance, very sensitive to sleep loss [R] (Basner & Dinges 2011) | Little to engage players                              |
+| Breath counting   | Mindfulness [R] (Levinson et al. 2014)                             | A browser cannot verify people's own counts           |
+| **SART + probes** | **Sustained attention, and where the mind was**                    | **Selected**                                          |
+
+From the apps I took Lumosity's short daily sessions, but not its single performance index shown as a percentile within an age group, and not Elevate's "how you compare with others" (rule 2).
+
+The **Sustained Attention to Response Task** (press for every digit except 3) measures what a workday erodes: minds wandered in 46.9% of experience samples, and wandering went with lower happiness [R] (Killingsworth & Gilbert 2010). Its markers are well studied: RT variability, anticipations and omissions go with disengagement [R] (Cheyne et al. 2009), and higher variability before a thought probe with off-task reports [R] (Bastian & Sackur 2013; Seli et al. 2013b). The probes ("where was your mind just now?") turn a measurement into a moment of reflection. The link holds for groups, not individuals, so Steady offers it as a prompt, never as a detector.
 
 ## 3. How it plays, and what brings people back
 
-- **Task [R]:** digits 1–9; press for every digit except **3**. Each trial is a 250 ms digit and a 900 ms mask, in 5 font sizes (Robertson et al. 1997; PsyToolkit). The digit sits on the glass of a lantern in a night scene, and the mask is the glass misting over [P]: it covers the digit's place like the original `⊗`, but as a texture, because play-testers read the black `⊗` as "wrong answer" (Spec 006).
-- **Length [P]:** 81 trials (9 of each digit, so 11% no-go as in the original) with 3 probes take **about 2 minutes**. A walkthrough as a new player found the earlier 126 trials (about 5 minutes on a first visit) too long (Spec 005). That is much shorter than the standard 225 trials, so error rates are noisier (one 3 moves the catch rate by 11 points), and this version has not been validated.
-- **Fair sequences [P]:** the server picks a seed for each session; it fixes a balanced digit order and the probe positions, and is never sent to the browser.
-- **Practice [P]:** the rules are shown as steps before every session and say that everyone presses on some 3s. A first play-test at full speed was impossible to follow, so the first session's practice (12 digits, about 30 seconds) **starts slow and ends at the real speed**. The real session always uses the standard timing, so results stay comparable.
-- **A press is acknowledged at once [P]:** the lantern glows after a press on a digit and flickers red after a press on a 3, as PsyToolkit's SART 2 turns its mask green after a correct press. The glow follows the press, so it cannot change that press's time.
-- **Points, as an experiment [P]:** in the gamified go/no-go literature, points left the data intact and made the task more enjoyable, while themed stimuli raised no-go errors by 28% [R] (Lumsden et al. 2016). So the digits stay plain, and the _game_ variant adds points around them: 10 per steady press, 30 per 3 held back, a multiplier that grows with the streak (×2 from 5, ×3 from 15, ×5 from 30), fireflies for the streak and a sky that turns from night to dawn, in the spirit of _Tenacity_, where the landscape responds to the player [R] (Patsenko et al. 2019). A visible streak may make people slow down to keep it, which would change the speed and rhythm Steady measures, so players are split three ways: _game_; _calm_ (the lantern and the glow, no points); and _plain_, the original screen with a bare digit and the `⊗` mask, as the control for the scene itself; plain sees no scene on any screen, while calm and game have it behind every screen around the check (Spec 028). Every session records its variant for a comparison between the groups (Specs 006 and 008). Points are never stored or sent: they are always derived from a session's trial outcomes with one rule, so the count during the block and the count afterwards cannot differ. The reward after the block stays: the _session journey_ ribbon and the longest steady run.
-- **Weekly target (4 of 7 days), not a daily streak.** A streak drops to zero after one missed day, but missing one opportunity did not materially affect habit formation in a 12-week study [R] (Lally et al. 2010). A focus check is also most useful on a bad day, and a flexible target removes the pressure to play only to keep a count [P].
-- **No leaderboards or percentiles:** comparing attention with colleagues would discourage honest use, and a shortened task has no norms to rank against.
-- **Something to collect (game variant) [P]:** a personal best, and a gallery of the sky each session reached, from night to dawn (Spec 007). Both use the dawn and points derived from the server's trial outcomes; neither is a measurement or a comparison with anyone else.
-- **Coming back pays off in comparison:** from session 3, Results compares today with your earlier sessions, and from session 7 with where you started.
+### From digits to lanterns
 
-## 4. Scoring
+The SART's weakness as a game is that it is dull: digits flash on a blank screen, and the right move is mostly to keep pressing. The obvious fix is to theme the stimuli themselves, replacing digits with characters or pictures to spot. But that changes the task: in a gamified go/no-go study, points left the data intact while themed stimuli raised no-go errors by 28% [R] (Lumsden et al. 2016). Theming the thing you react to changes how you react.
 
-All scoring runs **on the server, from the raw trial data**, which is stored unchanged with a `scoring_version`, so history can be re-scored when the rules change. The client never sends a score. There is no composite score:
+The answer came from **lantern riddles** (猜灯谜): at the Chinese Lantern Festival, riddles are written on lanterns, and people walk from lantern to lantern, reading each one and deciding whether to answer. That is the SART's own rhythm, one item at a time and a decision each time, and it puts the theme **around** the item rather than in it. So in Steady [P]:
 
-| Metric                | Definition                                                                               |
-| --------------------- | ---------------------------------------------------------------------------------------- |
-| Commission error rate | Presses on a 3 ÷ 9, shown as catch rate ("8 of 9")                                       |
-| Omission rate         | Missed presses on go digits ÷ 72                                                         |
-| Median go RT          | Median RT of correct go trials                                                           |
-| RT variability (CV)   | SD ÷ mean of the same trials; lower = steadier                                           |
-| d′ (secondary)        | Log-linear corrected [R] (Hautus 1995; Stanislaw & Todorov 1999); labelled noisy (n = 9) |
+- **The digit stays the research stimulus,** written on the glass of a lantern in a night scene, at the standard timing.
+- **The mask becomes the glass misting over.** It covers the digit's place like the original `⊗`, which play-testers read as "wrong answer" (Spec 006).
+- **The lantern answers every press:** it glows after a press and flickers red on a 3, as PsyToolkit's SART 2 turns its mask green. The glow follows the press, so it cannot change its time.
+- **The name follows the image:** attention as a light you keep steady through the night.
 
-- **What counts as a good result:** there is no pass mark. In standard SART studies people typically press on 30–50% of no-go digits and miss 5–10% of go digits [R] (Wilson et al. 2016), so pressing on some 3s is normal. Those figures come from longer versions and other samples, so they are not shown as norms; a result is judged against the player's own history (§6).
-- **Speed–accuracy trade-off [R]:** slower responding reduces errors (Seli et al. 2013a), so errors are always shown next to median RT and never ranked alone.
-- **Mistakes and outliers [P]:** presses under 100 ms are anticipations; the 1150 ms response window bounds the slow end. The first 5 trials and the 3 after each probe count for accuracy but not for RT, because slowing after an interruption is not mind-wandering. With fewer than 10 usable RTs, RT statistics are left empty rather than estimated.
+The task itself stays as researched: a 250 ms digit and a 900 ms mask, in five font sizes [R] (Robertson et al. 1997; PsyToolkit), so results stay comparable with the research and between sessions. Play-tests changed only what makes it learnable [P]: **81 trials and 3 probes** (about two minutes; 126 felt too long, at the cost of noisier error rates than the standard 225 and an unvalidated version), and **practice that starts at an 800 ms digit** and ends at the real speed, because a new player could not keep up at full speed.
 
-## 5. Data integrity vs. behaviour
+### The loop that brings people back
 
-- **Technical problems reject a session:** trials that do not match the server's plan, more than one response per trial, timestamps out of order, or a session that finished faster than its trials allow. Leaving the tab voids a session; an unsubmitted one expires after 30 minutes and is never scored.
-- **Behaviour is only flagged [P]:** many omissions, many anticipations (the 100 ms cut-off is borrowed from the PVT's false-start rule, Basner & Dinges 2011), or machine-like regular timing (RT CV < 0.05). Flagged sessions **stay in trends** with a marker: excluding them would hide exactly the players who are struggling.
-- The server never labels a session as cheating. The checks make faking costly, but browser input can't be fully trusted.
+A habit needs a reason to return at every time scale: something during the session, something right after it, and something across the weeks. Each layer gives feedback, a goal or a sense of progress, and each is tied to the player's own play, never to other people (rule 2).
 
-## 6. Trends
+| Time scale                       | Feedback                                                                                       | Goal                                                                            | Sense of progress                                                                                        |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Seconds** (during the session) | The lantern glows on a press, flickers on a 3                                                  | Game: keep the streak, raise the multiplier (×2 from 5, ×3 from 15, ×5 from 30) | Game: fireflies gather with the streak, and the night sky turns towards dawn                             |
+| **Minutes** (right after)        | A one-sentence result, and the whole session as a ribbon of digits with its longest steady run | Game: a new personal best (the highest dawn)                                    | From session 3, today against your earlier sessions; from session 7, against where you started           |
+| **Weeks** (across sessions)      | A week of seven lanterns on Home, lit for each day played                                      | **4 of 7 days, not a streak**                                                   | Trends: recent vs. where you started, in words, then charts (§6); game: a gallery of every session's sky |
 
-- **Starting point [P]:** the median of sessions 2–6, fixed once set (session 1 is practice). **Recent [P]:** the median of the last 5 sessions. The Trends page (named neutrally, because a trend can also stay flat or fall: Spec 022) reads "recent vs. where you started", with an arrow and words per metric, and one summary sentence in the same words as Results.
-- **Noise band [P]:** a change within ordinary session-to-session noise reads "Similar" (≈), not better or worse: for example, one extra caught 3 is not progress.
-- **Charts:** catch rate, omissions, median RT and RT variability side by side, so speed and accuracy are always seen together.
-- **Exploratory patterns** are collapsed below the charts. A sleep or stress split is drawn only once two groups have **at least 10 sessions**, as raw dots with `n` and a median, and is worded "a pattern so far, not a cause". Variability before probes is shown in the same descriptive way.
+Two choices in that table carry the most weight:
 
-## 7. Privacy and security
+- **A weekly target, not a daily streak.** A streak turns one missed day into a loss, yet missing one opportunity did not materially affect habit formation over 12 weeks [R] (Lally et al. 2010). And the most informative session is the one on a bad day, which a streak discourages people from playing.
+- **No leaderboards.** Ranking colleagues would turn an honest check into a performance, and a shortened task has no norms to rank against.
 
-- **Players:** a player is a random 256-bit token. Player IDs never come from URLs or bodies, every query is scoped to the token's player, and another player's session is a `404`. Steady is a test project whose deployments we control, so everyone sees every player and can pick any of them (Spec 016): the server keeps each token and `GET /api/players` hands them out. Making it private again means only that this list stops returning tokens. The only personal detail stored is the name a player types (Spec 013: needed so the same player shows the same name in any browser); no email is collected, and `DELETE /me` removes everything. There is no recovery by design.
-- **Operator view, designed but not built:** an employer or operator would see aggregates only, with separate sign-in, at least 10 players per group and no drill-down to a person (OAIC APP 3 and APP 11). It is not built because aggregates need real players, and charts from invented data would break §6. Design and wireframe: [operator-view.md](operator-view.md).
+### Three groups: testing that fun does not change the measure
 
-## 8. Trade-offs and limitations
+The lantern design is a bet that the theme can live around the stimulus without moving the results, and the points add a second risk: a visible streak may make people slow down to keep it. Rather than assume, every new player is assigned one of three groups at random, for good (Specs 006, 008, 027, 028):
 
-- **Storing exact trials and raw responses** costs space but makes every result recomputable and auditable.
-- **Not a clinical tool:** browser timing adds jitter; keyboard and touch differ, so each session records its input device; practice effects inflate early gains; all insights are within-person and exploratory.
-- **With more time:** an n-of-1 experiment where players sometimes do mindful breathing first, assigned at random; a speed–accuracy-corrected error score; a task-switching mode.
+| Screen                   | Plain (control)                    | Calm                                                         | Game                                                                      |
+| ------------------------ | ---------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| During the trials        | The original: bare digit, `⊗` mask | Lantern in a night scene, glow on a press                    | As calm, plus points, a multiplier, fireflies and a sky turning to dawn   |
+| Home, the check, Results | The page, no scene and no lantern  | The night scene behind the whole window, the lantern on Home | The same scene at the last session's dawn (on Results, the session's own) |
+| Trends, Manage players   | No scene                           | No scene                                                     | No scene; Trends adds a gallery of every session's sky                    |
+| Game extras              | None                               | None                                                         | A personal best on Home and a game summary on Results                     |
+
+The digit sequence, timing, probes and scoring never differ, so plain against calm measures the effect of the scene and calm against game the effect of the game layer. Points are game progress, not a measurement: they are derived from the scored trials and never stored, and the personal best is the highest dawn (the share of a session's maximum), not the most points, because an all-correct session's points depend on where the 3s fall.
+
+## 4. Scoring: what counts as a good result
+
+A single score would hide the trade-offs that make SART results meaningful (rule 1), so a session has four measures: **3s held back** (of 9), **digits missed** (of 72), **typical response time** (median RT of correct presses) and **how much the timing varied** (SD ÷ mean). d′ is kept as a secondary measure [R] (Hautus 1995; Stanislaw & Todorov 1999), labelled noisy because it rests on 9 no-go trials.
+
+- **No pass mark.** People typically press on 30–50% of no-go digits and miss 5–10% of go digits [R] (Wilson et al. 2016), so pressing on some 3s is normal, and the rules say so before every session. Those figures come from longer versions, so they are not shown as norms: a good result holds or improves against your own history.
+- **Speed and accuracy are always shown together,** because slowing down reduces errors [R] (Seli et al. 2013a).
+- **Mistakes and outliers [P]:** presses under 100 ms are anticipations (the PVT's false-start rule); the 1150 ms window bounds the slow end. The first 5 trials and the 3 after each probe count for accuracy but not speed, since slowing after an interruption is not mind-wandering. With fewer than 10 usable RTs, speed is left empty rather than estimated.
+
+## 5. Fair play: mistakes, cheating and trust
+
+A score is fair only if nobody, the player's own browser included, can choose it. That matters more once rewards are attached (§8). So **the server owns the sequence, the clock and the score:** it picks a seed it never sends, stores the exact trials, accepts only raw presses and scores them with one pure function, keeping the raw data so history can be re-scored.
+
+- **Technical problems reject a session:** presses that do not match the trials, impossible timing, or a session older than 30 minutes. Leaving the page voids it.
+- **Behaviour is only flagged [P]:** many omissions, many anticipations or machine-like regular timing. Flagged sessions stay in the trends: dropping them would hide the players who are struggling.
+
+The server never calls a session cheating. Browser input cannot be fully trusted; the checks make faking costly, not impossible.
+
+## 6. Showing progress
+
+A list of numbers says what happened, not whether anything changed. Trends answers that in one sentence, for example **"Your last 5 checks: better than where you started at keeping an even rhythm."**
+
+- **Recent vs. where you started [P]:** the median of the last 5 sessions against a fixed starting point, the median of sessions 2–6 (session 1 is practice). Medians, so one odd session cannot swing it.
+- **Noise is named [P]:** a change within ordinary session-to-session noise reads "Similar"; one extra 3 held back is not progress.
+- **Words first, then charts:** an arrow and a word per measure, then the four charts side by side, so speed and accuracy are read together.
+- **Patterns that never overclaim:** sleep and stress splits appear only once two groups have at least 10 sessions, as raw dots with `n`, worded "a pattern so far, not a cause".
+
+## 7. Players, privacy and teams
+
+Each player sees only their own data: a player is a random token, every query is scoped to it, and another player's session is a `404`. For the demo the server also lists every player, so anyone can pick one (Spec 016); making that list private changes one route, not the isolation.
+
+An employer would want to know whether the programme works without seeing anyone's attention scores. The **operator view** gives aggregates only: active players, the share meeting the weekly target, and each measure per group, with at least 10 players per group and no drill-down to a person (OAIC APP 3 and APP 11). It is designed but not built, because it needs real players: [operator-view.md](operator-view.md).
+
+## 8. Beyond the demo: a rewards economy for teams
+
+For an employer, the strongest lever for coming back is not inside the game but around it. I designed, but did not build, a rewards economy:
+
+- **Points for showing up:** each session played, and each week that reaches 4 of 7 days, earns points, with a bonus for consistent weeks.
+- **A rewards store:** points are exchanged for prizes the employer funds, from a coffee to an extra wellbeing day.
+- **Further on, a digital currency:** points issued as a token that can be held, transferred or spent with partner merchants, so the reward is worth something outside the app.
+
+One rule keeps the economy from breaking the measurement: **rewards follow participation, never performance.** Paying for scores would invite exactly the gaming §5 guards against, would punish people on bad days, and would turn an honest check into a performance (rules 1 and 2). The in-game points of §3 stay what they are, a game layer that buys nothing. Server-owned sessions (§5) and the weekly target (§3) are the foundation it would be built on. It is left out of the demo because its value depends on real teams, real prizes and decisions (budgets, tax, regulation for a token) that belong to the employer.
+
+## 9. Trade-offs and what next
+
+Storing raw presses costs space but makes every result auditable; a two-minute session makes the habit realistic and the numbers noisier, which the noise band answers. With more time: the group comparison of §3 once there are enough players; the rewards economy of §8 with a pilot team; an n-of-1 experiment with a minute of mindful breathing first on random days; an error score corrected for speed; and a task-switching mode. Limitations and technical trade-offs are in the [README](../README.md#assumptions-limitations-and-next-steps).
 
 ## Sources
 

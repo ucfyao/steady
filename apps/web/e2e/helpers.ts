@@ -85,7 +85,14 @@ export async function asNewPlayer(page: Page, request: APIRequestContext, prefix
     token: string;
   }[];
   const id = list.find((p) => p.token === token)!.id;
+  // Select the player before the app's own code runs: written after load, the app could save
+  // its first-listed player over it once the list arrives. Only on the tab's first page, so a
+  // later switch in the menu survives navigation.
+  await page.addInitScript((selected) => {
+    if (sessionStorage.getItem('e2e.playerSelected')) return;
+    sessionStorage.setItem('e2e.playerSelected', '1');
+    localStorage.setItem('steady.activePlayer.v1', selected);
+  }, id);
   await page.goto('/');
-  await page.evaluate((selected) => localStorage.setItem('steady.activePlayer.v1', selected), id);
   return name;
 }

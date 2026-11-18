@@ -67,7 +67,7 @@ Redeploy after changing settings. Check: `https://<api domain>/api/health` retur
 
 ### 3. Web project
 
-Import the same repository again with root directory `apps/web`, framework preset Vite and Node.js 26.x. It needs no environment variables. `apps/web/vercel.json` forwards `/api` to the API's production domain (`steady-api-bay.vercel.app`); if that domain changes, change the URL there.
+Import the same repository again as project `steady` (here `steady-sand-ten.vercel.app`) with root directory `apps/web`, framework preset Vite and Node.js 26.x. It needs no environment variables. `apps/web/vercel.json` forwards `/api` to the API's production domain (`steady-api-bay.vercel.app`); if that domain changes, change the URL there.
 
 Check: open the site and play a full session through to results and progress.
 

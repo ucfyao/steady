@@ -1,135 +1,288 @@
+<div align="center">
+
 # Steady
 
-A two-minute daily focus check built on the Sustained Attention to Response Task (SART) with thought probes. Take-home assignment for Walk the Dragon.
+**A two-minute brain-training game for sustained attention, built on a well-studied research task.**
 
-> **Status:** complete for the assignment's scope. The scoring and progress core (Specs 001–002), the API (Spec 003) and the web app (Spec 004: player profiles, the game, results and progress) are done, with unit, integration and end-to-end tests in CI.
+Press for every digit, hold back on 3. Steady measures how accurate, fast and even your attention was today, and compares it only with your own history.
 
-## Quick start
+[![CI](https://github.com/ucfyao/steady/actions/workflows/ci.yml/badge.svg)](https://github.com/ucfyao/steady/actions/workflows/ci.yml)
+![Node 26](https://img.shields.io/badge/node-26-339933?logo=node.js&logoColor=white)
+![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
+![pnpm 10](https://img.shields.io/badge/pnpm-10-F69220?logo=pnpm&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Requires Node ≥ 26 (`nvm use` reads `.nvmrc`; Volta reads the `volta` field in `package.json`), pnpm 10 (`corepack enable` provides the version pinned in `package.json`) and Docker running. The first `pnpm bootstrap` pulls the `postgres:17-alpine` image, which can take a minute.
+[**Live demo**](https://steady-sand-ten.vercel.app) · [Design note](docs/design-note.md) · [Architecture](docs/architecture.md) · [Development log](docs/ai-log.md)
+
+<img src="docs/images/home.png" alt="Steady home screen: a glowing lantern in a dawn sky above a Start today&#39;s check button" width="800">
+
+</div>
+
+<details>
+<summary><b>Contents</b></summary>
+
+- [Overview](#overview)
+- [Getting started](#getting-started)
+- [Design](#design)
+- [How it works](#how-it-works)
+- [Key technical decisions](#key-technical-decisions)
+- [Testing](#testing)
+- [Assumptions, limitations and next steps](#assumptions-limitations-and-next-steps)
+- [Time spent](#time-spent)
+- [AI tools](#ai-tools)
+- [Deployment](#deployment)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+
+</details>
+
+## Overview
+
+Steady trains sustained attention with the **Sustained Attention to Response Task (SART)**, a standard research task for lapses of attention, and short **thought probes** that ask where your mind just was. Every session is saved and scored on the server, and progress is shown against the player's own starting point: honest about what improved, and never a promise of general brain gains or a rank against others.
+
+### Features
+
+- **Two minutes a day:** 81 trials and 3 probes at the standard SART timing, after a practice round that starts slow.
+- **Four honest measures, no composite score:** 3s held back, digits missed, typical response time and how even the timing was, always side by side.
+- **Progress in words:** "recent vs. where you started", with ordinary noise shown as "Similar", and charts per measure.
+- **Several players, each seeing only their own data,** with no login required.
+- **Three groups** (plain, calm lantern, game with points) to test whether the game layer changes what is measured.
+
+<table>
+  <tr>
+    <td width="30%"><img src="docs/images/home-phone.png" alt="Home on a phone in the light theme"></td>
+    <td width="70%">
+      <img src="docs/images/results.png" alt="Results: the session from start to end, one square per digit">
+      <br><br>
+      <img src="docs/images/trends.png" alt="Trends: four charts of the measures over every session">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Home on a phone</sub></td>
+    <td align="center"><sub>Results (each square is a digit) and Trends</sub></td>
+  </tr>
+</table>
+
+### Built with
+
+| Layer   | Technology                                                          |
+| ------- | ------------------------------------------------------------------- |
+| Web     | React 19, TypeScript, Vite 8, React Router, Recharts, CSS Modules   |
+| API     | Node.js 26, TypeScript, NestJS 12, Drizzle ORM, Pino                |
+| Core    | Framework-free TypeScript with Zod: session plan, scoring, progress |
+| Data    | PostgreSQL 17 (Docker locally, Supabase in production)              |
+| Tests   | Vitest, Testing Library, Testcontainers, Playwright                 |
+| Hosting | Vercel (static web app, one serverless function), GitHub Actions CI |
+
+## Getting started
+
+Setup takes about five minutes, most of it the first download of dependencies and the Postgres image.
+
+**Prerequisites:** Node.js 26 (`nvm use` reads `.nvmrc`), pnpm 10 (`corepack enable` installs the pinned version) and Docker running.
 
 ```bash
-pnpm install        # also builds @steady/core
-pnpm bootstrap      # creates .env, starts Postgres 17 (Docker, host port 5433), runs migrations, sets up the demo players
-pnpm dev            # web app on http://localhost:5173, API on http://localhost:4000/api
-pnpm seed:demo      # refreshes the six demo players (O- old, N- new; A plain, B calm, C game)
-pnpm check          # core build, lint, format check, typecheck, all tests (API tests need Docker running)
+git clone https://github.com/ucfyao/steady.git
+cd steady
+pnpm install     # installs dependencies and builds @steady/core
+pnpm bootstrap   # creates .env, starts Postgres 17 in Docker (port 5433), runs migrations, seeds demo players
+pnpm dev         # web on http://localhost:5173, API on http://localhost:4000/api
 ```
 
-The `.env` that `pnpm bootstrap` creates points to Supabase: put the database password in `DATABASE_URL` and rerun `pnpm bootstrap`, or switch to the commented Docker URL to work offline. Migrations and the demo players go to whichever database `DATABASE_URL` names.
+Open http://localhost:5173. A first visit starts with how-to-play steps and a short practice round; a full session takes about two minutes.
 
-Open http://localhost:5173. The first visit creates a player and starts with a how-to-play screen and a short practice round; a full session takes about two minutes. To try a second player on the same device, open **Manage players** from the avatar menu (top right), add one, then switch to it in the same menu.
+| Command          | What it does                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| `pnpm dev`       | Web, API and core in watch mode                                                    |
+| `pnpm check`     | Core build, lint, format check, typecheck and all tests (CI runs the same command) |
+| `pnpm e2e`       | Playwright end-to-end tests against the real stack (about 4 minutes)               |
+| `pnpm seed:demo` | Rebuilds the six demo players                                                      |
 
-To see Trends without playing ten sessions, use the demo players. `pnpm bootstrap` sets them up (and `pnpm seed:demo` refreshes them): an old and a new one per group (Specs 011 and 013), the first name's initial standing for the group (A plain, B calm, C game). O-Ava, O-Ben and O-Cleo each have 10 sessions over the past two weeks (session 1 not counted, sessions 2–6 the starting point, some with a check-in), scored by the same `scoreSession` as the API, with only the key presses simulated; N-Amy, N-Bella and N-Cora have none, to try a new player's first visit in each group. Their tokens are fixed, so a rerun rebuilds the same players (history as of today, the new players emptied again) instead of adding copies. Every player is in everyone's list (Spec 016), so with `pnpm dev` running, pick one in the avatar menu. Switching between the three in the avatar menu shows each variant on every screen; in development the menu shows each player's group. The script writes to the database directly: the API accepts only a session that was just played. It runs from source with `tsx` and writes nothing to `apps/api/dist`, so running it while `pnpm dev` is up does not restart the API.
+Before the first `pnpm e2e`, install the browser once: `pnpm --filter @steady/web exec playwright install chromium`.
 
-The Docker Compose project is always named `steady`, so every checkout and worktree of the repository shares one Postgres container and one data volume (`steady_pgdata`).
+### Demo players
 
-End-to-end tests (real browser, API and database; about 4 minutes, because sessions run in real time):
+`pnpm bootstrap` (and `pnpm seed:demo` at any time) creates six players, a returning and a new one in each group, so every state can be shown without playing ten sessions. Switch between them in the avatar menu (top right). The same six are on the [live demo](https://steady-sand-ten.vercel.app), where visitors may have added sessions.
 
-```bash
-pnpm --filter @steady/web exec playwright install chromium   # once
-pnpm bootstrap && pnpm e2e
+| Group                                                                     | Returning player | New player |
+| ------------------------------------------------------------------------- | ---------------- | ---------- |
+| **Plain:** the original SART screen, a bare digit and the `⊗` mask        | O-Ava            | N-Amy      |
+| **Calm:** the lantern scene and its glow, no points                       | O-Ben            | N-Bella    |
+| **Game:** the lantern with points, a multiplier, fireflies and a dawn sky | O-Cleo           | N-Cora     |
+
+`O-` is a returning (old) player and `N-` a new one; the first name's initial gives the group (**A** plain, **B** calm, **C** game). Why there are three groups, and what is the same in all of them: [design note, Three groups](docs/design-note.md#three-groups-testing-that-fun-does-not-change-the-measure).
+
+- **Returning players** have 10 scored sessions over two weeks, 7 with a sleep or stress check-in: session 1 is not counted, sessions 2–6 set the starting point, and 3 of the last 7 days are played, one short of the weekly target. Use them for Home with history, Results compared with the starting point, and Trends; O-Cleo also has a personal best and a gallery of skies.
+- **New players** have no sessions. Use them for a first visit: how-to-play, practice and the first Results.
+
+The tokens are fixed, so rerunning the seed rebuilds the same six players (history relative to today) instead of adding copies.
+
+### Use Supabase instead of Docker
+
+Steady uses Supabase only as PostgreSQL, so switching is a matter of `DATABASE_URL`: copy the project's **session pooler** URL (under **Connect**), set it in `.env` in place of the Docker one (the commented example shows the shape, with `?sslmode=no-verify`), and run `pnpm bootstrap` again. Migrations and demo players always go to whichever database `DATABASE_URL` names. Hosting on Vercel: [docs/deployment.md](docs/deployment.md).
+
+## Design
+
+The full reasoning, options and sources are in the **[design note](docs/design-note.md)**. In short, three rules decide every choice: measure one thing well and claim only what it supports; compare a player only with themselves; make coming back worthwhile without changing what is measured.
+
+| Question                 | Choice                                                                                                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Which game?              | SART with thought probes, chosen over Stroop, N-back, task switching, PVT and breath counting                                                                                                             |
+| How does it play?        | The digit on a lantern's glass in a night scene, after the lantern-riddle game: the theme sits around the digit, never in it                                                                              |
+| How is it scored fairly? | Four measures computed on the server from raw presses; no pass mark, only your own history; odd behaviour flagged, not rejected                                                                           |
+| What brings people back? | A loop at three time scales: instant feedback from the lantern, a result and comparison after each session, a weekly target of 4 of 7 days instead of a streak; a team rewards economy designed for later |
+| How is progress shown?   | "Recent vs. where you started", in words, with a noise band, then charts with speed and accuracy side by side                                                                                             |
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    participant B as Browser (apps/web)
+    participant A as API (apps/api)
+    participant C as @steady/core
+    participant D as PostgreSQL
+
+    B->>A: POST /api/sessions
+    A->>C: plan from a server-chosen seed
+    A->>D: store the exact trials
+    A-->>B: trials (never the seed)
+    Note over B: play: onsets from frame timestamps
+    B->>A: POST /api/sessions/:id/submit (raw presses)
+    A->>C: validateSubmission + scoreSession
+    A->>D: store raw presses and score
+    A-->>B: score and per-trial outcomes
 ```
 
-(`pnpm setup` is a pnpm built-in, so the setup script is called `bootstrap`.)
-
-## Repository layout
-
 ```
-apps/api         @steady/api: NestJS 12 + Drizzle + PostgreSQL 17
-apps/web         @steady/web: React 19 + Vite 8
-packages/core    @steady/core: pure TypeScript session plan, validation, scoring and progress
-specs/           one folder per feature (GitHub Spec Kit layout: spec.md, plan.md, tasks.md)
-docs/            design note, deployment guide and AI-assisted development log
+apps/
+  api/        NestJS 12 + Drizzle + PostgreSQL 17: players, sessions, progress, health
+  web/        React 19 + Vite 8: Home, the check, Results, Trends, Manage players
+packages/
+  core/       Pure TypeScript: session plan, validation, scoring, progress, Zod contracts
+specs/        One folder per feature: spec.md, plan.md, tasks.md (index in specs/README.md)
+docs/         Design note, architecture, deployment, operator view, development log
 ```
 
-## Data model and API
-
-Two tables (`apps/api/src/db/schema.ts`):
-
-| Table      | Columns                                                                                                                                                                       | Notes                                                                                                                                      |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `players`  | `id`, `token_hash` (unique), `created_at`                                                                                                                                     | Nothing personal: a player is only the hash of their token                                                                                 |
-| `sessions` | `id`, `player_id` → `players` (cascade delete), `seed`, `trials`, `probe_after`, `check_in`, `device`, `started_at`, `completed_at`, `submission`, `score`, `scoring_version` | One row per session; trials, raw submission and score are JSONB. Indexed on `(player_id, completed_at)`. `completed_at` is null while open |
-
-All routes are under `/api`, and all need `Authorization: Bearer <token>` except the two marked public:
-
-| Route                       | What it does                                                                                                               |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `POST /players` (public)    | Creates a player; returns the token once                                                                                   |
-| `DELETE /me`                | Deletes the player and all their sessions                                                                                  |
-| `POST /sessions`            | Starts a session: the server picks the seed, stores the exact trials and returns them (never the seed)                     |
-| `POST /sessions/:id/submit` | Validates the responses against the stored trials and the server's clock, scores them with `scoreSession`, and stores both |
-| `GET /sessions`             | The player's completed sessions with their scores                                                                          |
-| `GET /progress`             | Baseline, recent performance and the exploratory comparisons, all computed by `@steady/core`                               |
-| `GET /health` (public)      | Database health                                                                                                            |
-
-A session's life: `POST /sessions` → play in the browser (timing recorded from frame timestamps) → `POST /sessions/:id/submit` → `400` if the responses do not match the trials, `422` if the timing is implausible or the session expired, otherwise scored and stored → Results and Trends read it back. An unsubmitted session expires after 30 minutes and is never scored.
-
-## Deployment
-
-Production runs on Vercel (two projects: `apps/web` static, `apps/api` as one serverless function) with Supabase as PostgreSQL. Pushes to `main` deploy automatically; migrations are a manual step before merging. See [docs/deployment.md](docs/deployment.md) for setup, releasing and troubleshooting.
-
-## Design note
-
-See [docs/design-note.md](docs/design-note.md): which task and which apps I looked at, how it plays and what brings people back, how it is scored and what counts as a good result, how progress is shown, an operator view designed but not built, and the trade-offs.
+**Data model:** two tables. `players` holds a token hash, a name and the player's group. `sessions` holds one row per session: the server's seed, the exact trials, the check-in, the input device, the raw presses and the score as JSONB, with the scoring version so history can be re-scored. **API:** create and list players; start, submit and list sessions; progress; health. Every route except creating and listing players and health needs `Authorization: Bearer <token>`. Full tables and status codes: [docs/architecture.md](docs/architecture.md).
 
 ## Key technical decisions
 
-- **Scoring lives in a framework-free package.** `@steady/core` depends only on Zod and is tested in isolation. The API is its only caller; the client never computes scores.
-- **ESM everywhere; `@steady/core` is built with plain `tsc`.** NestJS 12, Vite and Vitest are all ESM, so one ESM build (with `.d.ts`) serves every consumer, and Node runs it without a TypeScript loader. Cost: a build step, which runs automatically on `pnpm install`.
-- **API contracts are Zod schemas in `@steady/core`,** so the API and the web client validate and type requests from one source.
-- **TypeScript is pinned to 5.9.** typescript-eslint does not support TypeScript 7 (the native compiler) yet.
-- **One test convention: Vitest with `*.test.ts`,** instead of NestJS's default Jest. Cost: tests compile with SWC, because esbuild cannot emit the decorator metadata Nest's dependency injection needs.
-- **The API is built with plain `tsc` and run with `node`, without the Nest CLI.** `tsc` emits the decorator metadata; dev mode is `tsc --watch` next to `node --watch`.
-- **Every Nest dependency is named with `@Inject()`,** so the API does not rely on the compiler emitting decorator metadata; a test checks every injectable. tsx and esbuild (used by Vercel's NestJS preset) do not emit it, and Nest then injects `undefined`.
-- **Node 26 everywhere.** It is the Active LTS; `.nvmrc` (read by CI), `engines`, `@types/node`, the `volta` field and both Vercel projects name the same version, so tests run on what production runs.
-- **Two Vercel projects, not Vercel Services.** The web app is static files; the API is our own `tsc` build behind one serverless function (`src/serverless.ts`), and the web project forwards `/api` to it, so the browser stays on one origin. Services would deploy both as one project, but its NestJS preset compiles without decorator metadata and the API did not start. Cost: the web project names the API's domain in `apps/web/vercel.json`, and previews of the web app call the production API.
-- **Supabase is used only as PostgreSQL.** The API talks to it with `pg` and Drizzle like any Postgres, so local development (Docker) and production differ only in `DATABASE_URL`. Cost on Vercel: `@nestjs/throttler` is CommonJS and `require()`s ES-module-only Nest 12, which Vercel's runtime refuses unless `NODE_OPTIONS=--experimental-require-module` is set.
-- **Deny by default.** `PlayerGuard` is global, so a new route needs a token unless it is explicitly marked `@Public()` (only "create player" and health are).
-- **Players by token, one shared list.** A player is a random 256-bit token, looked up by its SHA-256 hash. The player id always comes from the token. Everyone sees every player and can pick any of them (Spec 016): the server keeps the tokens and `GET /api/players` lists them, a deliberate trade-off for this test project that a protected list would undo. Every session query filters on `player_id`, and another player's session returns `404`, the same as a missing one. Cost: a lost token means lost history.
-- **The server owns time and scoring.** The seed is chosen by the server and never returned, the exact trials are stored and scored, and a submission is rejected (`422`) if it arrives faster than the trials could have run or after 30 minutes. An identical retry returns the stored result; a different second submission returns `409`. The final write is conditional (`completed_at IS NULL`), so two concurrent submits cannot both win.
-- **Players on a device are local profiles.** Each profile is a name plus its token in `localStorage`; the name never leaves the browser. Several people can share a device, and the demo can show two players seeing only their own data, without the server storing anything personal.
-- **The trial clock is plain TypeScript, driven by frame timestamps.** `TrialRunner` takes `requestAnimationFrame` and `event.timeStamp` values and decides onsets, windows and probes, so timing is unit-tested with synthetic times. The digit is written straight into the DOM inside the frame callback, not through React state, so it is on screen in the frame whose timestamp becomes its onset. In a headless-browser run where a script pressed 400 ms after each digit appeared, the recorded RTs were 400.3–404.9 ms (median 401.3).
-- **One session, one row.** Trials, the raw submission and the score are JSONB columns, which keeps writes atomic; the raw responses are kept so a future `scoringVersion` can re-score history. Trade-off: no trial-level SQL queries, which nothing needs yet.
-- **Tests run the real app on a real database.** Integration tests start PostgreSQL 17 with Testcontainers, apply the committed migrations and drive the HTTP stack with a fake clock. CI runs them on every PR. Mocked repositories would not catch a missing `player_id` filter.
-- **The app refuses to start on bad config,** with a message naming the variable.
-- **Every tunable rule is in one file** (`packages/core/src/config.ts`), marked [R] when it comes from research and [P] when it is a product decision.
-- **The real session keeps the standard SART timing (250 ms digit + 900 ms mask); only practice is slower.** A first play-test at full speed was too fast to follow, so practice now starts at an 800 ms digit and ends at the real speed, and the rules are shown as steps before every session. Changing the real timing would make results incomparable with the research and between sessions.
-- **The results page only draws what the server scored.** `scoreSession` returns an outcome per trial, and the session journey ribbon is drawn from it, so the "steady" and "anticipation" rules exist once, in core.
-- **The client computes only two things, both from server scores:** the weekly target, because "4 of the last 7 days" depends on the device's calendar and time zone; and, on Results for sessions 3–6 (before the baseline exists), the median of the earlier sessions to compare with. Their constants live in core's config, and the median is core's `median`.
-- **Exploratory comparisons never overstate.** They are collapsed under "Exploring patterns". A comparison is drawn only once two groups have 10 sessions; until then it says only how many more sessions it needs. Then each group with 10 or more is shown as raw dots with `n` and its median, smaller groups are listed but not drawn, and one sentence ends "a pattern so far, not a cause".
+The most important ones, each with its trade-off. All of them, with the reasoning: [docs/architecture.md](docs/architecture.md#technical-decisions).
+
+| Decision                                                                                                | Why                                                                                        | Trade-off                                                                                    |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| **Scoring in a framework-free package** (`@steady/core`), called only by the API                        | One place for every rule, tested in isolation; the client can never compute a score        | A build step for core, run automatically on install, dev and check                           |
+| **The server owns the seed, the clock and the score**                                                   | A browser cannot choose its sequence or its result; raw presses are kept for re-scoring    | Browser input still cannot be fully trusted, so odd timing is flagged, never called cheating |
+| **One session, one row**, trials and presses as JSONB                                                   | Atomic writes; every result can be recomputed from what was stored                         | No trial-level SQL queries, which nothing needs yet                                          |
+| **Identity by token, not login;** every query scoped to the token's player                              | Meets "each player sees only their own data" without accounts                              | No recovery; for the demo the player list is public (one route to close)                     |
+| **The trial clock is plain TypeScript on frame timestamps;** the digit is written straight into the DOM | Timing is unit-tested with synthetic times; scripted 400 ms presses recorded at 400–405 ms | Display can still lag by up to one frame (about 17 ms at 60 Hz)                              |
+| **Every tunable rule in one file** (`packages/core/src/config.ts`), marked research or product decision | Thresholds are reviewable in one place and never hard-coded elsewhere                      | Changing a scoring rule means bumping the scoring version                                    |
+| **Tests on a real PostgreSQL** (Testcontainers), not mocks                                              | A missing `player_id` filter would pass against a mock                                     | API tests need Docker                                                                        |
+| **ESM everywhere, Vitest everywhere,** the API built with plain `tsc`                                   | One module system and one test runner across the monorepo                                  | Nest needs SWC for tests and explicit `@Inject()`, because esbuild drops decorator metadata  |
+| **Two Vercel projects** (static web, one serverless API) and Supabase used only as PostgreSQL           | One origin for the browser; local and production differ only in `DATABASE_URL`             | The web project names the API's domain; web previews call the production API                 |
 
 ## Testing
 
-- **Core** (Vitest): reference values come from independent calculations (Python `statistics`) or from the spec, never from the implementation.
-- **API** (Vitest + Testcontainers): the real Nest app on PostgreSQL 17 with a fake clock.
-- **Web** (Vitest + Testing Library): the trial runner with synthetic frame and press times; whole sessions on the play screen with a fake frame clock, checked with core's `validateSubmission`.
-- **End-to-end** (Playwright, separate CI job): a new player practises and plays a full session with real key presses in real time, then sees results and progress; a second player on the same device sees none of it; hiding the page voids a session.
-- **Mutation checks:** more than 100 deliberate rule breaks (scoring, progress, player isolation, timing windows, retries, token hashing, rate limits, log redaction, results and progress screens, voiding) each made a test fail. Each first round found real gaps, listed in [docs/ai-log.md](docs/ai-log.md).
-- **Real browser checks:** headless Chromium against the real stack, at desktop and phone width, for the game's timing (recorded RTs within about 1 ms of the scripted 400 ms), the results page and the progress page.
+Tests concentrate where a bug would give a player a wrong result or another player's data:
 
-## Assumptions and limitations
+| What                             | How                                                                                                                                     |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scoring and progress** (core)  | Vitest; expected values come from the spec or an independent calculation (Python `statistics`), never from the code under test          |
+| **Player isolation and the API** | The real Nest app on PostgreSQL 17 (Testcontainers) with a fake clock: another player's session is a `404`, retries, races, rate limits |
+| **Timing** (web)                 | The trial runner with synthetic frame and press times: windows, anticipations, probes                                                   |
+| **Whole sessions** (end to end)  | Playwright plays full sessions with real key presses in real time: results, progress, a second player seeing none of it, voiding        |
 
-- **Not a clinical tool.** Results are for the player's own trends; all comparisons are within-person and exploratory.
-- **Browser timing:** onset is the frame's timestamp, so display can differ by up to one frame (about 17 ms at 60 Hz), and keyboard and touch latency differ by device. The device is stored with each session; results are compared only within a player.
-- **Identity:** a player is a token on the server, with a name (Spec 013), listed for everyone (Spec 016); the browser remembers only which player is selected. There are no accounts; clearing site data only forgets which player was selected. Apart from the name the server holds no personal data; real accounts (or employer SSO) would be the next step.
-- **Trust:** the server checks that a submission is plausible (length, timing, duration) and flags machine-like timing, but browser input cannot be fully trusted. It never labels a session as cheating.
-- **Leaving the page voids a session,** because timing would be interrupted. The open session expires after 30 minutes without being scored.
-- **Not built:** offline play, notifications, sharing, leaderboards (on purpose: comparing attention scores with colleagues would discourage honest use), and an operator or employer view (designed in [docs/operator-view.md](docs/operator-view.md), not built: aggregates need real players).
+Each new rule is also broken on purpose to confirm a test fails; more than 100 such mutation checks have been run, and the gaps they found are in the [development log](docs/ai-log.md). CI runs `pnpm check`, `pnpm build` and the end-to-end tests on every pull request.
+
+## Assumptions, limitations and next steps
+
+**Assumptions**
+
+- Attention training is most useful as a private daily habit, compared with yourself; nobody needs to see a rank.
+- A login is not required (per the brief), so a random token stands in for an account.
+- Players use a keyboard or a touch screen, and keep the page open for two minutes.
+
+**Limitations**
+
+- **Not a clinical tool.** The 81-trial session is shorter than the standard 225 and not validated; all comparisons are within one player and exploratory.
+- **Browser timing** can lag by up to a frame, and keyboard and touch latency differ, so each session records its device.
+- **No accounts or recovery.** For the demo every player is listed for everyone; a lost token means lost history.
+- **The group comparison has no screen yet:** with a handful of players it would mean nothing.
+- **Leaving the page voids a session,** because the timing would be broken.
+
+**With more time**
+
+- Real accounts (or employer SSO) and a private player list.
+- The [operator view](docs/operator-view.md) for teams: aggregates only, at least 10 players per group.
+- A rewards economy for teams: points for showing up, a store of employer-funded prizes, later a digital token; rewards follow participation, never scores ([design note §8](docs/design-note.md#8-beyond-the-demo-a-rewards-economy-for-teams)).
+- An n-of-1 experiment (a minute of mindful breathing first, on random days), an error score corrected for speed, and a task-switching mode.
 
 ## Time spent
 
-TBD
+About three and a half days in total:
+
+| When              | Time        | What                                                                                                                                                                |
+| ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sunday evening    | One evening | Research and the design note, then a plan split into specs; several AI agents built the first version in parallel, each in its own worktree                         |
+| The next two days | Two days    | Two new versions from play-testing: the **calm** lantern scene, and the **game** with points and a dawn sky, with the original screen kept as the **plain** control |
+| Then              | Half a day  | Deployment to Vercel and Supabase, and the documentation                                                                                                            |
+
+Most of the time went into the two days of iteration: play-testing, the three groups, and checking every change in a real browser, at phone and desktop width, light and dark. The first version, with its scoring core, API and tests, was the fastest part, because the specs were written and reviewed before the agents started.
 
 ## AI tools
 
-I used Claude Code throughout, as a pair programmer under a fixed workflow written down in [CLAUDE.md](CLAUDE.md):
+Yes, throughout, as I would on the job. AI wrote much of the code; I set the workflow, reviewed every spec before code was written, and reviewed and merged every pull request myself.
 
-- **Spec first:** each feature has a spec (`specs/`) that I reviewed before code; the AI updates the spec in the same PR when code has to deviate.
-- **Tests first, with independent expectations:** tests are written and seen failing before the implementation, and expected values come from the spec or a separate calculation, so a wrong rule cannot also produce its own expected value.
-- **Deliberate breakage:** after each change, the AI breaks each new rule on purpose and confirms a test fails. This found untested rules in almost every part.
-- **Real use:** headless-browser runs against the real stack, and my own play-test, which found that the first game was too fast to learn.
-- **Every PR** passes `pnpm check` and CI, and is reviewed and squash-merged by me.
+| Tool                                                             | What it was used for                                                                                                                                                 |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Claude Code**                                                  | Pair programmer: specs, implementation, tests, docs, under the rules in [CLAUDE.md](CLAUDE.md); several agents in parallel, one worktree each, for the first version |
+| **OpenAI Codex**                                                 | A second model as an independent reviewer of pull requests, so one model's blind spots are not also the reviewer's                                                   |
+| **[GitHub Spec Kit](https://github.com/github/spec-kit) layout** | One spec, plan and task list per feature in [`specs/`](specs/README.md), reviewed before any code                                                                    |
+| **[gstack](https://github.com/garrytan/gstack) skills**          | `browse`: a headless browser for real-stack checks, screenshots and layout measurements; `design-shotgun`: design variants to compare before building                |
+| **UI/UX skills**                                                 | `ui-ux-pro-max` for UI/UX reviews (keyboard paths, contrast in light and dark, layouts from 375 px to 2000 px); `dataviz` for the Trends charts                      |
+| **Process skills**                                               | `superpowers:brainstorming` before new features, `systematic-debugging` for root causes, and my own `worktree-workflow` for branches and pull requests               |
 
-Where the AI was wrong or weak, and how each problem was caught (18 entries: from a test that passed against a stub, to a broken commit workflow, to a delete confirmation that carried over to the next player): [docs/ai-log.md](docs/ai-log.md).
+**How the work was kept honest**
+
+- **Spec first, tests first:** each rule is in a spec before it is in code, and tests take their expected values from the spec or an independent calculation, so a wrong rule cannot also produce its own expected value.
+- **Deliberate breakage:** after each change, every new rule is broken on purpose to confirm a test fails.
+- **Real use:** headless-browser runs against the real stack and my own play-tests, which found, for example, that the first game was too fast to learn.
+
+**Learning from mistakes.** Every time the AI's output was wrong or weak, it is recorded in the **[development log](docs/ai-log.md)** with how it was caught and the fix: 70 entries, grouped by kind, from tests that could not fail to layout faults only a browser shows. The log is not only a record: recurring lessons are turned into standing instructions so they do not happen again, as rules in [CLAUDE.md](CLAUDE.md) (for example "run `pnpm install` first in every new worktree" and "screens are remounted per player"), as the agent's persistent memory (check which dev servers are running before an end-to-end run, so tests never reach the production database), and as reusable skills, such as `worktree-workflow` for branches, worktrees and pull requests.
+
+## Deployment
+
+Production runs as two Vercel projects with Supabase as the database; every push to `main` deploys, and pull requests get previews.
+
+| Service | URL                                                                           |
+| ------- | ----------------------------------------------------------------------------- |
+| Web     | [steady-sand-ten.vercel.app](https://steady-sand-ten.vercel.app)              |
+| API     | [steady-api-bay.vercel.app/api](https://steady-api-bay.vercel.app/api/health) |
+
+Setup, migrations and troubleshooting: [docs/deployment.md](docs/deployment.md).
+
+## Documentation
+
+| Document                               | Contents                                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| [Design note](docs/design-note.md)     | Research, options and choices: which game, scoring, coming back, progress     |
+| [Architecture](docs/architecture.md)   | Data model, API reference, every technical decision and its cost, testing     |
+| [Deployment](docs/deployment.md)       | Vercel and Supabase setup, releasing, migrations, troubleshooting             |
+| [Operator view](docs/operator-view.md) | An aggregate view for teams: designed, not built                              |
+| [Specs](specs/README.md)               | Every feature's spec, with its status                                         |
+| [Development log](docs/ai-log.md)      | Mistakes made while building with an AI pair programmer, and what caught them |
+| [CLAUDE.md](CLAUDE.md)                 | Rules for AI coding agents working in this repository                         |
+
+## Contributing
+
+Every change follows the same path:
+
+1. **A spec** in `specs/NNN-name/` (see [specs/README.md](specs/README.md)), reviewed before code.
+2. **A feature branch** (`feature/…` or `fix/…`) and failing tests first.
+3. **`pnpm check`** passes locally; CI runs it again with the build and the end-to-end tests.
+4. **A pull request**, squash-merged into the protected `main`, with conventional commit titles (`feat:`, `fix:`, `docs:`…).
+
+AI coding agents follow the same rules, written down in [CLAUDE.md](CLAUDE.md).
+
+## License
+
+[MIT](LICENSE)

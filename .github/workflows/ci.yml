@@ -37,7 +37,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # .env.example points to Supabase; e2e uses the Docker Postgres. With .env present, bootstrap does not copy the example.
+      # The Docker Postgres, written explicitly so e2e never depends on .env.example. With .env present, bootstrap does not copy the example.
       - run: echo 'DATABASE_URL=postgres://steady:steady@localhost:5433/steady' > .env
       - run: pnpm bootstrap
       - run: pnpm --filter @steady/web exec playwright install --with-deps chromium
