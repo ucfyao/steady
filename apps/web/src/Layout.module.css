@@ -7,14 +7,26 @@
 }
 
 /*
- * The night look (Spec 015): the focus-mode scene fixed behind the whole window. Below the
- * page's own stacking (z-index -1), so the header, its menu and the content keep their order.
- * The colours are the night tokens (tokens.css, `[data-night]`).
+ * The check's scene (Spec 023): Home's scene fixed behind the whole window, for calm and game.
+ * Below the page's own stacking (z-index -1), so the header, its menu and the content keep
+ * their order. A dark wash at the top keeps the header's light text readable at any dawn,
+ * as on Home (Spec 014).
  */
-.nightScene {
+.checkScene {
+  --header-height: calc(2 * var(--space-7) + 2.25rem);
+
   position: fixed;
   inset: 0;
   z-index: -1;
+}
+
+.checkScene::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(var(--header-height) * 1.6);
+  background: linear-gradient(180deg, rgb(20 22 40 / 0.6), transparent);
+  pointer-events: none;
 }
 
 .header {
@@ -72,24 +84,35 @@
   margin-bottom: 0;
 }
 
+/* On the check's scene (Spec 023) the header stays in the flow and takes the same colours. */
 .overHero .brand,
 .overHero .navLink,
 .overHero .avatar,
-.overHero .themeButton {
+.overHero .themeButton,
+.onScene .brand,
+.onScene .navLink,
+.onScene .avatar,
+.onScene .themeButton {
   --color-focus: var(--night-text);
 
   color: var(--night-text);
 }
 
 .overHero .avatar,
-.overHero .themeButton {
+.overHero .themeButton,
+.onScene .avatar,
+.onScene .themeButton {
   border-color: rgb(236 230 218 / 0.4);
 }
 
 .overHero .navLink:hover,
 .overHero .avatar:hover,
 .overHero .avatar[aria-expanded='true'],
-.overHero .themeButton:hover {
+.overHero .themeButton:hover,
+.onScene .navLink:hover,
+.onScene .avatar:hover,
+.onScene .avatar[aria-expanded='true'],
+.onScene .themeButton:hover {
   color: var(--night-text);
   border-color: var(--night-text);
 }

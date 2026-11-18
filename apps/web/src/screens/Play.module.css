@@ -3,6 +3,24 @@
   flex-direction: column;
 }
 
+/*
+ * Spec 023: on calm's and game's scene, the content sits in one panel on the theme's surface,
+ * so it follows the light/dark choice while the scene stays night.
+ */
+.panel {
+  padding: var(--space-7);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: var(--space-5);
+  }
+}
+
 .lead {
   font-size: var(--text-lg);
   color: var(--color-text-muted);

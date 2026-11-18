@@ -17,7 +17,8 @@ import { Steps } from '../game/Steps.js';
 import { browserEnv, type PlayEnv } from '../game/env.js';
 import { createPracticePlan, summarisePractice, type PracticeSummary } from '../game/practice.js';
 import type { RunnerOptions } from '../game/runner.js';
-import { useNightPage } from '../Layout.js';
+import { dawnPercent } from '../game/dawn.js';
+import { useCheckScene } from '../Layout.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { Button } from '../ui/Button.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
@@ -72,8 +73,10 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   const [practiced, setPracticed] = useState<PracticeSummary | null>(null);
   /** The A/B variant for practice (Spec 006); the real session uses what the server says. */
   const [variant, setVariant] = useState<Variant>('calm');
-  /** Whether `variant` has arrived; until then the check stays paper (Spec 015). */
+  /** Whether `variant` has arrived; until then there is no scene (Spec 023 §2). */
   const [variantKnown, setVariantKnown] = useState(false);
+  /** The dawn of the player's last game session, 0–100, as on Home (Spec 023 §2). */
+  const [lastSky, setLastSky] = useState(0);
   // Bumped by "Try again" to get the check ready once more.
   const [attempt, setAttempt] = useState(0);
 
@@ -84,6 +87,8 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       .then(([sessions, me]) => {
         if (cancelled) return;
         setVariant(env.variantOverride ?? me.variant);
+        const lastGame = sessions.filter((s) => s.variant === 'game').at(-1);
+        setLastSky(lastGame ? dawnPercent(lastGame.score) : 0);
         setVariantKnown(true);
         const first = sessions.length === 0;
         setFirstTime(first);
@@ -96,8 +101,10 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     };
   }, [api, env, attempt]);
 
-  // Spec 015: calm and game see the whole check at night; plain stays paper.
-  useNightPage(variantKnown && variant !== 'plain');
+  // Spec 023: calm and game see Home's scene behind the check (game at its last sky); plain
+  // has no scene. The content follows the light/dark choice.
+  const onScene = variantKnown && variant !== 'plain';
+  useCheckScene(onScene ? (variant === 'game' ? lastSky : 0) : null);
 
   const intro = () => {
     setGuided(true);
@@ -145,154 +152,168 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     </>
   );
 
-  switch (step.k) {
-    case 'loading':
-      return <Loading label="Loading…" />;
-    case 'starting':
-      return <Loading label="Starting your session…" />;
-    case 'submitting':
-      return <Loading label="Scoring your session…" />;
+  const inFocusMode = step.k === 'practice' || step.k === 'running';
+  const content = screenFor();
+  // Spec 023: on the scene, the content of every screen outside focus mode sits in one panel.
+  return onScene && !inFocusMode ? (
+    <div className={styles.panel} data-testid="check-panel">
+      {content}
+    </div>
+  ) : (
+    content
+  );
 
-    case 'intro':
-      return (
-        <section className={styles.screen}>
-          <Steps step={1} label="How it works" />
-          <h1 className={styles.balanced}>Catch every digit. Hold back on 3.</h1>
-          <p className={styles.lead}>Digits flash one at a time. React to each one, except 3.</p>
-          <HowToPlay device={env.device} />
-          <Button size="lg" onClick={practice}>
-            Try a short practice
-          </Button>
-          <p className={styles.footnote}>12 digits · about 30 seconds · not saved</p>
-          {!firstTime && (
-            <Button
-              variant="link"
-              className={styles.centered}
-              onClick={() => {
-                setGuided(false);
-                setStep({ k: 'before' });
-              }}
-            >
-              Skip practice
+  function screenFor(): ReactNode {
+    switch (step.k) {
+      case 'loading':
+        return <Loading label="Loading…" />;
+      case 'starting':
+        return <Loading label="Starting your session…" />;
+      case 'submitting':
+        return <Loading label="Scoring your session…" />;
+
+      case 'intro':
+        return (
+          <section className={styles.screen}>
+            <Steps step={1} label="How it works" />
+            <h1 className={styles.balanced}>Catch every digit. Hold back on 3.</h1>
+            <p className={styles.lead}>Digits flash one at a time. React to each one, except 3.</p>
+            <HowToPlay device={env.device} />
+            <Button size="lg" onClick={practice}>
+              Try a short practice
             </Button>
-          )}
-        </section>
-      );
+            <p className={styles.footnote}>12 digits · about 30 seconds · not saved</p>
+            {!firstTime && (
+              <Button
+                variant="link"
+                className={styles.centered}
+                onClick={() => {
+                  setGuided(false);
+                  setStep({ k: 'before' });
+                }}
+              >
+                Skip practice
+              </Button>
+            )}
+          </section>
+        );
 
-    case 'practice':
-      return (
-        <Block
-          plan={step.plan}
-          options={PRACTICE_OPTIONS}
-          hint={<>Practice · {rule}</>}
-          env={env}
-          variant={variant}
-          onDone={({ rts }) => {
-            setPracticed(summarisePractice(step.plan.trials, rts));
-            setStep({ k: 'before' });
-          }}
-          onVoid={(reason) => setStep({ k: 'voided', during: 'practice', reason })}
-        />
-      );
+      case 'practice':
+        return (
+          <Block
+            plan={step.plan}
+            options={PRACTICE_OPTIONS}
+            hint={<>Practice · {rule}</>}
+            env={env}
+            variant={variant}
+            onDone={({ rts }) => {
+              setPracticed(summarisePractice(step.plan.trials, rts));
+              setStep({ k: 'before' });
+            }}
+            onVoid={(reason) => setStep({ k: 'voided', during: 'practice', reason })}
+          />
+        );
 
-    case 'before':
-      return (
-        <BeforeYouStart
-          guided={guided}
-          practice={
-            guided && practiced ? (
-              <PracticeLine summary={practiced} device={env.device} onAgain={practice} />
-            ) : null
-          }
-          value={checkIn}
-          onChange={setCheckIn}
-          onStart={() => start()}
-          onSkip={() => {
-            setCheckIn({});
-            start({});
-          }}
-          onHowToPlay={intro}
-        />
-      );
+      case 'before':
+        return (
+          <BeforeYouStart
+            guided={guided}
+            practice={
+              guided && practiced ? (
+                <PracticeLine summary={practiced} device={env.device} onAgain={practice} />
+              ) : null
+            }
+            value={checkIn}
+            onChange={setCheckIn}
+            onStart={() => start()}
+            onSkip={() => {
+              setCheckIn({});
+              start({});
+            }}
+            onHowToPlay={intro}
+          />
+        );
 
-    case 'running':
-      return (
-        <Block
-          plan={step.session.plan}
-          options={MAIN_OPTIONS}
-          hint={rule}
-          env={env}
-          variant={step.session.variant}
-          onDone={(submission) => submit(step.session, submission)}
-          onVoid={(reason) => setStep({ k: 'voided', during: 'session', reason })}
-        />
-      );
+      case 'running':
+        return (
+          <Block
+            plan={step.session.plan}
+            options={MAIN_OPTIONS}
+            hint={rule}
+            env={env}
+            variant={step.session.variant}
+            onDone={(submission) => submit(step.session, submission)}
+            onVoid={(reason) => setStep({ k: 'voided', during: 'session', reason })}
+          />
+        );
 
-    case 'submit-error': {
-      const retryable = !['unprocessable', 'conflict'].includes(step.error.kind);
-      return (
-        <div role="alert" className="error">
-          <p>{retryable ? errorWords(step.error) : 'This session could not be saved.'}</p>
-          {retryable ? (
-            <Button onClick={() => submit(step.session, step.submission)}>Try again</Button>
-          ) : (
-            <Link to="/">Back to home</Link>
-          )}
-        </div>
-      );
-    }
-
-    case 'voided':
-      return (
-        <StatusPage
-          tone="warning"
-          title={
-            step.during === 'practice'
-              ? 'Practice stopped'
-              : step.reason === 'stopped'
-                ? 'Session stopped'
-                : 'Session voided'
-          }
-          primary={{
-            label: 'Play again',
-            // A first-time player who left the practice starts the steps again.
-            onClick: () =>
-              step.during === 'practice' && firstTime ? intro() : setStep({ k: 'before' }),
-          }}
-          secondary={{ label: 'Back to home', to: '/' }}
-        >
-          {step.reason === 'stopped' ? (
-            step.during === 'practice' ? (
-              'You stopped the practice.'
+      case 'submit-error': {
+        const retryable = !['unprocessable', 'conflict'].includes(step.error.kind);
+        return (
+          <div role="alert" className="error">
+            <p>{retryable ? errorWords(step.error) : 'This session could not be saved.'}</p>
+            {retryable ? (
+              <Button onClick={() => submit(step.session, step.submission)}>Try again</Button>
             ) : (
-              'You stopped the session, so it was not saved.'
-            )
-          ) : (
-            <>
-              You left the page while it was running. Leaving the page interrupts the timing, so{' '}
-              {step.during === 'practice' ? 'the practice stopped' : 'this session was not saved'}.
-            </>
-          )}
-        </StatusPage>
-      );
+              <Link to="/">Back to home</Link>
+            )}
+          </div>
+        );
+      }
 
-    case 'error':
-      return (
-        <StatusPage
-          title="Could not get the check ready"
-          alert
-          primary={{
-            label: 'Try again',
-            onClick: () => {
-              setStep({ k: 'loading' });
-              setAttempt((n) => n + 1);
-            },
-          }}
-          secondary={{ label: 'Back to home', to: '/' }}
-        >
-          {errorWords(step.error)}
-        </StatusPage>
-      );
+      case 'voided':
+        return (
+          <StatusPage
+            tone="warning"
+            title={
+              step.during === 'practice'
+                ? 'Practice stopped'
+                : step.reason === 'stopped'
+                  ? 'Session stopped'
+                  : 'Session voided'
+            }
+            primary={{
+              label: 'Play again',
+              // A first-time player who left the practice starts the steps again.
+              onClick: () =>
+                step.during === 'practice' && firstTime ? intro() : setStep({ k: 'before' }),
+            }}
+            secondary={{ label: 'Back to home', to: '/' }}
+          >
+            {step.reason === 'stopped' ? (
+              step.during === 'practice' ? (
+                'You stopped the practice.'
+              ) : (
+                'You stopped the session, so it was not saved.'
+              )
+            ) : (
+              <>
+                You left the page while it was running. Leaving the page interrupts the timing, so{' '}
+                {step.during === 'practice' ? 'the practice stopped' : 'this session was not saved'}
+                .
+              </>
+            )}
+          </StatusPage>
+        );
+
+      case 'error':
+        return (
+          <StatusPage
+            title="Could not get the check ready"
+            alert
+            primary={{
+              label: 'Try again',
+              onClick: () => {
+                setStep({ k: 'loading' });
+                setAttempt((n) => n + 1);
+              },
+            }}
+            secondary={{ label: 'Back to home', to: '/' }}
+          >
+            {errorWords(step.error)}
+          </StatusPage>
+        );
+    }
   }
 }
 
