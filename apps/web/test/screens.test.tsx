@@ -176,7 +176,7 @@ describe('Manage players', () => {
       expect(row(name).getByRole('button', { name: `Rename ${name}` })).toBeInTheDocument();
       expect(row(name).getByRole('button', { name: `Delete ${name}` })).toBeInTheDocument();
     }
-    // Switching stays in the avatar menu.
+    // Switching stays in the avatar menu. (The header's "Switch to dark" is the colour scheme.)
     expect(within(screen.getByRole('main')).queryByRole('button', { name: /switch/i })).toBeNull();
   });
 

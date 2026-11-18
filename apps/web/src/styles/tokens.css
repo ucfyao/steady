@@ -1,45 +1,45 @@
 /*
- * Design tokens and global base styles.
- * Source: the approved design (Home / Check-in / Focus mode, 2026-11-16), in one look: the night
- * (Spec 019). The neutrals are the night scene's blue, so the scene and the page read as one sky;
- * the accents are sage, and the lantern's yellow belongs to the night look of the check.
- * Every text colour is at least 4.5:1 on the surface, the page and the sunken surface (Spec 017).
+ * Design tokens and global base styles ("quiet paper").
+ * Source: the approved design (Home / Check-in / Focus mode, 2026-11-16).
  * Components use these variables through CSS Modules in src/ui; nothing else defines colours.
  */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* Colour: surfaces and text */
-  --color-bg: #141a2b; /* page */
-  --color-surface: #1b2135; /* content */
-  --color-text: #ece6da; /* 12.8:1 on the surface */
-  --color-text-muted: #a9a7b6; /* 6.8:1 on the surface */
-  --color-border: #2e3550; /* dividers */
-  --color-border-strong: #434b69; /* chip and avatar outlines */
+  --color-bg: #ece6da; /* page */
+  --color-surface: #f6f2ea; /* content */
+  --color-text: #2b2925;
+  /* The design's #7a756a is 4.1:1 on the surface; darkened to pass WCAG AA (4.9:1). */
+  --color-text-muted: #6e695e;
+  --color-border: #d9d1c2; /* dividers */
+  --color-border-strong: #cfc6b5; /* chip and avatar outlines */
 
   /* Colour: sage accent */
-  --color-accent: #9cbba0; /* primary button, selected chip */
-  --color-on-accent: #141a2b;
-  --color-accent-soft: #7f9c83; /* fills: completed days, chart lines */
-  --color-link: #a9c6ad; /* 8.6:1 on the surface */
-  --color-danger: #e8907f;
-  --color-on-danger: #141a2b;
-  --color-focus: #a9c6ad;
+  --color-accent: #3f5a45; /* primary button, selected chip */
+  --color-on-accent: #f6f2ea;
+  --color-accent-soft: #6b8a6f; /* fills: completed days, chart lines */
+  /* Link text: #6b8a6f is 3.4:1 on the surface, so text uses a darker sage (5.3:1). */
+  --color-link: #4e6b53;
+  --color-danger: #a3402f;
+  --color-on-danger: #f6f2ea;
+  --color-focus: #3f5a45;
   /* Tints: soft backgrounds for pills, tips and status marks (flow design, 2026-11-16) */
-  --color-accent-tint: #233631; /* behind accent text: 6.1:1 */
-  --color-danger-tint: #43283a; /* behind danger text: 5.4:1 */
-  --color-surface-sunken: #222941; /* a tip box on the content surface */
-  --color-mark: #2d3450; /* small round icon behind a list point */
+  --color-accent-tint: #e1eadf; /* behind accent text: 6.4:1 */
+  --color-danger-tint: #f3ddd6; /* behind danger text: 5.1:1 */
+  --color-surface-sunken: #ebe5d8; /* a tip box on the content surface */
+  --color-mark: #e4ddcf; /* small round icon behind a list point */
 
   /* Colour: the results ribbon (unchanged until the results screen is redesigned) */
-  --color-viz-steady: #3f7f71;
-  --color-viz-caught: #7fb0ec;
-  --color-viz-early: #e0b252;
-  --color-viz-missed: #2a3148;
+  --color-viz-steady: #7fb8aa;
+  --color-viz-caught: #2b5f9e;
+  --color-viz-early: #b7791f;
+  --color-viz-missed: #e4e6e1;
 
   /*
-   * Colour: the lantern's night scene (Home's hero, the Results sky, focus mode).
+   * Colour: the lantern's night scene (Home's hero, the Results game panel, focus mode).
+   * The scene is dark in both colour schemes, so these are not redefined for dark mode.
    */
   --night-bg: #1b2340;
   --night-text: #ece6da;
@@ -87,7 +87,7 @@
   --radius-pill: 999px;
 
   /* Depth: only things that float over content (the avatar menu). Cards stay flat. */
-  --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
+  --shadow-popover: 0 6px 24px rgb(43 41 37 / 0.1);
 
   /* Layout */
   --content-width: 45rem; /* 720 */
@@ -98,6 +98,74 @@
   :root {
     --gutter: var(--space-8);
   }
+}
+
+/*
+ * Dark: the same paper at night. With the system (Match system), or chosen in the avatar menu
+ * (Spec 012: data-theme on <html>). Light chosen on a dark system keeps the light set above.
+ * The neutrals are in the night scene's blue, so the scene and the page read as one sky; the
+ * accents stay sage, the lantern's yellow belongs to the night look (Spec 017). Every text
+ * colour is at least 4.5:1 on the surface, the page and the sunken surface (measured).
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-bg: #141a2b;
+    --color-surface: #1b2135;
+    --color-text: #ece6da;
+    --color-text-muted: #a9a7b6;
+    --color-border: #2e3550;
+    --color-border-strong: #434b69;
+
+    --color-accent: #9cbba0;
+    --color-on-accent: #141a2b;
+    --color-accent-soft: #7f9c83;
+    --color-link: #a9c6ad;
+    --color-danger: #e8907f;
+    --color-on-danger: #141a2b;
+    --color-focus: #a9c6ad;
+    --color-accent-tint: #233631;
+    --color-danger-tint: #43283a;
+    --color-surface-sunken: #222941;
+    --color-mark: #2d3450;
+    --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
+
+    --color-viz-steady: #3f7f71;
+    --color-viz-caught: #7fb0ec;
+    --color-viz-early: #e0b252;
+    --color-viz-missed: #2a3148;
+  }
+}
+
+/* The same values as the block above: change both together. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #141a2b;
+  --color-surface: #1b2135;
+  --color-text: #ece6da;
+  --color-text-muted: #a9a7b6;
+  --color-border: #2e3550;
+  --color-border-strong: #434b69;
+
+  --color-accent: #9cbba0;
+  --color-on-accent: #141a2b;
+  --color-accent-soft: #7f9c83;
+  --color-link: #a9c6ad;
+  --color-danger: #e8907f;
+  --color-on-danger: #141a2b;
+  --color-focus: #a9c6ad;
+  --color-accent-tint: #233631;
+  --color-danger-tint: #43283a;
+  --color-surface-sunken: #222941;
+  --color-mark: #2d3450;
+  --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
+
+  --color-viz-steady: #3f7f71;
+  --color-viz-caught: #7fb0ec;
+  --color-viz-early: #e0b252;
+  --color-viz-missed: #2a3148;
 }
 
 /*

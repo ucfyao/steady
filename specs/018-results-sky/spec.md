@@ -28,9 +28,9 @@ Nothing here changes a measurement, a comparison or a score. Results is after th
 - While the session loads, when it is not found, or when it cannot be loaded, there is no band and the header is the usual one.
 - Below the band, everything is as before: This session, the journey, About this session, the actions.
 
-## 2. Below the band
+## 2. Both themes
 
-The page below is the night's blue (Spec 017, the only set since Spec 019), so the band runs into it, as Home's hero does. (Written when there was also a light theme, where it was Home's shape: sky above, paper below.)
+The band is dark in both themes, like every scene. In the dark theme the page below is the night's blue (Spec 017), so the band runs into it; in the light theme it is Home's shape: sky above, paper below.
 
 ## Test cases
 
@@ -38,4 +38,4 @@ The page below is the night's blue (Spec 017, the only set since Spec 019), so t
 - A calm and a plain session: the band with the conclusion, no game summary, `--dawn` 0; the header lies on the band.
 - For a session that is not found: no band, the usual header. Leaving Results gives the usual header back.
 - While a notice is shown the usual header stays: one rule in the layout for Home and Results, tested on Home (Spec 014).
-- Real browser: 375 px and 1440 px, in both colour schemes as they were then, a game session at a high dawn, a calm session; no horizontal scroll.
+- Real browser: 375 px and 1440 px, light and dark, a game session at a high dawn, a calm session; no horizontal scroll.

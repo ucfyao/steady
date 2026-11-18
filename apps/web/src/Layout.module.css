@@ -74,19 +74,22 @@
 
 .overHero .brand,
 .overHero .navLink,
-.overHero .avatar {
+.overHero .avatar,
+.overHero .themeButton {
   --color-focus: var(--night-text);
 
   color: var(--night-text);
 }
 
-.overHero .avatar {
+.overHero .avatar,
+.overHero .themeButton {
   border-color: rgb(236 230 218 / 0.4);
 }
 
 .overHero .navLink:hover,
 .overHero .avatar:hover,
-.overHero .avatar[aria-expanded='true'] {
+.overHero .avatar[aria-expanded='true'],
+.overHero .themeButton:hover {
   color: var(--night-text);
   border-color: var(--night-text);
 }
@@ -108,6 +111,35 @@
   border: 1px solid var(--color-border-strong);
   border-radius: 50%;
   cursor: pointer;
+}
+
+/* The light/dark button (Spec 012): the avatar's look, with a 44 px tap area around it. */
+.themeButton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.themeButton::before {
+  content: '';
+  position: absolute;
+  inset: -0.25rem;
+}
+
+.themeButton:hover {
+  border-color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
 .avatar:hover,
