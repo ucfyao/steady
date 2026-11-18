@@ -18,8 +18,7 @@ import {
 import { useLocation, useParams } from 'react-router';
 import { errorWords } from '../api/client.js';
 import { dawnPercent, personalBest, sessionPoints } from '../game/dawn.js';
-import { Scene } from '../game/Scene.js';
-import { useOverHero } from '../Layout.js';
+import { useScene } from '../Layout.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
@@ -77,8 +76,15 @@ export function Results() {
       : history.k === 'ready'
         ? history.sessions.find((s) => s.id === id)
         : undefined;
-  // Spec 018: once a session is shown, the header lies on its sky.
-  useOverHero(session !== undefined);
+  // Spec 018, Spec 028: a calm or game session on its sky behind the page (the session's dawn
+  // for game, the night for calm); a plain session has none.
+  useScene(
+    session && session.variant !== 'plain'
+      ? session.variant === 'game'
+        ? dawnPercent(session.score)
+        : 0
+      : null,
+  );
 
   if (!session) {
     if (history.k === 'loading') return <Loading label="Loading your results…" />;
@@ -134,16 +140,16 @@ export function Results() {
   const m = METRICS;
   // The sky this session reached (Spec 018): its dawn for a game session, the night otherwise.
   const dawn = (session.variant === 'game' ? dawnPercent(score) / 100 : 0).toFixed(3);
+  const onScene = session.variant !== 'plain';
 
   return (
-    <section className={styles.results}>
-      {/* `--dawn` on the band too, so the wash behind the text grows only as the sky lightens. */}
+    <section className={onScene ? `${styles.results} ${styles.onScene}` : styles.results}>
+      {/* `--dawn` on the band, so the wash behind the text grows only as the sky lightens. */}
       <section
         aria-label="Your sky"
         className={styles.sky}
         ref={(el) => el?.style.setProperty('--dawn', dawn)}
       >
-        <Scene rich ref={(el) => el?.style.setProperty('--dawn', dawn)} />
         <div className={styles.skyInner}>
           {/* The name is for screen readers; the conclusion is the first visible line (Spec 010). */}
           <h1 className="visually-hidden">Session complete</h1>
@@ -236,7 +242,7 @@ export function Results() {
         <Button to="/" size="lg">
           Back to home
         </Button>
-        <Button to="/progress" variant="secondary" size="lg">
+        <Button to="/progress" variant="secondary" size="lg" className={styles.onSky}>
           See your trends
         </Button>
       </div>

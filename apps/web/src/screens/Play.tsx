@@ -20,7 +20,7 @@ import { browserEnv, type PlayEnv } from '../game/env.js';
 import { createPracticePlan, summarisePractice, type PracticeSummary } from '../game/practice.js';
 import type { RunnerOptions } from '../game/runner.js';
 import { dawnPercent } from '../game/dawn.js';
-import { useCheckScene } from '../Layout.js';
+import { useScene } from '../Layout.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { Button } from '../ui/Button.js';
 import { ChipGroup } from '../ui/ChipGroup.js';
@@ -109,7 +109,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   // Spec 026: calm and game see Home's scene behind the check (game at its last sky); plain
   // has no scene. The content follows the light/dark choice.
   const onScene = variantKnown && variant !== 'plain';
-  useCheckScene(onScene ? (variant === 'game' ? lastSky : 0) : null);
+  useScene(onScene ? (variant === 'game' ? lastSky : 0) : null);
 
   const intro = () => {
     setGuided(true);

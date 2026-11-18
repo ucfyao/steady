@@ -342,47 +342,34 @@ describe('Results: the game first (Spec 006 §4)', () => {
 });
 
 describe("Results: the session's sky (Spec 018)", () => {
-  const overHero = () => screen.getByRole('banner').closest('[data-over-hero]');
-  const dawnOf = (band: HTMLElement) =>
-    within(band).getByTestId('scene').style.getPropertyValue('--dawn');
   // Every 3 held back and every other digit pressed: an all-correct session, so dawn 100%.
   const perfect = completed('p1', (t) => (t.isTarget ? null : 400));
 
-  it('opens a game session on its own sky, with the conclusion and the game in it', async () => {
+  it('opens a game session with the conclusion and the game at the top', async () => {
     const game = { ...perfect, variant: 'game' as const };
     renderResults({ pathname: '/results/p1', state: { session: game } }, [game]);
     const band = await screen.findByRole('region', { name: 'Your sky' });
     expect(within(band).getByTestId('conclusion')).toBeInTheDocument();
     expect(within(band).getByRole('region', { name: 'Your game' })).toHaveTextContent('Dawn 100%');
-    expect(dawnOf(band)).toBe('1.000');
-    expect(overHero()).not.toBeNull();
+    // Spec 028: the sky itself is behind the page, at the session's dawn.
+    expect(
+      within(screen.getByTestId('page-scene'))
+        .getByTestId('scene')
+        .style.getPropertyValue('--dawn'),
+    ).toBe('1.000');
   });
 
-  it.each(['calm', 'plain'] as const)(
-    'opens a %s session on the night sky, with no game',
-    async (variant) => {
-      const session = { ...perfect, variant };
-      renderResults({ pathname: '/results/p1', state: { session } }, [session]);
-      const band = await screen.findByRole('region', { name: 'Your sky' });
-      expect(within(band).getByTestId('conclusion')).toBeInTheDocument();
-      expect(within(band).queryByRole('region', { name: 'Your game' })).toBeNull();
-      expect(dawnOf(band)).toBe('0.000');
-      expect(overHero()).not.toBeNull();
-    },
-  );
+  it.each(['calm', 'plain'] as const)('opens a %s session with no game', async (variant) => {
+    const session = { ...perfect, variant };
+    renderResults({ pathname: '/results/p1', state: { session } }, [session]);
+    const band = await screen.findByRole('region', { name: 'Your sky' });
+    expect(within(band).getByTestId('conclusion')).toBeInTheDocument();
+    expect(within(band).queryByRole('region', { name: 'Your game' })).toBeNull();
+  });
 
-  it('has no sky and the usual header when the session is not found', async () => {
+  it('has no sky when the session is not found', async () => {
     renderResults('/results/missing');
     await screen.findByRole('heading', { name: 'Session not found' });
     expect(screen.queryByRole('region', { name: 'Your sky' })).toBeNull();
-    expect(overHero()).toBeNull();
-  });
-
-  it('gives the header back when leaving Results', async () => {
-    renderResults({ pathname: '/results/s1', state: { session: mixed } });
-    await screen.findByRole('region', { name: 'Your sky' });
-    await userEvent.click(screen.getByRole('link', { name: 'See your trends' }));
-    await screen.findByRole('heading', { level: 1 });
-    expect(overHero()).toBeNull();
   });
 });

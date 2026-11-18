@@ -7,12 +7,12 @@
 }
 
 /*
- * The check's scene (Spec 026): Home's scene fixed behind the whole window, for calm and game.
+ * The scene behind the page (Spec 026, Spec 028): fixed behind the whole window, for calm and game.
  * Below the page's own stacking (z-index -1), so the header, its menu and the content keep
  * their order. A dark wash at the top keeps the header's light text readable at any dawn,
  * as on Home (Spec 014).
  */
-.checkScene {
+.pageScene {
   --header-height: calc(2 * var(--space-7) + 2.25rem);
 
   position: fixed;
@@ -20,7 +20,7 @@
   z-index: -1;
 }
 
-.checkScene::after {
+.pageScene::after {
   content: '';
   position: absolute;
   inset: 0 0 auto;
@@ -70,25 +70,7 @@
   text-underline-offset: 0.3em;
 }
 
-/*
- * On Home the header lies on the night scene (Spec 014): out of the flow, over the top of the
- * hero, in the night colours. Only the header's own controls change, so the avatar menu keeps
- * the surface colours.
- */
-.overHero {
-  position: absolute;
-  top: 0;
-  left: var(--gutter);
-  right: var(--gutter);
-  z-index: 2;
-  margin-bottom: 0;
-}
-
-/* On the check's scene (Spec 026) the header stays in the flow and takes the same colours. */
-.overHero .brand,
-.overHero .navLink,
-.overHero .avatar,
-.overHero .themeButton,
+/* On the scene (Spec 026, Spec 028) the header stays in the flow and takes the night colours. */
 .onScene .brand,
 .onScene .navLink,
 .onScene .avatar,
@@ -98,17 +80,11 @@
   color: var(--night-text);
 }
 
-.overHero .avatar,
-.overHero .themeButton,
 .onScene .avatar,
 .onScene .themeButton {
   border-color: rgb(236 230 218 / 0.4);
 }
 
-.overHero .navLink:hover,
-.overHero .avatar:hover,
-.overHero .avatar[aria-expanded='true'],
-.overHero .themeButton:hover,
 .onScene .navLink:hover,
 .onScene .avatar:hover,
 .onScene .avatar[aria-expanded='true'],

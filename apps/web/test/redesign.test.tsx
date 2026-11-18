@@ -71,7 +71,8 @@ describe('Home (Spec 007 §1)', () => {
       'href',
       '/play',
     );
-    expect(within(hero).getByTestId('scene')).toBeInTheDocument();
+    // Spec 028: the scene is behind the page, not inside the hero.
+    expect(within(screen.getByTestId('page-scene')).getByTestId('scene')).toBeInTheDocument();
   });
 
   it('draws the week as seven lanterns, played ones lit', async () => {
@@ -91,7 +92,11 @@ describe('Home (Spec 007 §1)', () => {
     );
     const hero = screen.getByRole('region', { name: "Today's check" });
     expect(hero).toHaveTextContent('Last sky: dawn 37%');
-    expect(within(hero).getByTestId('scene').style.getPropertyValue('--dawn')).toBe('0.370');
+    expect(
+      within(screen.getByTestId('page-scene'))
+        .getByTestId('scene')
+        .style.getPropertyValue('--dawn'),
+    ).toBe('0.370');
   });
 
   it('for a calm player: no personal best and no last sky', async () => {

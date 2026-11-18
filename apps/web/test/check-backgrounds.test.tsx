@@ -33,9 +33,9 @@ function renderPlay(variant: Variant, opts: { sessions?: CompletedSession[] } = 
 }
 
 const header = () => within(screen.getByRole('banner'));
-const checkScene = () => screen.queryByTestId('check-scene');
+const checkScene = () => screen.queryByTestId('page-scene');
 const sceneDawn = () =>
-  within(screen.getByTestId('check-scene')).getByTestId('scene').style.getPropertyValue('--dawn');
+  within(screen.getByTestId('page-scene')).getByTestId('scene').style.getPropertyValue('--dawn');
 const panel = () => screen.queryByTestId('check-panel');
 const howItWorks = () =>
   screen.findByRole('heading', { name: 'Catch every digit. Hold back on 3.' });
@@ -158,8 +158,9 @@ describe("the check's background per group (Spec 026 §2)", () => {
   it('leaving the check removes the scene', async () => {
     renderPlay('calm');
     await howItWorks();
-    await userEvent.click(screen.getByRole('link', { name: 'Steady' }));
-    await screen.findByRole('region', { name: "Today's check" });
+    // Trends has no scene (Spec 028 §1); Home now has one for calm too.
+    await userEvent.click(screen.getByRole('link', { name: 'Trends' }));
+    await screen.findByRole('heading', { level: 1, name: 'Trends' });
     expect(checkScene()).toBeNull();
   });
 });
