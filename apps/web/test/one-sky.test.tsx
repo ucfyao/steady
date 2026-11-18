@@ -158,10 +158,50 @@ describe('Results (Spec 028 §3)', () => {
     expect(layout()).not.toHaveAttribute('data-scene');
   });
 
-  it('no scene when the session is not found', async () => {
+  it('calm: the scene while the session loads, the waiting state on a panel', async () => {
+    const backend = fakeBackend();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const factory: typeof backend.factory = ((token: string | null) => {
+      const api = backend.factory(token);
+      return {
+        ...api,
+        listSessions: async () => {
+          await gate;
+          return api.listSessions();
+        },
+      };
+    }) as typeof backend.factory;
+    const s = session('calm', 6);
+    backend.control.variant = 'calm';
+    backend.sessions.set(tokenN(1), [s]);
+    render(
+      <PlayersProvider apiFactory={factory} storage={localStorage}>
+        <MemoryRouter initialEntries={[`/results/${s.id}`]}>
+          <AppRoutes />
+        </MemoryRouter>
+      </PlayersProvider>,
+    );
+    const waiting = await screen.findByText('Loading your results…');
+    expect(sceneDawn()).toBe('0.000');
+    expect(screen.getByTestId('results-panel')).toContainElement(waiting);
+    release();
+    await screen.findByRole('region', { name: 'Your sky' });
+    expect(sceneDawn()).toBe('0.000');
+  });
+
+  it('calm: the scene stays when the session is not found, the message on a panel', async () => {
     renderAt('/results/missing', 'calm');
+    const title = await screen.findByRole('heading', { name: 'Session not found' });
+    expect(pageScene()).not.toBeNull();
+    expect(screen.getByTestId('results-panel')).toContainElement(title);
+  });
+
+  it('plain: no scene and no panel when the session is not found', async () => {
+    renderAt('/results/missing', 'plain');
     await screen.findByRole('heading', { name: 'Session not found' });
     expect(pageScene()).toBeNull();
+    expect(screen.queryByTestId('results-panel')).toBeNull();
   });
 
   it('no scene after leaving for Trends', async () => {

@@ -3,7 +3,7 @@
 Status: implemented
 Design note: `docs/design-note.md` §3
 Depends on: Spec 010, Spec 014, Spec 018, Spec 026, Spec 027
-Changes: Spec 014 §1–§3 (Home's hero), Spec 018 (Results' sky), Spec 010 (a panel has a fill and a shadow on the scene)
+Changes: Spec 014 §1–§3 (Home's hero), Spec 018 (Results' sky), Spec 026 §2 (no plain page while the check loads), Spec 010 (a panel has a fill and a shadow on the scene)
 
 ## Why
 
@@ -20,7 +20,8 @@ The two looks met on every check: Home, then the check, then Results, then Home 
 - **plain:** no scene on any screen. The page colour of the chosen theme, as on every other screen.
 - **Trends, Players and the status pages** are unchanged: no scene.
 - **The header** lies on the scene in the night colours whenever there is one, and stays in the flow of the page (Spec 026). It is no longer laid over a band (Spec 014, Spec 018), so a notice no longer changes it.
-- The group is the player's group (Spec 027). On Home it is known with the player list, so the scene is there from the first paint; no screen shows a scene and then removes it.
+- The group is the player's group (Spec 027), known with the player list before any screen is drawn. So the scene is there from the first paint on Home, the check and Results, including their waiting states: no screen shows the page colour and then the scene, or the scene and then the page colour. This replaces Spec 026 §2's "until the group is known, the plain page colour".
+- game's dawn needs the sessions: until they arrive the scene is at night (dawn 0), then it takes the last game session's sky (Home, the check) or the session's own (Results).
 
 ## 2. Home
 
@@ -33,6 +34,7 @@ The two looks met on every check: Home, then the check, then Results, then Home 
 
 - **calm and game:** the conclusion and game's summary sit on the scene at the top, in the night colours, as before. The scene is at the session's own dawn (game) or at night (calm), as in Spec 018.
 - **plain:** no scene. The conclusion is a headline on the page in the theme's colours.
+- While the session loads, and when it cannot be loaded or is not found, the scene is the player's group's (at night) and the message sits on a panel on the theme's surface, as on the check (Spec 026). plain has neither.
 - The panels under it sit on the theme's surface. On the scene, the secondary button ("See your trends") takes the night colours of the header, so it stays readable on the sky.
 
 ## 4. Panels on the scene
@@ -53,7 +55,9 @@ Nothing that a session records changes, and focus mode is unchanged. plain's Hom
 - Home, calm: the scene is there before the history arrives.
 - Home, calm, with a notice: the header still lies on the scene.
 - Results: a game session on the scene at its dawn; a calm session at dawn 0; a plain session with no scene; the conclusion is there in every case.
-- Results: no scene when the session is not found, and none after leaving for Trends.
+- Results, calm: the scene while the session loads and when it is not found, with the message on a panel; plain: neither.
+- Results: no scene after leaving for Trends.
+- The check, calm: the scene while it loads, with the waiting state in the panel.
 - The check (Spec 026) keeps its tests, with the scene now shared with Home and Results.
 - A panel on a page with a scene has the surface fill; without one it has none (`data-scene` on the layout).
 - Real browser: Home and Results for plain, calm and game, light and dark, at 375 px, 1280 px and 2000 px.

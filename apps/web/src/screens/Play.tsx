@@ -63,7 +63,7 @@ const NONE = '';
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Play({ env: injected }: { env?: PlayEnv }) {
-  const { api, active } = usePlayers();
+  const { api, active, groups } = usePlayers();
   const navigate = useNavigate();
   const [env] = useState(() => injected ?? browserEnv());
   const [step, setStep] = useState<Step>({ k: 'loading' });
@@ -78,8 +78,6 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   } | null>(null);
   /** The A/B variant for practice (Spec 006); the real session uses what the server says. */
   const [variant, setVariant] = useState<Variant>('calm');
-  /** Whether `variant` has arrived; until then there is no scene (Spec 026 §2). */
-  const [variantKnown, setVariantKnown] = useState(false);
   /** The dawn of the player's last game session, 0–100, as on Home (Spec 026 §2). */
   const [lastSky, setLastSky] = useState(0);
   // Bumped by "Try again" to get the check ready once more.
@@ -94,7 +92,6 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
         setVariant(me.variant);
         const lastGame = sessions.filter((s) => s.variant === 'game').at(-1);
         setLastSky(lastGame ? dawnPercent(lastGame.score) : 0);
-        setVariantKnown(true);
         const first = sessions.length === 0;
         setFirstTime(first);
         setGuided(first);
@@ -106,10 +103,12 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     };
   }, [api, env, attempt]);
 
-  // Spec 026: calm and game see Home's scene behind the check (game at its last sky); plain
-  // has no scene. The content follows the light/dark choice.
-  const onScene = variantKnown && variant !== 'plain';
-  useScene(onScene ? (variant === 'game' ? lastSky : 0) : null);
+  // Spec 026, Spec 028: calm and game see the scene behind the check from the first paint (the
+  // group comes with the player list), game at its last sky once the sessions arrive; plain has
+  // no scene. The content follows the light/dark choice.
+  const group = active ? groups[active.id] : undefined;
+  const onScene = group === 'calm' || group === 'game';
+  useScene(onScene ? (group === 'game' ? lastSky : 0) : null);
 
   const intro = () => {
     setGuided(true);

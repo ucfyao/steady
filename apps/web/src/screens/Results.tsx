@@ -4,7 +4,7 @@ import {
   type ProgressMetric,
   type ProgressSummary,
 } from '@steady/core';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   METRICS,
   METRIC_ORDER,
@@ -46,7 +46,7 @@ type History =
 
 export function Results() {
   const { id } = useParams();
-  const { api, active } = usePlayers();
+  const { api, active, groups } = usePlayers();
   // Play hands the new session over for an instant page. It belongs to the player who played
   // it: after a switch (same URL, same state) only the current player's history counts.
   const state = useLocation().state as { session?: CompletedSession; playerId?: string } | null;
@@ -76,20 +76,26 @@ export function Results() {
       : history.k === 'ready'
         ? history.sessions.find((s) => s.id === id)
         : undefined;
-  // Spec 018, Spec 028: a calm or game session on its sky behind the page (the session's dawn
-  // for game, the night for calm); a plain session has none.
-  useScene(
-    session && session.variant !== 'plain'
-      ? session.variant === 'game'
-        ? dawnPercent(session.score)
-        : 0
-      : null,
-  );
+  // Spec 018, Spec 028: calm and game on their sky behind the page from the first paint (the
+  // group comes with the player list), at the session's own dawn for game once it is here and
+  // at night until then; plain has none.
+  const variant = session?.variant ?? (active ? groups[active.id] : undefined);
+  const onScene = variant === 'calm' || variant === 'game';
+  useScene(onScene ? (session?.variant === 'game' ? dawnPercent(session.score) : 0) : null);
+  // On the scene, the waiting, error and not-found states sit on a panel, as on the check.
+  const onPanel = (node: ReactNode) =>
+    onScene ? (
+      <div className={styles.panel} data-testid="results-panel">
+        {node}
+      </div>
+    ) : (
+      node
+    );
 
   if (!session) {
-    if (history.k === 'loading') return <Loading label="Loading your results…" />;
+    if (history.k === 'loading') return onPanel(<Loading label="Loading your results…" />);
     if (history.k === 'error')
-      return (
+      return onPanel(
         <StatusPage
           title="Could not load this session"
           alert
@@ -103,16 +109,16 @@ export function Results() {
           secondary={{ label: 'Back to home', to: '/' }}
         >
           {errorWords(history.error)}
-        </StatusPage>
+        </StatusPage>,
       );
-    return (
+    return onPanel(
       <StatusPage
         title="Session not found"
         primary={{ label: 'Back to home', to: '/' }}
         secondary={{ label: 'See your trends', to: '/progress' }}
       >
         This session does not belong to the current player, or it no longer exists.
-      </StatusPage>
+      </StatusPage>,
     );
   }
 
@@ -140,7 +146,6 @@ export function Results() {
   const m = METRICS;
   // The sky this session reached (Spec 018): its dawn for a game session, the night otherwise.
   const dawn = (session.variant === 'game' ? dawnPercent(score) / 100 : 0).toFixed(3);
-  const onScene = session.variant !== 'plain';
 
   return (
     <section className={onScene ? `${styles.results} ${styles.onScene}` : styles.results}>

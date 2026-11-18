@@ -107,7 +107,7 @@ describe("the check's background per group (Spec 026 §2)", () => {
     expect(sceneDawn()).toBe('0.000');
   });
 
-  it('no scene while the check loads', async () => {
+  it('the scene while the check loads, with the waiting state in the panel (Spec 028 §1)', async () => {
     const backend = fakeBackend();
     backend.control.variant = 'calm';
     // Hold the check's own requests, so the screen is up but the group has not arrived.
@@ -131,8 +131,9 @@ describe("the check's background per group (Spec 026 §2)", () => {
         </MemoryRouter>
       </PlayersProvider>,
     );
-    await screen.findByText('Loading…');
-    expect(checkScene()).toBeNull();
+    const waiting = await screen.findByText('Loading…');
+    expect(checkScene()).not.toBeNull();
+    expect(panel()).toContainElement(waiting);
     release();
     await howItWorks();
     expect(checkScene()).not.toBeNull();
