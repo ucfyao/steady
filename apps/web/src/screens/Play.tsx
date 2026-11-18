@@ -91,7 +91,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
     Promise.all([api.listSessions(), api.getMe()])
       .then(([sessions, me]) => {
         if (cancelled) return;
-        setVariant(env.variantOverride ?? me.variant);
+        setVariant(me.variant);
         const lastGame = sessions.filter((s) => s.variant === 'game').at(-1);
         setLastSky(lastGame ? dawnPercent(lastGame.score) : 0);
         setVariantKnown(true);
@@ -126,7 +126,6 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
       const session = await api.startSession({
         checkIn: hasCheckIn ? answers : null,
         device: env.device,
-        ...(env.variantOverride && { variant: env.variantOverride }),
       });
       setStep({ k: 'running', session });
     } catch (e) {

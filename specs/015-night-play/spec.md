@@ -1,6 +1,6 @@
 # Spec 015: The whole check in each group's look
 
-Status: implemented; §2 (the night colours around focus mode) replaced by Spec 026, where the content follows the light/dark choice on Home's scene
+Status: implemented; §2 (the night colours around focus mode) replaced by Spec 026, where the content follows the light/dark choice on Home's scene; Spec 027 removes the `?variant=` override (§1): the look follows the player's group
 Design note: `docs/design-note.md` §3
 Depends on: Spec 006, Spec 008, Spec 014
 Changes: Spec 008 §1 (where the groups differ: the whole check, not only focus mode)

@@ -17,14 +17,11 @@ afterEach(() => document.documentElement.removeAttribute('data-theme'));
 const outcomes = (k: number): TrialOutcome[] =>
   Array.from({ length: 10 }, (_, i) => (i < k ? 'steady' : 'omission'));
 
-function renderPlay(
-  variant: Variant,
-  opts: { sessions?: CompletedSession[]; override?: Variant } = {},
-) {
+function renderPlay(variant: Variant, opts: { sessions?: CompletedSession[] } = {}) {
   const backend = fakeBackend();
   backend.control.variant = variant;
   if (opts.sessions) backend.sessions.set(tokenN(1), opts.sessions);
-  const clock = fakeEnv('keyboard', opts.override);
+  const clock = fakeEnv('keyboard');
   render(
     <PlayersProvider apiFactory={backend.factory} storage={localStorage}>
       <MemoryRouter initialEntries={['/play']}>
@@ -108,12 +105,6 @@ describe("the check's background per group (Spec 026 §2)", () => {
     renderPlay('game');
     await howItWorks();
     expect(sceneDawn()).toBe('0.000');
-  });
-
-  it('an override decides the background', async () => {
-    renderPlay('calm', { override: 'plain' });
-    await howItWorks();
-    expect(checkScene()).toBeNull();
   });
 
   it('no scene while the check loads', async () => {

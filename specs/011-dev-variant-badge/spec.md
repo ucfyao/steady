@@ -1,6 +1,6 @@
 # Spec 011: Seeing and reaching the variants in development
 
-Status: implemented
+Status: implemented; Spec 027 removes the `?variant=` override (§1): switching players is the only way to see a group
 Depends on: Spec 006 §5, Spec 008
 Changes: nothing a player sees
 

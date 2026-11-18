@@ -43,6 +43,4 @@ export const UpdateMeSchema = z.object({ name: PlayerNameSchema }).strict();
 export const StartSessionSchema = z.object({
   checkIn: CheckInSchema.nullish(),
   device: z.enum(INPUT_DEVICES),
-  /** A play-test override (`?variant=`); without it, the player's own variant applies. */
-  variant: z.enum(VARIANTS).optional(),
 });

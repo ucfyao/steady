@@ -59,9 +59,8 @@ export class SessionsService {
     playerId: string,
     checkIn: CheckIn | null,
     device: InputDevice,
-    override?: Variant,
   ): Promise<StartedSession> {
-    const variant = override ?? (await this.variantOf(playerId));
+    const variant = await this.variantOf(playerId);
     const seed = randomInt(2 ** 31 - 1); // server-chosen; fits a Postgres integer
     const { trials, probeAfter } = createSessionPlan(seed);
     const [row] = await this.db

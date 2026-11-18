@@ -1,9 +1,9 @@
 import { act } from '@testing-library/react';
-import type { InputDevice, Variant } from '@steady/core';
+import type { InputDevice } from '@steady/core';
 import type { PlayEnv } from '../../src/game/env.js';
 
 /** A manual clock: frames only run when the test advances time. */
-export function fakeEnv(device: InputDevice = 'keyboard', variantOverride?: Variant) {
+export function fakeEnv(device: InputDevice = 'keyboard') {
   let now = 0;
   let nextId = 1;
   let queue = new Map<number, (t: number) => void>();
@@ -22,7 +22,6 @@ export function fakeEnv(device: InputDevice = 'keyboard', variantOverride?: Vari
       return () => hidden.delete(cb);
     },
     device,
-    variantOverride,
   };
 
   /** Runs one frame at the current time. */
