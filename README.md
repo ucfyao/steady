@@ -50,7 +50,7 @@ Steady trains sustained attention with the **Sustained Attention to Response Tas
 
 <table>
   <tr>
-    <td width="30%"><img src="docs/images/home-phone.png" alt="Home on a phone in the light theme"></td>
+    <td width="30%"><img src="docs/images/home-phone.png" alt="Home on a phone: the lantern in a dawn sky, the week and the last check, hills below"></td>
     <td width="70%">
       <img src="docs/images/results.png" alt="Results: the session from start to end, one square per digit">
       <br><br>
