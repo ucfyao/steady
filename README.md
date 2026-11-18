@@ -6,7 +6,7 @@ A two-minute daily focus check built on the Sustained Attention to Response Task
 
 ## Quick start
 
-Requires Node ≥ 24 (`nvm use` reads `.nvmrc`), pnpm 10 (`corepack enable` provides the version pinned in `package.json`) and Docker running. The first `pnpm bootstrap` pulls the `postgres:17-alpine` image, which can take a minute.
+Requires Node ≥ 26 (`nvm use` reads `.nvmrc`; Volta reads the `volta` field in `package.json`), pnpm 10 (`corepack enable` provides the version pinned in `package.json`) and Docker running. The first `pnpm bootstrap` pulls the `postgres:17-alpine` image, which can take a minute.
 
 ```bash
 pnpm install        # also builds @steady/core
