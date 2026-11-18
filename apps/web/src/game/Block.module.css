@@ -413,9 +413,8 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  /* [P] findable, but never competing with the digit: muted, never the lantern yellow. */
-  color: var(--night-muted);
-  font-size: var(--text-lg);
+  /* [P] findable, but never competing with the digit: the text colour, never the lantern yellow. */
+  color: var(--night-text);
   line-height: 1;
   cursor: pointer;
 }
@@ -430,14 +429,10 @@
   background: var(--night-chip);
 }
 
-.stop:hover {
-  color: var(--night-text);
+.stop:hover span {
+  background: var(--color-mark);
 }
 
 .plain .stop {
-  color: var(--color-text-muted);
-}
-
-.plain .stop:hover {
   color: var(--color-text);
 }

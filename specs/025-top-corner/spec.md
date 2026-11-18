@@ -15,9 +15,9 @@ The points, the multiplier and Stop share one centre line: the points row starts
 
 ## 2. One style [P]
 
-- Stop's visible part is a 28 px circle (the pill's height) with the pill's fill, and a smaller "×" inside.
+- Stop's visible part is a 28 px circle (the pill's height) with the pill's fill, and a drawn "×" inside (12 px, 2 px strokes), so its weight matches the pill on any font. A text "×" in the muted colour was tried first and read as faint next to the pill.
 - The fill is one token, `--night-chip`, used by both; on the paper look (plain) it is the paper's sunken surface. No colour is written outside `tokens.css`.
-- Stop stays quieter than the multiplier, as Spec 009 asks ("findable, but never competing with the digit"): its "×" is the muted text colour, never the lantern yellow; it lights to the full text colour on hover.
+- Stop stays neutral, as Spec 009 asks ("findable, but never competing with the digit"): its "×" is the text colour of the look (light on the night scene, dark on paper), never the lantern yellow, which belongs to the game's rewards. On hover the circle darkens a step (`--color-mark`).
 - The same in every group: plain draws the same circle in its paper colours (it has no points or multiplier).
 
 ## Test cases
