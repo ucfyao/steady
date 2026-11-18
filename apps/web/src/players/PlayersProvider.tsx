@@ -9,7 +9,14 @@ import {
 } from 'react';
 import type { PlayerListItem, Variant } from '@steady/core';
 import { ApiError, createApi, type Api } from '../api/client.js';
-import { loadActiveId, normaliseName, saveActiveId, type Profile } from './store.js';
+import {
+  loadActiveId,
+  loadGroup,
+  normaliseName,
+  saveActiveId,
+  saveGroup,
+  type Profile,
+} from './store.js';
 
 export interface PlayersContextValue {
   status: 'loading' | 'ready' | 'error';
@@ -38,6 +45,11 @@ export interface PlayersContextValue {
   retry(): void;
   /** Each player's group, by player id (for Spec 011's tags). */
   groups: Partial<Record<string, Variant>>;
+  /**
+   * The selected player's group (Spec 028): from the list once it has arrived; until then the
+   * group remembered in this browser, so the scene can be drawn while the app sets up.
+   */
+  activeGroup: Variant | null;
 }
 
 export const PlayersContext = createContext<PlayersContextValue | null>(null);
@@ -64,6 +76,7 @@ export function PlayersProvider({
   // Spec 016: the list comes from the server; this browser keeps only the selection.
   const [list, setList] = useState<PlayerListItem[] | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(() => loadActiveId(storage));
+  const [rememberedGroup] = useState<Variant | null>(() => loadGroup(storage));
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<NoticeState | null>(null);
   // Guards against creating two players when StrictMode runs the effect twice.
@@ -99,9 +112,12 @@ export function PlayersProvider({
   // The selected player, or the first one when none (or a missing one) is selected.
   const active = profiles.find((p) => p.id === selectedId) ?? profiles[0] ?? null;
   const activeId = active?.id ?? null;
+  const activeGroup = list ? ((activeId ? groups[activeId] : undefined) ?? null) : rememberedGroup;
   useEffect(() => {
-    if (list) saveActiveId(storage, activeId);
-  }, [storage, list, activeId]);
+    if (!list) return;
+    saveActiveId(storage, activeId);
+    saveGroup(storage, activeGroup);
+  }, [storage, list, activeId, activeGroup]);
 
   const count = profiles.length;
   const createProfile = useCallback(
@@ -194,6 +210,7 @@ export function PlayersProvider({
     deletePlayer,
     retry: () => setError(null),
     groups,
+    activeGroup,
   };
 
   return <PlayersContext.Provider value={value}>{children}</PlayersContext.Provider>;

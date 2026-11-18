@@ -85,7 +85,7 @@ function LastCheck({ session, best }: { session: CompletedSession; best: number 
 }
 
 export function Home() {
-  const { api, active, groups } = usePlayers();
+  const { api, active, activeGroup } = usePlayers();
   const [data, setData] = useState<{
     sessions: CompletedSession[];
     summary: ProgressSummary;
@@ -116,7 +116,7 @@ export function Home() {
   const best = game ? personalBest(data.sessions) : null;
   // Spec 028: calm and game on their scene behind the page from the first paint (the group
   // comes with the player list); game's sky rises to the last one once the history arrives.
-  const group = active ? groups[active.id] : undefined;
+  const group = activeGroup;
   const onScene = group === 'calm' || group === 'game';
   useScene(onScene ? (lastSky ?? 0) : null);
 
@@ -149,7 +149,7 @@ export function Home() {
         </div>
       </section>
       {failed && (
-        <div role="alert" className="error">
+        <div role="alert" className={`error ${styles.panel}`}>
           <p>Could not load your history.</p>
           <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
             Try again

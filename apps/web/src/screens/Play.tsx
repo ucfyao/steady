@@ -63,7 +63,7 @@ const NONE = '';
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function Play({ env: injected }: { env?: PlayEnv }) {
-  const { api, active, groups } = usePlayers();
+  const { api, active, activeGroup } = usePlayers();
   const navigate = useNavigate();
   const [env] = useState(() => injected ?? browserEnv());
   const [step, setStep] = useState<Step>({ k: 'loading' });
@@ -106,7 +106,7 @@ export function Play({ env: injected }: { env?: PlayEnv }) {
   // Spec 026, Spec 028: calm and game see the scene behind the check from the first paint (the
   // group comes with the player list), game at its last sky once the sessions arrive; plain has
   // no scene. The content follows the light/dark choice.
-  const group = active ? groups[active.id] : undefined;
+  const group = activeGroup;
   const onScene = group === 'calm' || group === 'game';
   useScene(onScene ? (group === 'game' ? lastSky : 0) : null);
 

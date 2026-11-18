@@ -46,7 +46,7 @@ type History =
 
 export function Results() {
   const { id } = useParams();
-  const { api, active, groups } = usePlayers();
+  const { api, active, activeGroup } = usePlayers();
   // Play hands the new session over for an instant page. It belongs to the player who played
   // it: after a switch (same URL, same state) only the current player's history counts.
   const state = useLocation().state as { session?: CompletedSession; playerId?: string } | null;
@@ -79,7 +79,7 @@ export function Results() {
   // Spec 018, Spec 028: calm and game on their sky behind the page from the first paint (the
   // group comes with the player list), at the session's own dawn for game once it is here and
   // at night until then; plain has none.
-  const variant = session?.variant ?? (active ? groups[active.id] : undefined);
+  const variant = session?.variant ?? activeGroup;
   const onScene = variant === 'calm' || variant === 'game';
   useScene(onScene ? (session?.variant === 'game' ? dawnPercent(session.score) : 0) : null);
   // On the scene, the waiting, error and not-found states sit on a panel, as on the check.

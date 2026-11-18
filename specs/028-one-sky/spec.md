@@ -21,6 +21,7 @@ The two looks met on every check: Home, then the check, then Results, then Home 
 - **Trends, Players and the status pages** are unchanged: no scene.
 - **The header** lies on the scene in the night colours whenever there is one, and stays in the flow of the page (Spec 026). It is no longer laid over a band (Spec 014, Spec 018), so a notice no longer changes it.
 - The group is the player's group (Spec 027), known with the player list before any screen is drawn. So the scene is there from the first paint on Home, the check and Results, including their waiting states: no screen shows the page colour and then the scene, or the scene and then the page colour. This replaces Spec 026 §2's "until the group is known, the plain page colour".
+- **Opening the app:** before the player list arrives ("Setting up…", or the error if it cannot be read), the scene is drawn at night for the group remembered in this browser for the selected player, with the text on a panel. The group is saved whenever the list arrives. With nothing remembered (a first visit, blocked storage) or a remembered plain, there is no scene. If the remembered group turns out to be wrong (the player was deleted elsewhere), the screen follows the list.
 - game's dawn needs the sessions: until they arrive the scene is at night (dawn 0), then it takes the last game session's sky (Home, the check) or the session's own (Results).
 
 ## 2. Home
@@ -28,7 +29,7 @@ The two looks met on every check: Home, then the check, then Results, then Home 
 - **calm and game:** the lantern, the greeting, the lead, game's last sky and the button sit on the scene in the first window, as before, in the night colours, with the soft dark wash behind the text. The wash fades out inside the block, so it has no visible edge.
 - **game's dawn:** the last game session's sky, as before (Spec 007 §1). Until the history arrives the scene is at night (dawn 0).
 - **plain:** no scene and **no lantern**. The greeting, the lead and the button sit on the page in the theme's colours, with the theme's primary button.
-- **Under the greeting, on the scene:** "Last 7 days", "Last check", the line about the starting point and the welcome for a new player each sit on the theme's surface, with its border and radius. The welcome and the starting-point line get a panel only on the scene; for plain they stay as before (Spec 014 §3).
+- **Under the greeting, on the scene:** "Last 7 days", "Last check", the line about the starting point and the welcome for a new player each sit on the theme's surface, with its border and radius. The welcome, the starting-point line and the "Could not load your history" message get a panel only on the scene; for plain they stay as before (Spec 014 §3).
 
 ## 3. Results
 
@@ -58,6 +59,7 @@ Nothing that a session records changes, and focus mode is unchanged. plain's Hom
 - Results, calm: the scene while the session loads and when it is not found, with the message on a panel; plain: neither.
 - Results: no scene after leaving for Trends.
 - The check, calm: the scene while it loads, with the waiting state in the panel.
+- Opening the app with calm remembered: the scene at night while setting up, the text on a panel; plain or nothing (or a value that is not a group) remembered: neither. The selected player's group is saved once the list arrives.
 - The check (Spec 026) keeps its tests, with the scene now shared with Home and Results.
 - A panel on a page with a scene has the surface fill; without one it has none (`data-scene` on the layout).
 - Real browser: Home and Results for plain, calm and game, light and dark, at 375 px, 1280 px and 2000 px.

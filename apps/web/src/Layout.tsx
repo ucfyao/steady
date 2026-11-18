@@ -43,18 +43,21 @@ export function useScene(dawn: number | null) {
 }
 
 export function Layout() {
-  const { status, error, retry, notice, dismissNotice, active } = usePlayers();
+  const { status, error, retry, notice, dismissNotice, active, activeGroup } = usePlayers();
   const [focusMode, setFocusMode] = useState(false);
   const [sceneDawn, setSceneDawn] = useState<number | null>(null);
   const outletContext = useMemo<LayoutContext>(() => ({ setFocusMode, setSceneDawn }), []);
-  // Spec 028: calm's and game's scene behind the page, outside focus mode (which draws its own).
-  const onScene = sceneDawn !== null && !focusMode;
+  // Spec 028: while the app sets up (or cannot), the remembered group's scene at night; once
+  // ready, the screen's own. Calm's and game's only, outside focus mode (which draws its own).
+  const settingUp = status !== 'ready' && (activeGroup === 'calm' || activeGroup === 'game');
+  const dawn = settingUp ? 0 : sceneDawn;
+  const onScene = dawn !== null && !focusMode;
 
   return (
     <div className={styles.app} data-scene={onScene || undefined}>
       {onScene && (
         <div className={styles.pageScene} data-testid="page-scene">
-          <Scene rich ref={(el) => el?.style.setProperty('--dawn', (sceneDawn / 100).toFixed(3))} />
+          <Scene rich ref={(el) => el?.style.setProperty('--dawn', (dawn / 100).toFixed(3))} />
         </div>
       )}
       {!focusMode && (
@@ -77,11 +80,18 @@ export function Layout() {
       {notice && !focusMode && <Notice onDismiss={dismissNotice}>{notice}</Notice>}
 
       <main>
-        {status === 'loading' && <p>Setting up…</p>}
-        {status === 'error' && (
-          <div role="alert" className="error">
-            <p>{error}</p>
-            <Button onClick={retry}>Try again</Button>
+        {status !== 'ready' && (
+          <div
+            className={settingUp ? styles.panel : undefined}
+            data-testid={settingUp ? 'layout-panel' : undefined}
+          >
+            {status === 'loading' && <p>Setting up…</p>}
+            {status === 'error' && (
+              <div role="alert" className="error">
+                <p>{error}</p>
+                <Button onClick={retry}>Try again</Button>
+              </div>
+            )}
           </div>
         )}
         {/* Keyed by player: switching or deleting a player remounts every screen, so no

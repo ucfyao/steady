@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../src/App.js';
 import { PlayersProvider } from '../src/players/PlayersProvider.js';
+import { GROUP_KEY } from '../src/players/store.js';
 import { fakeBackend, tokenN } from './support/fake-api.js';
 import { storedSession } from './support/sessions.js';
 
@@ -211,5 +212,63 @@ describe('Results (Spec 028 §3)', () => {
     await userEvent.click(screen.getByRole('link', { name: 'See your trends' }));
     await screen.findByRole('heading', { level: 1, name: 'Trends' });
     expect(pageScene()).toBeNull();
+  });
+});
+
+describe('opening the app (Spec 028 §1)', () => {
+  /** Holds the player list, so the layout stays on "Setting up…" until `release`. */
+  function renderHeld(remembered?: string) {
+    if (remembered) localStorage.setItem(GROUP_KEY, remembered);
+    const backend = fakeBackend();
+    backend.control.variant = 'calm';
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const factory: typeof backend.factory = ((token: string | null) => {
+      const api = backend.factory(token);
+      return {
+        ...api,
+        listPlayers: async () => {
+          await gate;
+          return api.listPlayers();
+        },
+      };
+    }) as typeof backend.factory;
+    render(
+      <PlayersProvider apiFactory={factory} storage={localStorage}>
+        <MemoryRouter initialEntries={['/']}>
+          <AppRoutes />
+        </MemoryRouter>
+      </PlayersProvider>,
+    );
+    return () => release();
+  }
+
+  it('the group remembered in this browser: its scene while setting up, the text on a panel', async () => {
+    const release = renderHeld('calm');
+    const waiting = await screen.findByText('Setting up…');
+    expect(sceneDawn()).toBe('0.000');
+    expect(screen.getByTestId('layout-panel')).toContainElement(waiting);
+    release();
+    await hero();
+    expect(pageScene()).not.toBeNull();
+  });
+
+  it('plain remembered: no scene and no panel while setting up', async () => {
+    renderHeld('plain');
+    await screen.findByText('Setting up…');
+    expect(pageScene()).toBeNull();
+    expect(screen.queryByTestId('layout-panel')).toBeNull();
+  });
+
+  it('nothing (or nonsense) remembered: no scene while setting up', async () => {
+    renderHeld('purple');
+    await screen.findByText('Setting up…');
+    expect(pageScene()).toBeNull();
+  });
+
+  it("remembers the selected player's group once the list arrives", async () => {
+    renderAt('/', 'game');
+    await hero();
+    expect(localStorage.getItem(GROUP_KEY)).toBe('game');
   });
 });
