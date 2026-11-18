@@ -5,7 +5,7 @@
 
 .lead {
   margin-bottom: var(--space-5);
-  color: rgb(236 230 218 / 0.8);
+  color: var(--color-text-muted);
   /* Wraps naturally ("on 3." is kept together by a no-break space in Home.tsx); "pretty"
      only avoids a short last line, so "on 3." does not end up alone on a phone. */
   text-wrap: pretty;
@@ -53,13 +53,13 @@
   color: var(--color-text-muted);
 }
 
-.hero .start {
+.onScene .start {
   background: var(--lantern);
   border-color: var(--lantern);
   color: var(--on-lantern);
 }
 
-.hero .start:hover {
+.onScene .start:hover {
   background: var(--lantern-hover);
 }
 
@@ -71,71 +71,47 @@
 }
 
 /*
- * The hero (Spec 007, Spec 014): the lantern's night scene, always dark, across the whole
- * window width and from the top of the page. The lantern is its centre, with the greeting,
- * lead and button under it on the content column.
+ * The hero (Spec 007, Spec 014, Spec 028): the greeting, lead and button, centred on the
+ * content column. For calm and game it sits on the scene behind the page, in the night colours,
+ * with the lantern above it; plain has the page and the theme's colours.
  */
 .hero {
-  --header-height: calc(2 * var(--space-7) + 2.25rem);
-
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  width: 100vw;
-  min-height: clamp(30rem, 64vh, 38rem);
-  margin-inline: calc(50% - 50vw);
   margin-bottom: var(--space-8);
-  padding: var(--space-6) 0 var(--space-8);
+  padding: var(--space-4) 0 var(--space-6);
+  text-align: center;
+}
+
+.onScene .hero {
+  min-height: clamp(24rem, calc(64vh - 6rem), 32rem);
   color: var(--night-text);
-  background: var(--night-bg);
-}
-
-/* The header lies on the scene: leave room for it above the lantern. */
-:global([data-over-hero]) .hero {
-  padding-top: var(--header-height);
-}
-
-/* A dark wash behind the header, so its light text stays readable at any dawn. */
-:global([data-over-hero]) .hero::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: 1;
-  height: calc(var(--header-height) * 1.6);
-  background: linear-gradient(180deg, rgb(20 22 40 / 0.6), transparent);
-  pointer-events: none;
 }
 
 /*
  * A soft dark wash behind the text, as strong as the sky is light: none needed at night,
- * enough at dawn for the light text to stay readable, and too wide to read as a patch.
+ * enough at dawn for the light text to stay readable. `closest-side` fades it out inside the
+ * hero, so it has no edge.
  */
-.hero::after {
+.onScene .hero::after {
   content: '';
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse 70% 55% at 50% 70%,
+    closest-side at 50% 68%,
     rgb(20 22 40 / calc(0.15 + var(--dawn, 0) * 0.35)),
-    transparent 80%
+    transparent
   );
   pointer-events: none;
 }
 
-/* The content column inside the full-width scene, centred. */
-.heroInner {
+.heroLantern,
+.heroText {
   position: relative;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding-inline: var(--gutter);
-  text-align: center;
 }
 
 .heroText {
@@ -144,15 +120,22 @@
   align-items: center;
 }
 
-/* The one title that stays large (Spec 010): the greeting on the scene. */
+/* The one title that stays large (Spec 010): the greeting. */
 .heroText h1 {
   font-size: var(--text-4xl);
+}
+
+.onScene .heroText h1 {
   color: var(--night-text);
 }
 
-.heroText h1,
-.heroText .lead,
-.heroText .sky {
+.onScene .heroText .lead {
+  color: rgb(236 230 218 / 0.8);
+}
+
+.onScene .heroText h1,
+.onScene .heroText .lead,
+.onScene .heroText .sky {
   text-shadow: 0 1px 14px rgb(20 22 40 / 0.55);
 }
 
@@ -231,6 +214,23 @@
   margin: calc(-1 * var(--space-3)) 0 var(--space-5);
   font-size: var(--text-sm);
   color: var(--lantern);
+}
+
+/*
+ * On the scene (Spec 028), the blocks that have no panel of their own (the welcome, the line
+ * about the starting point) get one on the theme's surface, as the cards do. plain keeps them
+ * on the page.
+ */
+.onScene .panel {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-on-scene);
+}
+
+.onScene .baseline {
+  margin-top: var(--space-4);
 }
 
 /* A new player's welcome (Spec 014 §3): no panel, a sentence and three points. */

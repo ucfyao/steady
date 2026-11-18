@@ -1,6 +1,6 @@
 # Spec 014: Home's night scene across the whole width
 
-Status: implemented
+Status: implemented; Spec 028 moves the scene behind the whole page for calm and game (no band, no lantern for plain), and the header no longer lies over the hero
 Design note: `docs/design-note.md` §3
 Depends on: Spec 007, Spec 010, Spec 012
 Changes: Spec 007 §1 (the hero), Spec 005 (the welcome for a new player)

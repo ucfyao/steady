@@ -89,6 +89,8 @@
 
   /* Depth: only things that float over content (the avatar menu). Cards stay flat. */
   --shadow-popover: 0 6px 24px rgb(43 41 37 / 0.1);
+  /* A panel on the scene (Spec 028): lifts it off the sky in both themes. */
+  --shadow-on-scene: 0 8px 30px rgb(10 12 25 / 0.25);
 
   /* Layout */
   --content-width: 45rem; /* 720 */
@@ -131,6 +133,7 @@
     --color-surface-sunken: #222941;
     --color-mark: #2d3450;
     --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
+    --shadow-on-scene: 0 8px 30px rgb(0 0 0 / 0.45);
 
     --color-viz-steady: #3f7f71;
     --color-viz-caught: #7fb0ec;
@@ -162,6 +165,7 @@
   --color-surface-sunken: #222941;
   --color-mark: #2d3450;
   --shadow-popover: 0 6px 24px rgb(0 0 0 / 0.4);
+  --shadow-on-scene: 0 8px 30px rgb(0 0 0 / 0.45);
 
   --color-viz-steady: #3f7f71;
   --color-viz-caught: #7fb0ec;

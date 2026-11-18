@@ -1,7 +1,7 @@
 import type { CompletedSession, ProgressSummary, Variant } from '@steady/core';
 import { useEffect, useState } from 'react';
 import { dawnPercent, personalBest } from '../game/dawn.js';
-import { Scene } from '../game/Scene.js';
+import { useScene } from '../Layout.js';
 import { METRICS } from '../metrics/metrics.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { lastCheckDay } from '../progress/lastCheck.js';
@@ -46,7 +46,7 @@ function Stat({
  */
 function Welcome() {
   return (
-    <section aria-labelledby="welcome-title" className={styles.welcome}>
+    <section aria-labelledby="welcome-title" className={`${styles.welcome} ${styles.panel}`}>
       <h2 id="welcome-title" className="visually-hidden">
         What Steady does
       </h2>
@@ -85,7 +85,7 @@ function LastCheck({ session, best }: { session: CompletedSession; best: number 
 }
 
 export function Home() {
-  const { api, active } = usePlayers();
+  const { api, active, activeGroup } = usePlayers();
   const [data, setData] = useState<{
     sessions: CompletedSession[];
     summary: ProgressSummary;
@@ -114,41 +114,42 @@ export function Home() {
   const lastGame = game ? data.sessions.filter((s) => s.variant === 'game').at(-1) : undefined;
   const lastSky = lastGame ? dawnPercent(lastGame.score) : null;
   const best = game ? personalBest(data.sessions) : null;
+  // Spec 028: calm and game on their scene behind the page from the first paint (the group
+  // comes with the player list); game's sky rises to the last one once the history arrives.
+  const group = activeGroup;
+  const onScene = group === 'calm' || group === 'game';
+  useScene(onScene ? (lastSky ?? 0) : null);
 
   return (
-    <section className={styles.home}>
-      {/* The lantern's scene (Spec 007 §1); a game player sees the last sky they reached. */}
-      {/* `--dawn` on the hero too, so the wash behind the text grows only as the sky lightens. */}
+    <section className={onScene ? `${styles.home} ${styles.onScene}` : styles.home}>
+      {/* The lantern on calm's and game's scene (Spec 007 §1, Spec 028); plain has neither. */}
+      {/* `--dawn` on the hero, so the wash behind the text grows only as the sky lightens. */}
       <section
         aria-label="Today's check"
         className={styles.hero}
         ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
       >
-        <Scene
-          rich
-          ref={(el) => el?.style.setProperty('--dawn', ((lastSky ?? 0) / 100).toFixed(3))}
-        />
-        <div className={styles.heroInner}>
-          {/* A lit paper lantern on a cord, drawn in CSS (Spec 014 §2). */}
+        {onScene && (
+          /* A lit paper lantern on a cord, drawn in CSS (Spec 014 §2). */
           <span className={styles.heroLantern} aria-hidden="true" data-testid="hero-lantern">
             <span className={styles.cord} />
             <span className={styles.lanternCap} />
             <span className={styles.lanternGlass} />
             <span className={styles.lanternBase} />
           </span>
-          <div className={styles.heroText}>
-            <h1 id="hero-title">Hi, {active?.name}</h1>
-            {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
-            <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
-            {lastSky !== null && <p className={styles.sky}>Last sky: dawn {lastSky}%</p>}
-            <Button to="/play" size="lg" className={styles.start}>
-              Start today&apos;s check
-            </Button>
-          </div>
+        )}
+        <div className={styles.heroText}>
+          <h1 id="hero-title">Hi, {active?.name}</h1>
+          {/* "on 3." stays together, so the 3 never wraps onto a line of its own. */}
+          <p className={styles.lead}>Two minutes. Catch every digit, hold back on&nbsp;3.</p>
+          {lastSky !== null && <p className={styles.sky}>Last sky: dawn {lastSky}%</p>}
+          <Button to="/play" size="lg" className={styles.start}>
+            Start today&apos;s check
+          </Button>
         </div>
       </section>
       {failed && (
-        <div role="alert" className="error">
+        <div role="alert" className={`error ${styles.panel}`}>
           <p>Could not load your history.</p>
           <Button variant="secondary" onClick={() => setAttempt((n) => n + 1)}>
             Try again
@@ -173,7 +174,7 @@ export function Home() {
           </Card>
           <LastCheck session={data.sessions.at(-1)!} best={best} />
           {data.summary.sessionsUntilBaseline > 0 && (
-            <p className={styles.baseline}>
+            <p className={`${styles.baseline} ${styles.panel}`}>
               {moreSessions(data.summary.sessionsUntilBaseline)} until your starting point
             </p>
           )}

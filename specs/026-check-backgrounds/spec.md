@@ -1,6 +1,6 @@
 # Spec 026: One background per group, and the light/dark choice on every screen
 
-Status: implemented; Spec 027 removes the `?variant=` override (§2): the group is the player's
+Status: implemented; Spec 027 removes the `?variant=` override (§2): the group is the player's; Spec 028 applies the same scene behind the page to Home and Results, and shows it while the check loads (§2: the group comes with the player list)
 Design note: `docs/design-note.md` §3
 Depends on: Spec 012, Spec 014, Spec 015, Spec 017
 Changes: Spec 015 §2 (the night look of the screens around focus mode)

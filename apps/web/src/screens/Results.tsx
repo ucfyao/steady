@@ -4,7 +4,7 @@ import {
   type ProgressMetric,
   type ProgressSummary,
 } from '@steady/core';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   METRICS,
   METRIC_ORDER,
@@ -18,8 +18,7 @@ import {
 import { useLocation, useParams } from 'react-router';
 import { errorWords } from '../api/client.js';
 import { dawnPercent, personalBest, sessionPoints } from '../game/dawn.js';
-import { Scene } from '../game/Scene.js';
-import { useOverHero } from '../Layout.js';
+import { useScene } from '../Layout.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
@@ -47,7 +46,7 @@ type History =
 
 export function Results() {
   const { id } = useParams();
-  const { api, active } = usePlayers();
+  const { api, active, activeGroup } = usePlayers();
   // Play hands the new session over for an instant page. It belongs to the player who played
   // it: after a switch (same URL, same state) only the current player's history counts.
   const state = useLocation().state as { session?: CompletedSession; playerId?: string } | null;
@@ -77,13 +76,26 @@ export function Results() {
       : history.k === 'ready'
         ? history.sessions.find((s) => s.id === id)
         : undefined;
-  // Spec 018: once a session is shown, the header lies on its sky.
-  useOverHero(session !== undefined);
+  // Spec 018, Spec 028: calm and game on their sky behind the page from the first paint (the
+  // group comes with the player list), at the session's own dawn for game once it is here and
+  // at night until then; plain has none.
+  const variant = session?.variant ?? activeGroup;
+  const onScene = variant === 'calm' || variant === 'game';
+  useScene(onScene ? (session?.variant === 'game' ? dawnPercent(session.score) : 0) : null);
+  // On the scene, the waiting, error and not-found states sit on a panel, as on the check.
+  const onPanel = (node: ReactNode) =>
+    onScene ? (
+      <div className={styles.panel} data-testid="results-panel">
+        {node}
+      </div>
+    ) : (
+      node
+    );
 
   if (!session) {
-    if (history.k === 'loading') return <Loading label="Loading your results…" />;
+    if (history.k === 'loading') return onPanel(<Loading label="Loading your results…" />);
     if (history.k === 'error')
-      return (
+      return onPanel(
         <StatusPage
           title="Could not load this session"
           alert
@@ -97,16 +109,16 @@ export function Results() {
           secondary={{ label: 'Back to home', to: '/' }}
         >
           {errorWords(history.error)}
-        </StatusPage>
+        </StatusPage>,
       );
-    return (
+    return onPanel(
       <StatusPage
         title="Session not found"
         primary={{ label: 'Back to home', to: '/' }}
         secondary={{ label: 'See your trends', to: '/progress' }}
       >
         This session does not belong to the current player, or it no longer exists.
-      </StatusPage>
+      </StatusPage>,
     );
   }
 
@@ -136,14 +148,13 @@ export function Results() {
   const dawn = (session.variant === 'game' ? dawnPercent(score) / 100 : 0).toFixed(3);
 
   return (
-    <section className={styles.results}>
-      {/* `--dawn` on the band too, so the wash behind the text grows only as the sky lightens. */}
+    <section className={onScene ? `${styles.results} ${styles.onScene}` : styles.results}>
+      {/* `--dawn` on the band, so the wash behind the text grows only as the sky lightens. */}
       <section
         aria-label="Your sky"
         className={styles.sky}
         ref={(el) => el?.style.setProperty('--dawn', dawn)}
       >
-        <Scene rich ref={(el) => el?.style.setProperty('--dawn', dawn)} />
         <div className={styles.skyInner}>
           {/* The name is for screen readers; the conclusion is the first visible line (Spec 010). */}
           <h1 className="visually-hidden">Session complete</h1>
@@ -236,7 +247,7 @@ export function Results() {
         <Button to="/" size="lg">
           Back to home
         </Button>
-        <Button to="/progress" variant="secondary" size="lg">
+        <Button to="/progress" variant="secondary" size="lg" className={styles.onSky}>
           See your trends
         </Button>
       </div>

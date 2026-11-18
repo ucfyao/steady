@@ -12,6 +12,12 @@
   margin-bottom: var(--space-4);
 }
 
+/* On the scene behind the page (Spec 028): the theme's surface and a soft shadow, off the sky. */
+:global([data-scene]) .card {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-on-scene);
+}
+
 .card:last-child {
   margin-bottom: 0;
 }

@@ -1,6 +1,6 @@
 # Spec 018: Results open on the session's sky
 
-Status: implemented
+Status: implemented; Spec 028 moves the sky behind the whole page for calm and game sessions, none for plain
 Design note: `docs/design-note.md` §3
 Depends on: Spec 006, Spec 010, Spec 014, Spec 015, Spec 017
 Changes: Spec 006 §4 (where the game summary sits), Spec 014 §1 (the header lies on a scene on Results too)
