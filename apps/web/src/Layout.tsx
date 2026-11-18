@@ -8,7 +8,11 @@ import { Button } from './ui/Button.js';
 import { Notice } from './ui/Notice.js';
 import styles from './Layout.module.css';
 
-type LayoutContext = { setFocusMode(on: boolean): void; setNight(on: boolean): void };
+type LayoutContext = {
+  setFocusMode(on: boolean): void;
+  setNight(on: boolean): void;
+  setOverHero(on: boolean): void;
+};
 
 /**
  * Focus mode (Spec 004): while a screen calls this, the layout drops the header and
@@ -38,14 +42,30 @@ export function useNightPage(on: boolean) {
   }, [setNight, on]);
 }
 
+/**
+ * A scene at the top of the page (Spec 018): while a screen calls this with `on`, the header
+ * lies on it, as on Home (Spec 014). A layout effect, so the header is in place before the
+ * first paint; it ends when the caller unmounts or passes false.
+ */
+export function useOverHero(on: boolean) {
+  const setOverHero = useOutletContext<LayoutContext | undefined>()?.setOverHero;
+  useLayoutEffect(() => {
+    if (!setOverHero || !on) return;
+    setOverHero(true);
+    return () => setOverHero(false);
+  }, [setOverHero, on]);
+}
+
 export function Layout() {
   const { status, error, retry, notice, dismissNotice, active } = usePlayers();
   const [focusMode, setFocusMode] = useState(false);
   const [night, setNight] = useState(false);
-  const outletContext = useMemo<LayoutContext>(() => ({ setFocusMode, setNight }), []);
-  // Spec 014: on Home the header lies on the night scene, unless a notice sits between them.
+  const [sceneOnTop, setOverHero] = useState(false);
+  const outletContext = useMemo<LayoutContext>(() => ({ setFocusMode, setNight, setOverHero }), []);
+  // Spec 014 and 018: the header lies on the scene at the top of Home, or of a screen that asks
+  // for it, unless a notice sits between them.
   const onHome = useMatch('/') !== null;
-  const overHero = onHome && status === 'ready' && !notice;
+  const overHero = (onHome || sceneOnTop) && status === 'ready' && !notice;
 
   return (
     <div
@@ -70,7 +90,8 @@ export function Layout() {
                 Progress
               </NavLink>
             </nav>
-            <ThemeToggle />
+            {/* The night look ignores the light/dark choice (Spec 015), so no button there (Spec 019). */}
+            {!night && <ThemeToggle />}
             {status === 'ready' && <PlayerMenu />}
           </div>
         </header>

@@ -18,6 +18,8 @@ import {
 import { useLocation, useParams } from 'react-router';
 import { errorWords } from '../api/client.js';
 import { dawnPercent, personalBest, sessionPoints } from '../game/dawn.js';
+import { Scene } from '../game/Scene.js';
+import { useOverHero } from '../Layout.js';
 import { usePlayers } from '../players/usePlayers.js';
 import { JourneyRibbon } from '../results/JourneyRibbon.js';
 import { Button } from '../ui/Button.js';
@@ -75,6 +77,8 @@ export function Results() {
       : history.k === 'ready'
         ? history.sessions.find((s) => s.id === id)
         : undefined;
+  // Spec 018: once a session is shown, the header lies on its sky.
+  useOverHero(session !== undefined);
 
   if (!session) {
     if (history.k === 'loading') return <Loading label="Loading your results…" />;
@@ -128,25 +132,41 @@ export function Results() {
     `${caught} of ${threes} 3s held back, ${count('omission')} digits missed, ` +
     `${count('anticipation')} presses too early. Longest steady run: ${score.longestSteadyRun} trials.`;
   const m = METRICS;
+  // The sky this session reached (Spec 018): its dawn for a game session, the night otherwise.
+  const dawn = (session.variant === 'game' ? dawnPercent(score) / 100 : 0).toFixed(3);
 
   return (
     <section className={styles.results}>
-      {/* The name is for screen readers; the conclusion is the first visible line (Spec 010). */}
-      <h1 className="visually-hidden">Session complete</h1>
-      <p className="headline" data-testid="conclusion" aria-live="polite">
-        {reference ? headline(reference, comparisons) : 'Session complete.'}
-      </p>
+      {/* `--dawn` on the band too, so the wash behind the text grows only as the sky lightens. */}
+      <section
+        aria-label="Your sky"
+        className={styles.sky}
+        ref={(el) => el?.style.setProperty('--dawn', dawn)}
+      >
+        <Scene rich ref={(el) => el?.style.setProperty('--dawn', dawn)} />
+        <div className={styles.skyInner}>
+          {/* The name is for screen readers; the conclusion is the first visible line (Spec 010). */}
+          <h1 className="visually-hidden">Session complete</h1>
+          <p
+            className={`headline ${styles.conclusion}`}
+            data-testid="conclusion"
+            aria-live="polite"
+          >
+            {reference ? headline(reference, comparisons) : 'Session complete.'}
+          </p>
 
-      {session.variant === 'game' && (
-        <GameSummary
-          session={session}
-          earlier={
-            history.k === 'ready'
-              ? history.sessions.filter((s) => s.completedAt < session.completedAt)
-              : null
-          }
-        />
-      )}
+          {session.variant === 'game' && (
+            <GameSummary
+              session={session}
+              earlier={
+                history.k === 'ready'
+                  ? history.sessions.filter((s) => s.completedAt < session.completedAt)
+                  : null
+              }
+            />
+          )}
+        </div>
+      </section>
 
       <Card as="section" aria-labelledby="stats-title">
         <h2 id="stats-title">This session</h2>
@@ -225,7 +245,7 @@ export function Results() {
 }
 
 /**
- * The game first (Spec 006 §4): the points of the server's outcomes, the longest streak and how far the
+ * The game first (Spec 006 §4), on the session's sky (Spec 018): the points of the server's outcomes, the longest streak and how far the
  * sky got towards dawn (points ÷ an all-correct session's points, rounded down).
  */
 function GameSummary({
@@ -244,7 +264,7 @@ function GameSummary({
   const before = earlier ? personalBest(earlier) : null;
   const newBest = before !== null && dawn > before;
   return (
-    <Card as="section" aria-labelledby="game-title" className={styles.game}>
+    <section aria-labelledby="game-title" className={styles.game}>
       <h2 id="game-title">Your game</h2>
       {newBest && <p className={styles.newBest}>New personal best</p>}
       <p className={styles.gamePoints}>
@@ -253,7 +273,7 @@ function GameSummary({
       <p className={styles.gameLine}>
         Longest streak: {score.longestSteadyRun} · Dawn {dawn}%
       </p>
-    </Card>
+    </section>
   );
 }
 
