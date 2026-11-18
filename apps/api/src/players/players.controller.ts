@@ -31,7 +31,6 @@ import type { z } from 'zod';
 export class PlayersController {
   constructor(@Inject(DB) private readonly db: Db) {}
 
-  /** The token is returned once and never stored in plain text; the name is (Spec 013). */
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60_000 } }) // [P]
   @Post('players')
